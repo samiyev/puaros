@@ -94,7 +94,7 @@ export class DependencyGraph extends BaseEntity {
         totalDependencies: number
         avgDependencies: number
         maxDependencies: number
-    } {
+        } {
         const nodes = Array.from(this.nodes.values())
         const totalFiles = nodes.length
         const totalDependencies = nodes.reduce((sum, node) => sum + node.dependencies.length, 0)

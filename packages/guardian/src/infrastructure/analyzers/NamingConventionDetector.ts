@@ -2,16 +2,16 @@ import { INamingConventionDetector } from "../../domain/services/INamingConventi
 import { NamingViolation } from "../../domain/value-objects/NamingViolation"
 import {
     LAYERS,
-    NAMING_VIOLATION_TYPES,
     NAMING_PATTERNS,
+    NAMING_VIOLATION_TYPES,
     USE_CASE_VERBS,
 } from "../../shared/constants/rules"
 import {
     EXCLUDED_FILES,
     FILE_SUFFIXES,
+    NAMING_ERROR_MESSAGES,
     PATH_PATTERNS,
     PATTERN_WORDS,
-    NAMING_ERROR_MESSAGES,
 } from "../constants/detectorPatterns"
 
 /**
@@ -72,7 +72,7 @@ export class NamingConventionDetector implements INamingConventionDetector {
                         filePath,
                         NAMING_ERROR_MESSAGES.DOMAIN_FORBIDDEN,
                         fileName,
-                        `Move to application or infrastructure layer, or rename to follow domain patterns`,
+                        "Move to application or infrastructure layer, or rename to follow domain patterns",
                     ),
                 )
                 return violations

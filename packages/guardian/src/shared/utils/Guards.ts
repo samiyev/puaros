@@ -3,6 +3,7 @@ import { TYPE_NAMES } from "../constants"
 /**
  * Type guard utilities for runtime type checking
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Guards {
     public static isNullOrUndefined(value: unknown): value is null | undefined {
         return value === null || value === undefined
