@@ -5,6 +5,51 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4] - 2025-11-24
+
+### Added
+
+**🎯 Smart Context-Aware Suggestions for Repository Method Names**
+
+Guardian now provides intelligent, context-specific suggestions when it detects non-domain method names in repositories.
+
+- ✅ **Intelligent method name analysis:**
+  - `queryUsers()` → Suggests: `search`, `findBy[Property]`
+  - `selectById()` → Suggests: `findBy[Property]`, `get[Entity]`
+  - `insertUser()` → Suggests: `create`, `add[Entity]`, `store[Entity]`
+  - `updateRecord()` → Suggests: `update`, `modify[Entity]`
+  - `upsertUser()` → Suggests: `save`, `store[Entity]`
+  - `removeUser()` → Suggests: `delete`, `removeBy[Property]`
+  - `fetchUserData()` → Suggests: `findBy[Property]`, `get[Entity]`
+  - And more technical patterns detected automatically!
+
+- 🎯 **Impact:**
+  - Developers get actionable, relevant suggestions instead of generic examples
+  - Faster refactoring with specific naming alternatives
+  - Better learning experience for developers new to DDD
+
+### Fixed
+
+- ✅ **Expanded domain method patterns support:**
+  - `find*()` methods - e.g., `findNodes()`, `findNodeById()`, `findSimilar()`
+  - `saveAll()` - batch save operations
+  - `deleteBy*()` methods - e.g., `deleteByPath()`, `deleteById()`
+  - `deleteAll()` - clear all entities
+  - `add*()` methods - e.g., `addRelationship()`, `addItem()`
+  - `initializeCollection()` - collection initialization
+
+- 🐛 **Removed `findAll` from technical methods blacklist:**
+  - `findAll()` is now correctly recognized as a standard domain method
+  - Reduced false positives for repositories using this common pattern
+
+### Technical
+
+- Added `suggestDomainMethodName()` method in `RepositoryPatternDetector.ts` with keyword-based suggestion mapping
+- Updated `getNonDomainMethodSuggestion()` in `RepositoryViolation.ts` to extract and use smart suggestions
+- Refactored suggestion logic to reduce cyclomatic complexity (22 → 9)
+- Enhanced `domainMethodPatterns` with 9 additional patterns
+- All 333 tests passing
+
 ## [0.6.3] - 2025-11-24
 
 ### Fixed

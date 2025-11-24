@@ -177,6 +177,9 @@ export class RepositoryViolation extends ValueObject<RepositoryViolationProps> {
     }
 
     private getNonDomainMethodSuggestion(): string {
+        const detailsMatch = /Consider: (.+)$/.exec(this.props.details)
+        const smartSuggestion = detailsMatch ? detailsMatch[1] : null
+
         const technicalToDomain = {
             findOne: REPOSITORY_PATTERN_MESSAGES.SUGGESTION_FINDONE,
             findMany: REPOSITORY_PATTERN_MESSAGES.SUGGESTION_FINDMANY,
@@ -186,8 +189,10 @@ export class RepositoryViolation extends ValueObject<RepositoryViolationProps> {
             query: REPOSITORY_PATTERN_MESSAGES.SUGGESTION_QUERY,
         }
 
-        const suggestion =
+        const fallbackSuggestion =
             technicalToDomain[this.props.methodName as keyof typeof technicalToDomain]
+        const finalSuggestion =
+            smartSuggestion || fallbackSuggestion || "findById() or findByEmail()"
 
         return [
             REPOSITORY_PATTERN_MESSAGES.STEP_RENAME_METHOD,
@@ -196,7 +201,7 @@ export class RepositoryViolation extends ValueObject<RepositoryViolationProps> {
             "",
             REPOSITORY_PATTERN_MESSAGES.EXAMPLE_PREFIX,
             `❌ Bad: ${this.props.methodName || "findOne"}()`,
-            `✅ Good: ${suggestion || "findById() or findByEmail()"}`,
+            `✅ Good: ${finalSuggestion}`,
         ].join("\n")
     }
 

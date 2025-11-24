@@ -69,13 +69,21 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
     private readonly domainMethodPatterns = [
         /^findBy[A-Z]/,
         /^findAll/,
+        /^find[A-Z]/,
         /^save$/,
+        /^saveAll$/,
         /^create$/,
         /^update$/,
         /^delete$/,
+        /^deleteBy[A-Z]/,
+        /^deleteAll$/,
         /^remove$/,
+        /^removeBy[A-Z]/,
+        /^removeAll$/,
         /^add$/,
+        /^add[A-Z]/,
         /^get[A-Z]/,
+        /^getAll/,
         /^search/,
         /^list/,
         /^has[A-Z]/,
@@ -86,6 +94,7 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
         /^clearAll$/,
         /^store[A-Z]/,
         /^initialize$/,
+        /^initializeCollection$/,
         /^close$/,
         /^connect$/,
         /^disconnect$/,
@@ -238,6 +247,42 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
     }
 
     /**
+     * Suggests better domain method names based on the original method name
+     */
+    private suggestDomainMethodName(methodName: string): string {
+        const lowerName = methodName.toLowerCase()
+        const suggestions: string[] = []
+
+        const suggestionMap: Record<string, string[]> = {
+            query: ["search", "findBy[Property]"],
+            select: ["findBy[Property]", "get[Entity]"],
+            insert: ["create", "add[Entity]", "store[Entity]"],
+            update: ["update", "modify[Entity]"],
+            upsert: ["save", "store[Entity]"],
+            remove: ["delete", "removeBy[Property]"],
+            fetch: ["findBy[Property]", "get[Entity]"],
+            retrieve: ["findBy[Property]", "get[Entity]"],
+            load: ["findBy[Property]", "get[Entity]"],
+        }
+
+        for (const [keyword, keywords] of Object.entries(suggestionMap)) {
+            if (lowerName.includes(keyword)) {
+                suggestions.push(...keywords)
+            }
+        }
+
+        if (lowerName.includes("get") && lowerName.includes("all")) {
+            suggestions.push("findAll", "listAll")
+        }
+
+        if (suggestions.length === 0) {
+            return "Use domain-specific names like: findBy[Property], save, create, delete, update, add[Entity]"
+        }
+
+        return `Consider: ${suggestions.slice(0, 3).join(", ")}`
+    }
+
+    /**
      * Detects non-domain method names in repository interfaces
      */
     private detectNonDomainMethodNames(
@@ -258,13 +303,14 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
                 const methodName = methodMatch[1]
 
                 if (!this.isDomainMethodName(methodName) && !line.trim().startsWith("//")) {
+                    const suggestion = this.suggestDomainMethodName(methodName)
                     violations.push(
                         RepositoryViolation.create(
                             REPOSITORY_VIOLATION_TYPES.NON_DOMAIN_METHOD_NAME,
                             filePath,
                             layer || LAYERS.DOMAIN,
                             lineNumber,
-                            `Method '${methodName}' uses technical name instead of domain language`,
+                            `Method '${methodName}' uses technical name instead of domain language. ${suggestion}`,
                             undefined,
                             undefined,
                             methodName,
