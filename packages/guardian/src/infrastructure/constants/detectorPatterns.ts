@@ -84,6 +84,8 @@ export const DDD_FOLDER_NAMES = {
     FACTORIES: "factories",
     PORTS: "ports",
     INTERFACES: "interfaces",
+    ERRORS: "errors",
+    EXCEPTIONS: "exceptions",
 } as const
 
 /**

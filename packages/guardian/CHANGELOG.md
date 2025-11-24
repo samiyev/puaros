@@ -5,6 +5,16 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2025-11-25
+
+### Fixed
+
+- 🐛 **False positive: `errors` folder detected as aggregate:**
+  - Added `errors` and `exceptions` to `DDD_FOLDER_NAMES` constants
+  - Added to `nonAggregateFolderNames` — these folders are no longer detected as aggregates
+  - Added to `allowedFolderNames` — imports from `errors`/`exceptions` folders are allowed across aggregates
+  - Fixes issue where `domain/code-analysis/errors/` was incorrectly identified as a separate aggregate named "errors"
+
 ## [0.7.1] - 2025-11-25
 
 ### Fixed

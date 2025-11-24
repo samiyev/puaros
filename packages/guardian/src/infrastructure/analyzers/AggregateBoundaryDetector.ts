@@ -54,6 +54,8 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
         DDD_FOLDER_NAMES.REPOSITORIES,
         DDD_FOLDER_NAMES.SERVICES,
         DDD_FOLDER_NAMES.SPECIFICATIONS,
+        DDD_FOLDER_NAMES.ERRORS,
+        DDD_FOLDER_NAMES.EXCEPTIONS,
     ])
     private readonly nonAggregateFolderNames = new Set<string>([
         DDD_FOLDER_NAMES.VALUE_OBJECTS,
@@ -69,6 +71,8 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
         DDD_FOLDER_NAMES.FACTORIES,
         DDD_FOLDER_NAMES.PORTS,
         DDD_FOLDER_NAMES.INTERFACES,
+        DDD_FOLDER_NAMES.ERRORS,
+        DDD_FOLDER_NAMES.EXCEPTIONS,
     ])
 
     /**
