@@ -78,6 +78,17 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
         /^get[A-Z]/,
         /^search/,
         /^list/,
+        /^has[A-Z]/,
+        /^is[A-Z]/,
+        /^exists[A-Z]/,
+        /^existsBy[A-Z]/,
+        /^clear[A-Z]/,
+        /^clearAll$/,
+        /^store[A-Z]/,
+        /^initialize$/,
+        /^close$/,
+        /^connect$/,
+        /^disconnect$/,
     ]
 
     private readonly concreteRepositoryPatterns = [

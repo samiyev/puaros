@@ -5,6 +5,37 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2025-11-24
+
+### Fixed
+
+**🐛 Repository Pattern Detection - Reduced False Positives**
+
+Fixed overly strict repository method name validation that was flagging valid DDD patterns as violations.
+
+- ✅ **Added support for common DDD repository patterns:**
+  - `has*()` methods - e.g., `hasProject()`, `hasPermission()`
+  - `is*()` methods - e.g., `isCached()`, `isActive()`
+  - `exists*()` methods - e.g., `existsById()`, `existsByEmail()`
+  - `clear*()` methods - e.g., `clearCache()`, `clearAll()`
+  - `store*()` methods - e.g., `storeMetadata()`, `storeFile()`
+  - Lifecycle methods: `initialize()`, `close()`, `connect()`, `disconnect()`
+
+- 🎯 **Impact:**
+  - Reduced false positives in real-world DDD projects
+  - Better alignment with Domain-Driven Design best practices
+  - More practical for cache repositories, connection management, and business queries
+
+- 📚 **Why these patterns are valid:**
+  - Martin Fowler's Repository Pattern allows domain-specific query methods
+  - DDD recommends using ubiquitous language in method names
+  - Lifecycle methods are standard for resource management in repositories
+
+### Technical
+
+- Updated `domainMethodPatterns` in `RepositoryPatternDetector.ts` with 11 additional valid patterns
+- All existing functionality remains unchanged
+
 ## [0.6.2] - 2025-11-24
 
 ### Added
