@@ -2,7 +2,7 @@
 
 This document outlines the current features and future plans for @puaros/guardian.
 
-## Current Version: 0.5.2 ✅ RELEASED
+## Current Version: 0.6.0 ✅ RELEASED
 
 **Released:** 2025-11-24
 
@@ -198,6 +198,47 @@ guardian check src --min-severity high
 
 ---
 
+## Version 0.6.0 - Output Limit Control & ESLint Optimization 🎯 ✅ RELEASED
+
+**Released:** 2025-11-24
+**Priority:** MEDIUM
+
+Control output verbosity for large codebases and achieve perfect code quality:
+
+```bash
+# Limit detailed output for large codebases
+guardian check src --limit 10
+
+# Combine with severity filters
+guardian check src --only-critical --limit 5
+
+# Short form
+guardian check src -l 20
+```
+
+**Implemented Features:**
+- ✅ `--limit` option to control detailed violation output per category
+- ✅ Short form `-l <number>` for convenience
+- ✅ Works seamlessly with `--only-critical` and `--min-severity` filters
+- ✅ Warning message when violations exceed limit
+- ✅ Full statistics always displayed at the end
+- ✅ Severity display constants extracted (`SEVERITY_DISPLAY_LABELS`, `SEVERITY_SECTION_HEADERS`)
+- ✅ ESLint configuration optimized (reduced warnings from 129 to 0)
+- ✅ CLI-specific overrides for no-console, complexity, max-lines-per-function
+- ✅ Dead code removal (unused IBaseRepository interface)
+- ✅ Complete development workflow added to CLAUDE.md
+- ✅ 292 tests passing with 90.63% coverage
+- ✅ Guardian self-check: ✅ 0 issues found
+
+**Benefits:**
+- Better experience with large codebases
+- Faster CI/CD output
+- Improved CLI maintainability with constants
+- Perfect ESLint score (0 errors, 0 warnings)
+- Guardian now passes its own quality checks
+
+---
+
 ## Version 0.5.1 - Code Quality Refactoring 🧹 ✅ RELEASED
 
 **Released:** 2025-11-24
@@ -254,7 +295,7 @@ class Order {
 
 ---
 
-### Version 0.7.0 - Anemic Domain Model Detection 🩺
+### Version 0.8.0 - Anemic Domain Model Detection 🩺
 **Target:** Q2 2026
 **Priority:** MEDIUM
 
@@ -295,7 +336,7 @@ class Order {
 
 ---
 
-### Version 0.7.0 - Domain Event Usage Validation 📢
+### Version 0.8.0 - Domain Event Usage Validation 📢
 **Target:** Q2 2026
 **Priority:** MEDIUM
 
@@ -334,7 +375,7 @@ class Order {
 
 ---
 
-### Version 0.8.0 - Value Object Immutability Check 🔐
+### Version 0.9.0 - Value Object Immutability Check 🔐
 **Target:** Q2 2026
 **Priority:** MEDIUM
 
@@ -377,7 +418,7 @@ class Email {
 
 ---
 
-### Version 0.9.0 - Use Case Single Responsibility 🎯
+### Version 0.10.0 - Use Case Single Responsibility 🎯
 **Target:** Q2 2026
 **Priority:** LOW
 
@@ -414,7 +455,7 @@ class SendWelcomeEmail {
 
 ---
 
-### Version 0.10.0 - Interface Segregation Validation 🔌
+### Version 0.11.0 - Interface Segregation Validation 🔌
 **Target:** Q2 2026
 **Priority:** LOW
 
@@ -459,7 +500,7 @@ interface IUserExporter {
 
 ---
 
-### Version 0.11.0 - Port-Adapter Pattern Validation 🔌
+### Version 0.12.0 - Port-Adapter Pattern Validation 🔌
 **Target:** Q2 2026
 **Priority:** MEDIUM
 
@@ -498,7 +539,7 @@ class TwilioAdapter implements INotificationPort {
 
 ---
 
-### Version 0.12.0 - Configuration File Support ⚙️
+### Version 0.13.0 - Configuration File Support ⚙️
 **Target:** Q3 2026
 **Priority:** MEDIUM
 
@@ -549,7 +590,7 @@ export default {
 
 ---
 
-### Version 0.13.0 - Command Query Separation (CQS/CQRS) 📝
+### Version 0.14.0 - Command Query Separation (CQS/CQRS) 📝
 **Target:** Q3 2026
 **Priority:** MEDIUM
 
@@ -610,7 +651,7 @@ class GetUser {  // Query
 
 ---
 
-### Version 0.14.0 - Factory Pattern Validation 🏭
+### Version 0.15.0 - Factory Pattern Validation 🏭
 **Target:** Q3 2026
 **Priority:** LOW
 
@@ -693,7 +734,7 @@ class Order {
 
 ---
 
-### Version 0.15.0 - Specification Pattern Detection 🔍
+### Version 0.16.0 - Specification Pattern Detection 🔍
 **Target:** Q3 2026
 **Priority:** MEDIUM
 
@@ -765,7 +806,7 @@ class ApproveOrder {
 
 ---
 
-### Version 0.16.0 - Layered Service Anti-pattern Detection ⚠️
+### Version 0.17.0 - Layered Service Anti-pattern Detection ⚠️
 **Target:** Q3 2026
 **Priority:** MEDIUM
 
@@ -842,7 +883,7 @@ class OrderService {
 
 ---
 
-### Version 0.17.0 - Bounded Context Leak Detection 🚧
+### Version 0.18.0 - Bounded Context Leak Detection 🚧
 **Target:** Q3 2026
 **Priority:** LOW
 
@@ -907,7 +948,7 @@ class ProductPriceChangedHandler {
 
 ---
 
-### Version 0.18.0 - Transaction Script vs Domain Model Detection 📜
+### Version 0.19.0 - Transaction Script vs Domain Model Detection 📜
 **Target:** Q3 2026
 **Priority:** LOW
 
@@ -974,7 +1015,7 @@ class Order {
 
 ---
 
-### Version 0.19.0 - Persistence Ignorance Validation 💾
+### Version 0.20.0 - Persistence Ignorance Validation 💾
 **Target:** Q3 2026
 **Priority:** MEDIUM
 
@@ -1060,7 +1101,7 @@ class UserEntityMapper {
 
 ---
 
-### Version 0.20.0 - Null Object Pattern Detection 🎭
+### Version 0.21.0 - Null Object Pattern Detection 🎭
 **Target:** Q3 2026
 **Priority:** LOW
 
@@ -1142,7 +1183,7 @@ class ProcessOrder {
 
 ---
 
-### Version 0.21.0 - Primitive Obsession in Methods 🔢
+### Version 0.22.0 - Primitive Obsession in Methods 🔢
 **Target:** Q3 2026
 **Priority:** MEDIUM
 
@@ -1209,7 +1250,7 @@ class Order {
 
 ---
 
-### Version 0.22.0 - Service Locator Anti-pattern 🔍
+### Version 0.23.0 - Service Locator Anti-pattern 🔍
 **Target:** Q4 2026
 **Priority:** MEDIUM
 
@@ -1269,7 +1310,7 @@ class CreateUser {
 
 ---
 
-### Version 0.23.0 - Double Dispatch Pattern Validation 🎯
+### Version 0.24.0 - Double Dispatch Pattern Validation 🎯
 **Target:** Q4 2026
 **Priority:** LOW
 
@@ -1346,7 +1387,7 @@ class ShippingCostCalculator implements IOrderItemVisitor {
 
 ---
 
-### Version 0.24.0 - Entity Identity Validation 🆔
+### Version 0.25.0 - Entity Identity Validation 🆔
 **Target:** Q4 2026
 **Priority:** MEDIUM
 
@@ -1439,7 +1480,7 @@ class UserId {
 
 ---
 
-### Version 0.25.0 - Saga Pattern Detection 🔄
+### Version 0.26.0 - Saga Pattern Detection 🔄
 **Target:** Q4 2026
 **Priority:** LOW
 
@@ -1537,7 +1578,7 @@ abstract class SagaStep {
 
 ---
 
-### Version 0.26.0 - Anti-Corruption Layer Detection 🛡️
+### Version 0.27.0 - Anti-Corruption Layer Detection 🛡️
 **Target:** Q4 2026
 **Priority:** MEDIUM
 
@@ -1623,7 +1664,7 @@ interface IOrderSyncPort {
 
 ---
 
-### Version 0.27.0 - Ubiquitous Language Validation 📖
+### Version 0.28.0 - Ubiquitous Language Validation 📖
 **Target:** Q4 2026
 **Priority:** HIGH
 
@@ -1811,4 +1852,4 @@ Until we reach 1.0.0, minor version bumps (0.x.0) may include breaking changes a
 ---
 
 **Last Updated:** 2025-11-24
-**Current Version:** 0.5.0
+**Current Version:** 0.6.0
