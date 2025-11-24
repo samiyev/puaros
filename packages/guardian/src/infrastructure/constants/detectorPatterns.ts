@@ -64,3 +64,45 @@ export const NAMING_ERROR_MESSAGES = {
     USE_VERB_NOUN: "Use verb + noun in PascalCase (e.g., CreateUser.ts, UpdateProfile.ts)",
     USE_CASE_START_VERB: "Use cases should start with a verb",
 } as const
+
+/**
+ * DDD folder names for aggregate boundary detection
+ */
+export const DDD_FOLDER_NAMES = {
+    ENTITIES: "entities",
+    AGGREGATES: "aggregates",
+    VALUE_OBJECTS: "value-objects",
+    VO: "vo",
+    EVENTS: "events",
+    DOMAIN_EVENTS: "domain-events",
+    REPOSITORIES: "repositories",
+    SERVICES: "services",
+    SPECIFICATIONS: "specifications",
+    DOMAIN: "domain",
+    CONSTANTS: "constants",
+    SHARED: "shared",
+    FACTORIES: "factories",
+    PORTS: "ports",
+    INTERFACES: "interfaces",
+} as const
+
+/**
+ * Repository method suggestions for domain language
+ */
+export const REPOSITORY_METHOD_SUGGESTIONS = {
+    SEARCH: "search",
+    FIND_BY_PROPERTY: "findBy[Property]",
+    GET_ENTITY: "get[Entity]",
+    CREATE: "create",
+    ADD_ENTITY: "add[Entity]",
+    STORE_ENTITY: "store[Entity]",
+    UPDATE: "update",
+    MODIFY_ENTITY: "modify[Entity]",
+    SAVE: "save",
+    DELETE: "delete",
+    REMOVE_BY_PROPERTY: "removeBy[Property]",
+    FIND_ALL: "findAll",
+    LIST_ALL: "listAll",
+    DEFAULT_SUGGESTION:
+        "Use domain-specific names like: findBy[Property], save, create, delete, update, add[Entity]",
+} as const

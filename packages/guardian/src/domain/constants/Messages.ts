@@ -49,6 +49,10 @@ export const REPOSITORY_PATTERN_MESSAGES = {
     SUGGESTION_QUERY: "find or search",
 }
 
+export const REPOSITORY_FALLBACK_SUGGESTIONS = {
+    DEFAULT: "findById() or findByEmail()",
+}
+
 export const AGGREGATE_VIOLATION_MESSAGES = {
     USE_ID_REFERENCE: "1. Reference other aggregates by ID (UserId, OrderId) instead of entity",
     USE_VALUE_OBJECT:

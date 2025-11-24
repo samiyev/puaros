@@ -2,6 +2,7 @@ import { IAggregateBoundaryDetector } from "../../domain/services/IAggregateBoun
 import { AggregateBoundaryViolation } from "../../domain/value-objects/AggregateBoundaryViolation"
 import { LAYERS } from "../../shared/constants/rules"
 import { IMPORT_PATTERNS } from "../constants/paths"
+import { DDD_FOLDER_NAMES } from "../constants/detectorPatterns"
 
 /**
  * Detects aggregate boundary violations in Domain-Driven Design
@@ -37,16 +38,37 @@ import { IMPORT_PATTERNS } from "../constants/paths"
  * ```
  */
 export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
-    private readonly entityFolderNames = new Set(["entities", "aggregates"])
-    private readonly valueObjectFolderNames = new Set(["value-objects", "vo"])
-    private readonly allowedFolderNames = new Set([
-        "value-objects",
-        "vo",
-        "events",
-        "domain-events",
-        "repositories",
-        "services",
-        "specifications",
+    private readonly entityFolderNames = new Set<string>([
+        DDD_FOLDER_NAMES.ENTITIES,
+        DDD_FOLDER_NAMES.AGGREGATES,
+    ])
+    private readonly valueObjectFolderNames = new Set<string>([
+        DDD_FOLDER_NAMES.VALUE_OBJECTS,
+        DDD_FOLDER_NAMES.VO,
+    ])
+    private readonly allowedFolderNames = new Set<string>([
+        DDD_FOLDER_NAMES.VALUE_OBJECTS,
+        DDD_FOLDER_NAMES.VO,
+        DDD_FOLDER_NAMES.EVENTS,
+        DDD_FOLDER_NAMES.DOMAIN_EVENTS,
+        DDD_FOLDER_NAMES.REPOSITORIES,
+        DDD_FOLDER_NAMES.SERVICES,
+        DDD_FOLDER_NAMES.SPECIFICATIONS,
+    ])
+    private readonly nonAggregateFolderNames = new Set<string>([
+        DDD_FOLDER_NAMES.VALUE_OBJECTS,
+        DDD_FOLDER_NAMES.VO,
+        DDD_FOLDER_NAMES.EVENTS,
+        DDD_FOLDER_NAMES.DOMAIN_EVENTS,
+        DDD_FOLDER_NAMES.REPOSITORIES,
+        DDD_FOLDER_NAMES.SERVICES,
+        DDD_FOLDER_NAMES.SPECIFICATIONS,
+        DDD_FOLDER_NAMES.ENTITIES,
+        DDD_FOLDER_NAMES.CONSTANTS,
+        DDD_FOLDER_NAMES.SHARED,
+        DDD_FOLDER_NAMES.FACTORIES,
+        DDD_FOLDER_NAMES.PORTS,
+        DDD_FOLDER_NAMES.INTERFACES,
     ])
 
     /**
@@ -120,12 +142,13 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
     public extractAggregateFromPath(filePath: string): string | undefined {
         const normalizedPath = filePath.toLowerCase().replace(/\\/g, "/")
 
-        const domainMatch = /\/domain\//.exec(normalizedPath)
+        const domainMatch = /(?:^|\/)(domain)\//.exec(normalizedPath)
         if (!domainMatch) {
             return undefined
         }
 
-        const pathAfterDomain = normalizedPath.substring(domainMatch.index + domainMatch[0].length)
+        const domainEndIndex = domainMatch.index + domainMatch[0].length
+        const pathAfterDomain = normalizedPath.substring(domainEndIndex)
         const segments = pathAfterDomain.split("/").filter(Boolean)
 
         if (segments.length < 2) {
@@ -136,10 +159,18 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
             if (segments.length < 3) {
                 return undefined
             }
-            return segments[1]
+            const aggregate = segments[1]
+            if (this.nonAggregateFolderNames.has(aggregate)) {
+                return undefined
+            }
+            return aggregate
         }
 
-        return segments[0]
+        const aggregate = segments[0]
+        if (this.nonAggregateFolderNames.has(aggregate)) {
+            return undefined
+        }
+        return aggregate
     }
 
     /**
@@ -225,11 +256,14 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
         }
 
         for (let i = 0; i < segments.length; i++) {
-            if (segments[i] === "domain" || segments[i] === "aggregates") {
+            if (
+                segments[i] === DDD_FOLDER_NAMES.DOMAIN ||
+                segments[i] === DDD_FOLDER_NAMES.AGGREGATES
+            ) {
                 if (i + 1 < segments.length) {
                     if (
                         this.entityFolderNames.has(segments[i + 1]) ||
-                        segments[i + 1] === "aggregates"
+                        segments[i + 1] === DDD_FOLDER_NAMES.AGGREGATES
                     ) {
                         if (i + 2 < segments.length) {
                             return segments[i + 2]
@@ -248,7 +282,7 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
                 !this.entityFolderNames.has(secondLastSegment) &&
                 !this.valueObjectFolderNames.has(secondLastSegment) &&
                 !this.allowedFolderNames.has(secondLastSegment) &&
-                secondLastSegment !== "domain"
+                secondLastSegment !== DDD_FOLDER_NAMES.DOMAIN
             ) {
                 return secondLastSegment
             }

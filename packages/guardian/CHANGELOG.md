@@ -5,6 +5,79 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2025-11-25
+
+### Fixed
+
+- 🐛 **Aggregate Boundary Detection for relative paths:**
+  - Fixed regex pattern to support paths starting with `domain/` (without leading `/`)
+  - Now correctly detects violations in projects scanned from parent directories
+
+- 🐛 **Reduced false positives in Repository Pattern detection:**
+  - Removed `findAll`, `exists`, `count` from ORM technical methods blacklist
+  - These are now correctly recognized as valid domain method names
+  - Added `exists`, `count`, `countBy[A-Z]` to domain method patterns
+
+- 🐛 **Non-aggregate folder exclusions:**
+  - Added exclusions for standard DDD folders: `constants`, `shared`, `factories`, `ports`, `interfaces`
+  - Prevents false positives when domain layer has shared utilities
+
+### Changed
+
+- ♻️ **Extracted magic strings to constants:**
+  - DDD folder names (`entities`, `aggregates`, `value-objects`, etc.) moved to `DDD_FOLDER_NAMES`
+  - Repository method suggestions moved to `REPOSITORY_METHOD_SUGGESTIONS`
+  - Fallback suggestions moved to `REPOSITORY_FALLBACK_SUGGESTIONS`
+
+### Added
+
+- 📁 **Aggregate boundary test examples:**
+  - Added `examples/aggregate-boundary/domain/` with Order, User, Product aggregates
+  - Demonstrates cross-aggregate entity reference violations
+
+## [0.7.0] - 2025-11-25
+
+### Added
+
+**🔒 Aggregate Boundary Validation**
+
+New DDD feature to enforce aggregate boundaries and prevent tight coupling between aggregates.
+
+- ✅ **Aggregate Boundary Detector:**
+  - Detects direct entity references across aggregate boundaries
+  - Validates that aggregates reference each other only by ID or Value Objects
+  - Supports multiple folder structure patterns:
+    - `domain/aggregates/order/Order.ts`
+    - `domain/order/Order.ts`
+    - `domain/entities/order/Order.ts`
+
+- ✅ **Smart Import Analysis:**
+  - Parses ES6 imports and CommonJS require statements
+  - Identifies entity imports from other aggregates
+  - Allows imports from value-objects, events, services, specifications folders
+
+- ✅ **Actionable Suggestions:**
+  - Reference by ID instead of entity
+  - Use Value Objects to store needed data from other aggregates
+  - Maintain aggregate independence
+
+- ✅ **CLI Integration:**
+  - `--architecture` flag includes aggregate boundary checks
+  - CRITICAL severity for violations
+  - Detailed violation messages with file:line references
+
+- ✅ **Test Coverage:**
+  - 41 new tests for aggregate boundary detection
+  - 333 total tests passing (100% pass rate)
+  - Examples in `examples/aggregate-boundary/`
+
+### Technical
+
+- New `AggregateBoundaryDetector` in infrastructure layer
+- New `AggregateBoundaryViolation` value object in domain layer
+- New `IAggregateBoundaryDetector` interface for dependency inversion
+- Integrated into `AnalyzeProject` use case
+
 ## [0.6.4] - 2025-11-24
 
 ### Added

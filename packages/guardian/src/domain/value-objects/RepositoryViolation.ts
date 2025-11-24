@@ -1,6 +1,6 @@
 import { ValueObject } from "./ValueObject"
 import { REPOSITORY_VIOLATION_TYPES } from "../../shared/constants/rules"
-import { REPOSITORY_PATTERN_MESSAGES } from "../constants/Messages"
+import { REPOSITORY_FALLBACK_SUGGESTIONS, REPOSITORY_PATTERN_MESSAGES } from "../constants/Messages"
 
 interface RepositoryViolationProps {
     readonly violationType:
@@ -192,7 +192,7 @@ export class RepositoryViolation extends ValueObject<RepositoryViolationProps> {
         const fallbackSuggestion =
             technicalToDomain[this.props.methodName as keyof typeof technicalToDomain]
         const finalSuggestion =
-            smartSuggestion || fallbackSuggestion || "findById() or findByEmail()"
+            smartSuggestion || fallbackSuggestion || REPOSITORY_FALLBACK_SUGGESTIONS.DEFAULT
 
         return [
             REPOSITORY_PATTERN_MESSAGES.STEP_RENAME_METHOD,

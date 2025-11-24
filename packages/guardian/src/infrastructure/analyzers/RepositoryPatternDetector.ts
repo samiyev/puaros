@@ -3,6 +3,7 @@ import { RepositoryViolation } from "../../domain/value-objects/RepositoryViolat
 import { LAYERS, REPOSITORY_VIOLATION_TYPES } from "../../shared/constants/rules"
 import { ORM_QUERY_METHODS } from "../constants/orm-methods"
 import { REPOSITORY_PATTERN_MESSAGES } from "../../domain/constants/Messages"
+import { REPOSITORY_METHOD_SUGGESTIONS } from "../constants/detectorPatterns"
 
 /**
  * Detects Repository Pattern violations in the codebase
@@ -68,7 +69,7 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
 
     private readonly domainMethodPatterns = [
         /^findBy[A-Z]/,
-        /^findAll/,
+        /^findAll$/,
         /^find[A-Z]/,
         /^save$/,
         /^saveAll$/,
@@ -83,11 +84,12 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
         /^add$/,
         /^add[A-Z]/,
         /^get[A-Z]/,
-        /^getAll/,
+        /^getAll$/,
         /^search/,
         /^list/,
         /^has[A-Z]/,
         /^is[A-Z]/,
+        /^exists$/,
         /^exists[A-Z]/,
         /^existsBy[A-Z]/,
         /^clear[A-Z]/,
@@ -98,6 +100,8 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
         /^close$/,
         /^connect$/,
         /^disconnect$/,
+        /^count$/,
+        /^countBy[A-Z]/,
     ]
 
     private readonly concreteRepositoryPatterns = [
@@ -254,15 +258,43 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
         const suggestions: string[] = []
 
         const suggestionMap: Record<string, string[]> = {
-            query: ["search", "findBy[Property]"],
-            select: ["findBy[Property]", "get[Entity]"],
-            insert: ["create", "add[Entity]", "store[Entity]"],
-            update: ["update", "modify[Entity]"],
-            upsert: ["save", "store[Entity]"],
-            remove: ["delete", "removeBy[Property]"],
-            fetch: ["findBy[Property]", "get[Entity]"],
-            retrieve: ["findBy[Property]", "get[Entity]"],
-            load: ["findBy[Property]", "get[Entity]"],
+            query: [
+                REPOSITORY_METHOD_SUGGESTIONS.SEARCH,
+                REPOSITORY_METHOD_SUGGESTIONS.FIND_BY_PROPERTY,
+            ],
+            select: [
+                REPOSITORY_METHOD_SUGGESTIONS.FIND_BY_PROPERTY,
+                REPOSITORY_METHOD_SUGGESTIONS.GET_ENTITY,
+            ],
+            insert: [
+                REPOSITORY_METHOD_SUGGESTIONS.CREATE,
+                REPOSITORY_METHOD_SUGGESTIONS.ADD_ENTITY,
+                REPOSITORY_METHOD_SUGGESTIONS.STORE_ENTITY,
+            ],
+            update: [
+                REPOSITORY_METHOD_SUGGESTIONS.UPDATE,
+                REPOSITORY_METHOD_SUGGESTIONS.MODIFY_ENTITY,
+            ],
+            upsert: [
+                REPOSITORY_METHOD_SUGGESTIONS.SAVE,
+                REPOSITORY_METHOD_SUGGESTIONS.STORE_ENTITY,
+            ],
+            remove: [
+                REPOSITORY_METHOD_SUGGESTIONS.DELETE,
+                REPOSITORY_METHOD_SUGGESTIONS.REMOVE_BY_PROPERTY,
+            ],
+            fetch: [
+                REPOSITORY_METHOD_SUGGESTIONS.FIND_BY_PROPERTY,
+                REPOSITORY_METHOD_SUGGESTIONS.GET_ENTITY,
+            ],
+            retrieve: [
+                REPOSITORY_METHOD_SUGGESTIONS.FIND_BY_PROPERTY,
+                REPOSITORY_METHOD_SUGGESTIONS.GET_ENTITY,
+            ],
+            load: [
+                REPOSITORY_METHOD_SUGGESTIONS.FIND_BY_PROPERTY,
+                REPOSITORY_METHOD_SUGGESTIONS.GET_ENTITY,
+            ],
         }
 
         for (const [keyword, keywords] of Object.entries(suggestionMap)) {
@@ -272,11 +304,14 @@ export class RepositoryPatternDetector implements IRepositoryPatternDetector {
         }
 
         if (lowerName.includes("get") && lowerName.includes("all")) {
-            suggestions.push("findAll", "listAll")
+            suggestions.push(
+                REPOSITORY_METHOD_SUGGESTIONS.FIND_ALL,
+                REPOSITORY_METHOD_SUGGESTIONS.LIST_ALL,
+            )
         }
 
         if (suggestions.length === 0) {
-            return "Use domain-specific names like: findBy[Property], save, create, delete, update, add[Entity]"
+            return REPOSITORY_METHOD_SUGGESTIONS.DEFAULT_SUGGESTION
         }
 
         return `Consider: ${suggestions.slice(0, 3).join(", ")}`

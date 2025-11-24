@@ -2,7 +2,6 @@ export const ORM_QUERY_METHODS = [
     "findOne",
     "findMany",
     "findFirst",
-    "findAll",
     "findAndCountAll",
     "insert",
     "insertMany",
@@ -17,8 +16,6 @@ export const ORM_QUERY_METHODS = [
     "run",
     "exec",
     "aggregate",
-    "count",
-    "exists",
 ] as const
 
 export type OrmQueryMethod = (typeof ORM_QUERY_METHODS)[number]
