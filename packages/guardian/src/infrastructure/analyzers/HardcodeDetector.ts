@@ -46,7 +46,7 @@ export class HardcodeDetector implements IHardcodeDetector {
      * Check if a file is a constants definition file
      */
     private isConstantsFile(filePath: string): boolean {
-        const fileName = filePath.split("/").pop() || ""
+        const _fileName = filePath.split("/").pop() ?? ""
         const constantsPatterns = [
             /^constants?\.(ts|js)$/i,
             /constants?\/.*\.(ts|js)$/i,
