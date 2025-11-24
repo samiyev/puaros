@@ -1,6 +1,6 @@
 {
     "name": "@samiyev/guardian",
-    "version": "0.7.2",
+    "version": "0.7.3",
     "description": "Research-backed code quality guardian for AI-assisted development. Detects hardcodes, circular deps, framework leaks, entity exposure, and 8 architecture violations. Enforces Clean Architecture/DDD principles. Works with GitHub Copilot, Cursor, Windsurf, Claude, ChatGPT, Cline, and any AI coding tool.",
     "keywords": [
         "puaros",

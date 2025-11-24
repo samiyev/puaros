@@ -195,6 +195,11 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
             return false
         }
 
+        // Check if import stays within the same bounded context
+        if (this.isInternalBoundedContextImport(normalizedPath)) {
+            return false
+        }
+
         const targetAggregate = this.extractAggregateFromImport(normalizedPath)
         if (!targetAggregate || targetAggregate === currentAggregate) {
             return false
@@ -205,6 +210,36 @@ export class AggregateBoundaryDetector implements IAggregateBoundaryDetector {
         }
 
         return this.seemsLikeEntityImport(normalizedPath)
+    }
+
+    /**
+     * Checks if the import is internal to the same bounded context
+     *
+     * An import like "../aggregates/Entity" from "repositories/Repo" stays within
+     * the same bounded context (one level up goes to the bounded context root).
+     *
+     * An import like "../../other-context/Entity" crosses bounded context boundaries.
+     */
+    private isInternalBoundedContextImport(normalizedPath: string): boolean {
+        const parts = normalizedPath.split("/")
+        const dotDotCount = parts.filter((p) => p === "..").length
+
+        /*
+         * If only one ".." and path goes into aggregates/entities folder,
+         * it's likely an internal import within the same bounded context
+         */
+        if (dotDotCount === 1) {
+            const nonDotParts = parts.filter((p) => p !== ".." && p !== ".")
+            if (nonDotParts.length >= 1) {
+                const firstFolder = nonDotParts[0]
+                // Importing from aggregates/entities within same bounded context is allowed
+                if (this.entityFolderNames.has(firstFolder)) {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     /**
