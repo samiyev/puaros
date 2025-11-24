@@ -7,10 +7,12 @@ import { IFileScanner } from "./domain/services/IFileScanner"
 import { ICodeParser } from "./domain/services/ICodeParser"
 import { IHardcodeDetector } from "./domain/services/IHardcodeDetector"
 import { INamingConventionDetector } from "./domain/services/INamingConventionDetector"
+import { IFrameworkLeakDetector } from "./domain/services/IFrameworkLeakDetector"
 import { FileScanner } from "./infrastructure/scanners/FileScanner"
 import { CodeParser } from "./infrastructure/parsers/CodeParser"
 import { HardcodeDetector } from "./infrastructure/analyzers/HardcodeDetector"
 import { NamingConventionDetector } from "./infrastructure/analyzers/NamingConventionDetector"
+import { FrameworkLeakDetector } from "./infrastructure/analyzers/FrameworkLeakDetector"
 import { ERROR_MESSAGES } from "./shared/constants"
 
 /**
@@ -63,11 +65,13 @@ export async function analyzeProject(
     const codeParser: ICodeParser = new CodeParser()
     const hardcodeDetector: IHardcodeDetector = new HardcodeDetector()
     const namingConventionDetector: INamingConventionDetector = new NamingConventionDetector()
+    const frameworkLeakDetector: IFrameworkLeakDetector = new FrameworkLeakDetector()
     const useCase = new AnalyzeProject(
         fileScanner,
         codeParser,
         hardcodeDetector,
         namingConventionDetector,
+        frameworkLeakDetector,
     )
 
     const result = await useCase.execute(options)
@@ -86,5 +90,6 @@ export type {
     HardcodeViolation,
     CircularDependencyViolation,
     NamingConventionViolation,
+    FrameworkLeakViolation,
     ProjectMetrics,
 } from "./application/use-cases/AnalyzeProject"

@@ -4,6 +4,7 @@ import { IFileScanner } from "../../domain/services/IFileScanner"
 import { ICodeParser } from "../../domain/services/ICodeParser"
 import { IHardcodeDetector } from "../../domain/services/IHardcodeDetector"
 import { INamingConventionDetector } from "../../domain/services/INamingConventionDetector"
+import { IFrameworkLeakDetector } from "../../domain/services/IFrameworkLeakDetector"
 import { SourceFile } from "../../domain/entities/SourceFile"
 import { DependencyGraph } from "../../domain/entities/DependencyGraph"
 import { ProjectPath } from "../../domain/value-objects/ProjectPath"
@@ -30,6 +31,7 @@ export interface AnalyzeProjectResponse {
     hardcodeViolations: HardcodeViolation[]
     circularDependencyViolations: CircularDependencyViolation[]
     namingViolations: NamingConventionViolation[]
+    frameworkLeakViolations: FrameworkLeakViolation[]
     metrics: ProjectMetrics
 }
 
@@ -81,6 +83,18 @@ export interface NamingConventionViolation {
     suggestion?: string
 }
 
+export interface FrameworkLeakViolation {
+    rule: typeof RULES.FRAMEWORK_LEAK
+    packageName: string
+    category: string
+    categoryDescription: string
+    file: string
+    layer: string
+    line?: number
+    message: string
+    suggestion: string
+}
+
 export interface ProjectMetrics {
     totalFiles: number
     totalFunctions: number
@@ -100,6 +114,7 @@ export class AnalyzeProject extends UseCase<
         private readonly codeParser: ICodeParser,
         private readonly hardcodeDetector: IHardcodeDetector,
         private readonly namingConventionDetector: INamingConventionDetector,
+        private readonly frameworkLeakDetector: IFrameworkLeakDetector,
     ) {
         super()
     }
@@ -148,6 +163,7 @@ export class AnalyzeProject extends UseCase<
             const hardcodeViolations = this.detectHardcode(sourceFiles)
             const circularDependencyViolations = this.detectCircularDependencies(dependencyGraph)
             const namingViolations = this.detectNamingConventions(sourceFiles)
+            const frameworkLeakViolations = this.detectFrameworkLeaks(sourceFiles)
             const metrics = this.calculateMetrics(sourceFiles, totalFunctions, dependencyGraph)
 
             return ResponseDto.ok({
@@ -157,6 +173,7 @@ export class AnalyzeProject extends UseCase<
                 hardcodeViolations,
                 circularDependencyViolations,
                 namingViolations,
+                frameworkLeakViolations,
                 metrics,
             })
         } catch (error) {
@@ -312,6 +329,34 @@ export class AnalyzeProject extends UseCase<
                     actual: violation.actual,
                     message: violation.getMessage(),
                     suggestion: violation.suggestion,
+                })
+            }
+        }
+
+        return violations
+    }
+
+    private detectFrameworkLeaks(sourceFiles: SourceFile[]): FrameworkLeakViolation[] {
+        const violations: FrameworkLeakViolation[] = []
+
+        for (const file of sourceFiles) {
+            const leaks = this.frameworkLeakDetector.detectLeaks(
+                file.imports,
+                file.path.relative,
+                file.layer,
+            )
+
+            for (const leak of leaks) {
+                violations.push({
+                    rule: RULES.FRAMEWORK_LEAK,
+                    packageName: leak.packageName,
+                    category: leak.category,
+                    categoryDescription: leak.getCategoryDescription(),
+                    file: file.path.relative,
+                    layer: leak.layer,
+                    line: leak.line,
+                    message: leak.getMessage(),
+                    suggestion: leak.getSuggestion(),
                 })
             }
         }

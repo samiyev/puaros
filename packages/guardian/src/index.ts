@@ -10,5 +10,6 @@ export type {
     ArchitectureViolation,
     HardcodeViolation,
     CircularDependencyViolation,
+    FrameworkLeakViolation,
     ProjectMetrics,
 } from "./api"
