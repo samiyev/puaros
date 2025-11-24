@@ -184,8 +184,239 @@ Development tools:
 - `@vitest/ui` - Vitest UI for interactive testing
 - `@vitest/coverage-v8` - Coverage reporting
 
+## Development Workflow
+
+### Complete Feature Development & Release Workflow
+
+This workflow ensures high quality and consistency from feature implementation to package publication.
+
+#### Phase 1: Feature Planning & Implementation
+
+```bash
+# 1. Create feature branch (if needed)
+git checkout -b feature/your-feature-name
+
+# 2. Implement feature following Clean Architecture
+# - Add to appropriate layer (domain/application/infrastructure/cli)
+# - Follow naming conventions
+# - Keep functions small and focused
+
+# 3. Update constants if adding CLI options
+# Edit: packages/guardian/src/cli/constants.ts
+```
+
+#### Phase 2: Quality Checks (Run After Implementation)
+
+```bash
+# Navigate to package
+cd packages/guardian
+
+# 1. Format code (REQUIRED - 4 spaces indentation)
+pnpm format
+
+# 2. Build to check compilation
+pnpm build
+
+# 3. Run linter (must pass with 0 errors, 0 warnings)
+cd ../.. && pnpm eslint "packages/**/*.ts" --fix
+
+# 4. Run tests (all must pass)
+pnpm test:run
+
+# 5. Check coverage (must be ≥80%)
+pnpm test:coverage
+```
+
+**Quality Gates:**
+- ✅ Format: No changes after `pnpm format`
+- ✅ Build: TypeScript compiles without errors
+- ✅ Lint: 0 errors, 0 warnings
+- ✅ Tests: All tests pass (292/292)
+- ✅ Coverage: ≥80% on all metrics
+
+#### Phase 3: Documentation Updates
+
+```bash
+# 1. Update README.md
+# - Add new feature to Features section
+# - Update CLI Usage examples if CLI changed
+# - Update API documentation if public API changed
+# - Update TypeScript interfaces
+
+# 2. Update TODO.md
+# - Mark completed tasks as done
+# - Add new technical debt if discovered
+# - Document coverage issues for new files
+# - Update "Recent Updates" section with changes
+
+# 3. Update CHANGELOG.md (for releases)
+# - Add entry with version number
+# - List all changes (features, fixes, improvements)
+# - Follow Keep a Changelog format
+```
+
+#### Phase 4: Verification & Testing
+
+```bash
+# 1. Test CLI manually with examples
+cd packages/guardian
+node dist/cli/index.js check ./examples --limit 5
+
+# 2. Test new feature with different options
+node dist/cli/index.js check ./examples --only-critical
+node dist/cli/index.js check ./examples --min-severity high
+
+# 3. Verify output formatting and messages
+# - Check that all violations display correctly
+# - Verify severity labels and suggestions
+# - Test edge cases and error handling
+
+# 4. Run full quality check suite
+pnpm format && pnpm eslint "packages/**/*.ts" && pnpm build && pnpm test:run
+```
+
+#### Phase 5: Commit & Version
+
+```bash
+# 1. Stage changes
+git add .
+
+# 2. Commit with Conventional Commits format
+git commit -m "feat: add --limit option for output control"
+# or
+git commit -m "fix: resolve unused variable in detector"
+# or
+git commit -m "docs: update README with new features"
+
+# Types: feat, fix, docs, style, refactor, test, chore
+
+# 3. Update package version (if releasing)
+cd packages/guardian
+npm version patch  # Bug fixes (0.5.2 → 0.5.3)
+npm version minor  # New features (0.5.2 → 0.6.0)
+npm version major  # Breaking changes (0.5.2 → 1.0.0)
+
+# 4. Push changes
+git push origin main  # or your branch
+git push --tags      # Push version tags
+```
+
+#### Phase 6: Publication (Maintainers Only)
+
+```bash
+# 1. Final verification before publish
+cd packages/guardian
+pnpm build && pnpm test:run && pnpm test:coverage
+
+# 2. Verify package contents
+npm pack --dry-run
+
+# 3. Publish to npm
+npm publish --access public
+
+# 4. Verify publication
+npm info @samiyev/guardian
+
+# 5. Test installation
+npm install -g @samiyev/guardian@latest
+guardian --version
+```
+
+### Quick Checklist for New Features
+
+**Before Committing:**
+- [ ] Feature implemented in correct layer
+- [ ] Code formatted with `pnpm format`
+- [ ] Lint passes: `pnpm eslint "packages/**/*.ts"`
+- [ ] Build succeeds: `pnpm build`
+- [ ] All tests pass: `pnpm test:run`
+- [ ] Coverage ≥80%: `pnpm test:coverage`
+- [ ] CLI tested manually if CLI changed
+- [ ] README.md updated with examples
+- [ ] TODO.md updated with progress
+- [ ] No `console.log` in production code
+- [ ] TypeScript interfaces documented
+
+**Before Publishing:**
+- [ ] CHANGELOG.md updated
+- [ ] Version bumped in package.json
+- [ ] All quality gates pass
+- [ ] Examples work correctly
+- [ ] Git tags pushed
+
+### Common Workflows
+
+**Adding a new CLI option:**
+```bash
+# 1. Add to cli/constants.ts (CLI_OPTIONS, CLI_DESCRIPTIONS)
+# 2. Add option in cli/index.ts (.option() call)
+# 3. Parse and use option in action handler
+# 4. Test with: node dist/cli/index.js check ./examples --your-option
+# 5. Update README.md CLI Usage section
+# 6. Run quality checks
+```
+
+**Adding a new detector:**
+```bash
+# 1. Create value object in domain/value-objects/
+# 2. Create detector in infrastructure/analyzers/
+# 3. Add detector interface to domain/services/
+# 4. Integrate in application/use-cases/AnalyzeProject.ts
+# 5. Add CLI output in cli/index.ts
+# 6. Write tests (aim for >90% coverage)
+# 7. Update README.md Features section
+# 8. Run full quality suite
+```
+
+**Fixing technical debt:**
+```bash
+# 1. Find issue in TODO.md
+# 2. Implement fix
+# 3. Run quality checks
+# 4. Update TODO.md (mark as completed)
+# 5. Commit with type: "refactor:" or "fix:"
+```
+
+### Debugging Tips
+
+**Build errors:**
+```bash
+# Check TypeScript errors in detail
+pnpm tsc --noEmit
+
+# Check specific file
+pnpm tsc --noEmit packages/guardian/src/path/to/file.ts
+```
+
+**Test failures:**
+```bash
+# Run single test file
+pnpm vitest tests/path/to/test.test.ts
+
+# Run tests with UI
+pnpm test:ui
+
+# Run tests in watch mode for debugging
+pnpm test
+```
+
+**Coverage issues:**
+```bash
+# Generate detailed coverage report
+pnpm test:coverage
+
+# View HTML report
+open coverage/index.html
+
+# Check specific file coverage
+pnpm vitest --coverage --reporter=verbose
+```
+
 ## Important Notes
 
 - **Always run `pnpm format` before committing** to ensure 4-space indentation
 - **Fix ESLint warnings incrementally** - they indicate real type safety issues
 - **Coverage is enforced** - maintain 80% coverage for all metrics when running `pnpm test:coverage`
+- **Test CLI manually** - automated tests don't cover CLI output formatting
+- **Update documentation** - README.md and TODO.md should always reflect current state
+- **Follow Clean Architecture** - keep layers separate and dependencies flowing inward
