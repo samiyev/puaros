@@ -19,12 +19,14 @@ Code quality guardian for vibe coders and enterprise teams - because AI writes f
 - 📝 Magic strings (URLs, connection strings, etc.)
 - 🎯 Smart context analysis
 - 💡 Automatic constant name suggestions
+- 📍 Suggested location for constants
 
 🔄 **Circular Dependency Detection**
 - Detects import cycles in your codebase
 - Shows complete dependency chain
 - Helps maintain clean architecture
 - Prevents maintenance nightmares
+- Severity-based reporting
 
 📝 **Naming Convention Detection**
 - Layer-based naming rules enforcement
@@ -41,6 +43,27 @@ Code quality guardian for vibe coders and enterprise teams - because AI writes f
 - Detects external service dependencies (AWS SDK, Firebase, Stripe, Twilio)
 - Maintains clean domain boundaries
 - Prevents infrastructure coupling in business logic
+
+🎭 **Entity Exposure Detection**
+- Detects domain entities exposed in API responses
+- Prevents data leakage through direct entity returns
+- Enforces DTO/Response object usage
+- Layer-aware validation
+- Smart suggestions for proper DTOs
+
+⬆️ **Dependency Direction Enforcement**
+- Validates Clean Architecture layer dependencies
+- Domain → Application → Infrastructure flow
+- Prevents backwards dependencies
+- Maintains architectural boundaries
+- Detailed violation reports
+
+📦 **Repository Pattern Validation**
+- Validates repository interface design
+- Detects ORM/technical types in interfaces
+- Checks for technical method names (findOne, save, etc.)
+- Enforces domain language usage
+- Prevents "new Repository()" anti-pattern
 
 🏗️ **Clean Architecture Enforcement**
 - Built with DDD principles
@@ -354,6 +377,17 @@ npx @samiyev/guardian check ./src --verbose
 npx @samiyev/guardian check ./src --no-hardcode  # Skip hardcode detection
 npx @samiyev/guardian check ./src --no-architecture  # Skip architecture checks
 
+# Filter by severity
+npx @samiyev/guardian check ./src --min-severity high  # Show high, critical only
+npx @samiyev/guardian check ./src --only-critical      # Show only critical issues
+
+# Limit detailed output (useful for large codebases)
+npx @samiyev/guardian check ./src --limit 10           # Show first 10 violations per category
+npx @samiyev/guardian check ./src -l 20                # Short form
+
+# Combine options
+npx @samiyev/guardian check ./src --only-critical --limit 5  # Top 5 critical issues
+
 # Show help
 npx @samiyev/guardian --help
 
@@ -450,9 +484,17 @@ interface AnalyzeProjectRequest {
 
 ```typescript
 interface AnalyzeProjectResponse {
+    // Violations
     hardcodeViolations: HardcodeViolation[]
-    architectureViolations: ArchitectureViolation[]
+    violations: ArchitectureViolation[]
     circularDependencyViolations: CircularDependencyViolation[]
+    namingViolations: NamingViolation[]
+    frameworkLeakViolations: FrameworkLeakViolation[]
+    entityExposureViolations: EntityExposureViolation[]
+    dependencyDirectionViolations: DependencyDirectionViolation[]
+    repositoryPatternViolations: RepositoryPatternViolation[]
+
+    // Metrics
     metrics: ProjectMetrics
 }
 
@@ -463,21 +505,80 @@ interface HardcodeViolation {
     type: "magic-number" | "magic-string"
     value: string | number
     context: string
-    suggestedConstantName: string
-    suggestedLocation: string
+    severity: "critical" | "high" | "medium" | "low"
+    suggestion: {
+        constantName: string
+        location: string
+    }
 }
 
 interface CircularDependencyViolation {
     rule: "circular-dependency"
     message: string
     cycle: string[]
-    severity: "error"
+    severity: "critical" | "high" | "medium" | "low"
+}
+
+interface NamingViolation {
+    file: string
+    fileName: string
+    layer: string
+    type: string
+    message: string
+    suggestion?: string
+    severity: "critical" | "high" | "medium" | "low"
+}
+
+interface FrameworkLeakViolation {
+    file: string
+    packageName: string
+    category: string
+    categoryDescription: string
+    layer: string
+    rule: string
+    message: string
+    suggestion: string
+    severity: "critical" | "high" | "medium" | "low"
+}
+
+interface EntityExposureViolation {
+    file: string
+    line?: number
+    entityName: string
+    returnType: string
+    methodName?: string
+    layer: string
+    rule: string
+    message: string
+    suggestion: string
+    severity: "critical" | "high" | "medium" | "low"
+}
+
+interface DependencyDirectionViolation {
+    file: string
+    fromLayer: string
+    toLayer: string
+    importPath: string
+    message: string
+    suggestion: string
+    severity: "critical" | "high" | "medium" | "low"
+}
+
+interface RepositoryPatternViolation {
+    file: string
+    layer: string
+    violationType: string
+    details: string
+    message: string
+    suggestion: string
+    severity: "critical" | "high" | "medium" | "low"
 }
 
 interface ProjectMetrics {
     totalFiles: number
-    analyzedFiles: number
-    totalLines: number
+    totalFunctions: number
+    totalImports: number
+    layerDistribution: Record<string, number>
 }
 ```
 
