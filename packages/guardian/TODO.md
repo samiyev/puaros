@@ -94,18 +94,37 @@ This file tracks technical debt, known issues, and improvements needed in the co
 ### Testing
 - [x] ~~**Increase test coverage**~~ ✅ **FIXED**
   - ~~Current: 85.71% (target: 80%+)~~
-  - **New: 90.06%** (exceeds 80% target!)
+  - **New: 90.63%** (exceeds 80% target!)
   - ~~But only 2 test files (Guards, BaseEntity)~~
-  - **Now: 7 test files** with 187 tests total
+  - **Now: 10 test files** with 292 tests total
   - ~~Need tests for:~~
     - ~~HardcodeDetector (main logic!)~~ ✅ 49 tests added
     - ~~HardcodedValue~~ ✅ 28 tests added
-    - ~~FrameworkLeakDetector~~ ✅ 28 tests added
+    - ~~FrameworkLeakDetector~~ ✅ 35 tests added
+    - ~~NamingConventionDetector~~ ✅ 55 tests added
+    - ~~DependencyDirectionDetector~~ ✅ 43 tests added
+    - ~~EntityExposureDetector~~ ✅ 24 tests added
+    - ~~RepositoryPatternDetector~~ ✅ 31 tests added
     - AnalyzeProject use case (pending)
     - CLI commands (pending)
     - FileScanner (pending)
     - CodeParser (pending)
   - Completed on: 2025-11-24
+
+- [ ] **Improve test coverage for low-coverage files**
+  - **SourceFile.ts**: 44.82% coverage (entity, not critical but needs improvement)
+    - Missing: Property getters, metadata methods, dependency management
+    - Target: 80%+
+  - **ProjectPath.ts**: 50% coverage (value object)
+    - Missing: Path validation methods, edge cases
+    - Target: 80%+
+  - **RepositoryViolation.ts**: 55.26% coverage (value object)
+    - Missing: Violation type methods, details formatting
+    - Target: 80%+
+  - **ValueObject.ts**: 25% coverage (base class)
+    - Missing: equals() and other base methods
+    - Target: 80%+
+  - Priority: Medium (overall coverage is good, but these specific files need attention)
 
 - [ ] **Add integration tests**
   - Test full workflow: scan → parse → detect → report
@@ -179,7 +198,37 @@ When implementing these, consider semantic versioning:
 
 ## 📝 Recent Updates (2025-11-24)
 
-### Completed Tasks
+### v0.5.2 - Limit Feature & ESLint Cleanup
+1. ✅ **Added --limit CLI option**
+   - Limits detailed output to specified number of violations per category
+   - Short form: `-l <number>`
+   - Works with severity filters (--only-critical, --min-severity)
+   - Shows warning when violations exceed limit
+   - Example: `guardian check ./src --limit 10`
+   - Updated CLI constants, index, and README documentation
+
+2. ✅ **ESLint configuration cleanup**
+   - Reduced warnings from 129 to 0 ✨
+   - Added CLI-specific overrides (no-console, complexity, max-lines-per-function)
+   - Disabled no-unsafe-* rules for CLI (Commander.js is untyped)
+   - Increased max-params to 8 for DDD patterns
+   - Excluded examples/, tests/, *.config.ts from linting
+   - Disabled style rules (prefer-nullish-coalescing, no-unnecessary-condition, no-nested-ternary)
+
+3. ✅ **Fixed remaining ESLint errors**
+   - Removed unused SEVERITY_LEVELS import from AnalyzeProject.ts
+   - Fixed unused fileName variable in HardcodeDetector.ts (prefixed with _)
+   - Replaced || with ?? for nullish coalescing
+
+4. ✅ **Updated README.md**
+   - Added all new detectors to Features section (Entity Exposure, Dependency Direction, Repository Pattern)
+   - Updated API documentation with all 8 violation types
+   - Added severity levels to all interfaces
+   - Documented --limit option with examples
+   - Updated ProjectMetrics interface
+   - Updated test statistics (292 tests, 90.63% coverage)
+
+### v0.5.0-0.5.1 - Architecture Enhancements
 1. ✅ **Added comprehensive tests for HardcodeDetector** (49 tests)
    - Magic numbers detection (setTimeout, retries, ports, limits)
    - Magic strings detection (URLs, connection strings)
@@ -203,9 +252,9 @@ When implementing these, consider semantic versioning:
    - Fixed constant truthiness errors
 
 5. ✅ **Improved test coverage**
-   - From 85.71% to 90.06% (statements)
+   - From 85.71% to 90.63% (statements)
    - All metrics now exceed 80% threshold
-   - Total tests: 16 → 187 tests
+   - Total tests: 16 → 292 tests
 
 6. ✅ **Implemented Framework Leak Detection (v0.2.0)**
    - Created FrameworkLeakDetector with 10 framework categories
