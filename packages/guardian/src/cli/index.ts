@@ -3,13 +3,13 @@ import { Command } from "commander"
 import { analyzeProject } from "../api"
 import { version } from "../../package.json"
 import {
+    CLI_ARGUMENTS,
     CLI_COMMANDS,
     CLI_DESCRIPTIONS,
-    CLI_OPTIONS,
-    CLI_ARGUMENTS,
-    DEFAULT_EXCLUDES,
-    CLI_MESSAGES,
     CLI_LABELS,
+    CLI_MESSAGES,
+    CLI_OPTIONS,
+    DEFAULT_EXCLUDES,
 } from "./constants"
 
 const program = new Command()
@@ -38,6 +38,7 @@ program
                 violations,
                 circularDependencyViolations,
                 namingViolations,
+                frameworkLeakViolations,
                 metrics,
             } = result
 
@@ -77,7 +78,7 @@ program
                 circularDependencyViolations.forEach((cd, index) => {
                     console.log(`${String(index + 1)}. ${cd.message}`)
                     console.log(`   Severity: ${cd.severity}`)
-                    console.log(`   Cycle path:`)
+                    console.log("   Cycle path:")
                     cd.cycle.forEach((file, i) => {
                         console.log(`     ${String(i + 1)}. ${file}`)
                     })
@@ -107,6 +108,24 @@ program
                 })
             }
 
+            // Framework leak violations
+            if (options.architecture && frameworkLeakViolations.length > 0) {
+                console.log(
+                    `\n🏗️ Found ${String(frameworkLeakViolations.length)} framework leak(s):\n`,
+                )
+
+                frameworkLeakViolations.forEach((fl, index) => {
+                    console.log(`${String(index + 1)}. ${fl.file}`)
+                    console.log(`   Package: ${fl.packageName}`)
+                    console.log(`   Category: ${fl.categoryDescription}`)
+                    console.log(`   Layer: ${fl.layer}`)
+                    console.log(`   Rule: ${fl.rule}`)
+                    console.log(`   ${fl.message}`)
+                    console.log(`   💡 Suggestion: ${fl.suggestion}`)
+                    console.log("")
+                })
+            }
+
             // Hardcode violations
             if (options.hardcode && hardcodeViolations.length > 0) {
                 console.log(
@@ -131,7 +150,8 @@ program
                 violations.length +
                 hardcodeViolations.length +
                 circularDependencyViolations.length +
-                namingViolations.length
+                namingViolations.length +
+                frameworkLeakViolations.length
 
             if (totalIssues === 0) {
                 console.log(CLI_MESSAGES.NO_ISSUES)
