@@ -69,3 +69,14 @@ export const SECRET_VIOLATION_MESSAGES = {
     ROTATE_IF_EXPOSED: "4. If secret was committed, rotate it immediately",
     USE_GITIGNORE: "5. Add secret files to .gitignore (.env, credentials.json, etc.)",
 }
+
+export const ANEMIC_MODEL_MESSAGES = {
+    REMOVE_PUBLIC_SETTERS: "1. Remove public setters - they allow uncontrolled state changes",
+    USE_METHODS_FOR_CHANGES: "2. Use business methods instead (approve(), cancel(), addItem())",
+    ENCAPSULATE_INVARIANTS: "3. Encapsulate business rules and invariants in methods",
+    ADD_BUSINESS_METHODS: "1. Add business logic methods to the entity",
+    MOVE_LOGIC_FROM_SERVICES:
+        "2. Move business logic from services to domain entities where it belongs",
+    ENCAPSULATE_BUSINESS_RULES: "3. Encapsulate business rules inside entity methods",
+    USE_DOMAIN_EVENTS: "4. Use domain events to communicate state changes",
+}

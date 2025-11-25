@@ -3,6 +3,7 @@ import { DependencyGraph } from "../../../domain/entities/DependencyGraph"
 import type {
     AggregateBoundaryViolation,
     AnalyzeProjectResponse,
+    AnemicModelViolation,
     ArchitectureViolation,
     CircularDependencyViolation,
     DependencyDirectionViolation,
@@ -29,6 +30,7 @@ export interface AggregationRequest {
     repositoryPatternViolations: RepositoryPatternViolation[]
     aggregateBoundaryViolations: AggregateBoundaryViolation[]
     secretViolations: SecretViolation[]
+    anemicModelViolations: AnemicModelViolation[]
 }
 
 /**
@@ -55,6 +57,7 @@ export class AggregateResults {
             repositoryPatternViolations: request.repositoryPatternViolations,
             aggregateBoundaryViolations: request.aggregateBoundaryViolations,
             secretViolations: request.secretViolations,
+            anemicModelViolations: request.anemicModelViolations,
             metrics,
         }
     }

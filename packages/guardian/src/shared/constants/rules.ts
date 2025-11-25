@@ -12,6 +12,7 @@ export const RULES = {
     REPOSITORY_PATTERN: "repository-pattern",
     AGGREGATE_BOUNDARY: "aggregate-boundary",
     SECRET_EXPOSURE: "secret-exposure",
+    ANEMIC_MODEL: "anemic-model",
 } as const
 
 /**

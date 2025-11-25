@@ -1,6 +1,7 @@
 import { SEVERITY_LEVELS, type SeverityLevel } from "../../shared/constants"
 import type {
     AggregateBoundaryViolation,
+    AnemicModelViolation,
     ArchitectureViolation,
     CircularDependencyViolation,
     DependencyDirectionViolation,
@@ -202,6 +203,33 @@ export class OutputFormatter {
         console.log(`   Context: ${hc.context.trim()}`)
         console.log(`   💡 Suggested: ${hc.suggestion.constantName}`)
         console.log(`   📁 Location: ${hc.suggestion.location}`)
+        console.log("")
+    }
+
+    formatAnemicModelViolation(am: AnemicModelViolation, index: number): void {
+        const location = am.line ? `${am.file}:${String(am.line)}` : am.file
+        console.log(`${String(index + 1)}. ${location}`)
+        console.log(`   Severity: ${SEVERITY_LABELS[am.severity]}`)
+        console.log(`   Class: ${am.className}`)
+        console.log(`   Layer: ${am.layer}`)
+        console.log(
+            `   Methods: ${String(am.methodCount)} | Properties: ${String(am.propertyCount)}`,
+        )
+
+        if (am.hasPublicSetters) {
+            console.log("   ⚠️  Has public setters (DDD anti-pattern)")
+        }
+        if (am.hasOnlyGettersSetters) {
+            console.log("   ⚠️  Only getters/setters (no business logic)")
+        }
+
+        console.log(`   ${am.message}`)
+        console.log("   💡 Suggestion:")
+        am.suggestion.split("\n").forEach((line) => {
+            if (line.trim()) {
+                console.log(`      ${line}`)
+            }
+        })
         console.log("")
     }
 }

@@ -2,7 +2,20 @@
 
 This document outlines the current features and future plans for @puaros/guardian.
 
-## Current Version: 0.7.5 ✅ RELEASED
+## Current Version: 0.9.0 ✅ RELEASED
+
+**Released:** 2025-11-26
+
+### What's New in 0.9.0
+
+- 🏛️ **Anemic Model Detection** - NEW feature to detect anemic domain models lacking business logic
+- ✅ **100% clean codebase** - Guardian now passes its own self-check with 0 issues
+- 📦 **New shared constants** - Added CLASS_KEYWORDS and EXAMPLE_CODE_CONSTANTS
+- ✅ **All 578 tests passing** - Added 12 new tests for anemic model detection
+
+---
+
+## Previous Version: 0.8.1 ✅ RELEASED
 
 **Released:** 2025-11-25
 

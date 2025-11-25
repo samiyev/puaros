@@ -6,6 +6,7 @@ import { IDependencyDirectionDetector } from "../../../domain/services/IDependen
 import { IRepositoryPatternDetector } from "../../../domain/services/RepositoryPatternDetectorService"
 import { IAggregateBoundaryDetector } from "../../../domain/services/IAggregateBoundaryDetector"
 import { ISecretDetector } from "../../../domain/services/ISecretDetector"
+import { IAnemicModelDetector } from "../../../domain/services/IAnemicModelDetector"
 import { SourceFile } from "../../../domain/entities/SourceFile"
 import { DependencyGraph } from "../../../domain/entities/DependencyGraph"
 import {
@@ -18,6 +19,7 @@ import {
 } from "../../../shared/constants"
 import type {
     AggregateBoundaryViolation,
+    AnemicModelViolation,
     ArchitectureViolation,
     CircularDependencyViolation,
     DependencyDirectionViolation,
@@ -45,6 +47,7 @@ export interface DetectionResult {
     repositoryPatternViolations: RepositoryPatternViolation[]
     aggregateBoundaryViolations: AggregateBoundaryViolation[]
     secretViolations: SecretViolation[]
+    anemicModelViolations: AnemicModelViolation[]
 }
 
 /**
@@ -60,6 +63,7 @@ export class ExecuteDetection {
         private readonly repositoryPatternDetector: IRepositoryPatternDetector,
         private readonly aggregateBoundaryDetector: IAggregateBoundaryDetector,
         private readonly secretDetector: ISecretDetector,
+        private readonly anemicModelDetector: IAnemicModelDetector,
     ) {}
 
     public async execute(request: DetectionRequest): Promise<DetectionResult> {
@@ -90,6 +94,9 @@ export class ExecuteDetection {
                 this.detectAggregateBoundaryViolations(request.sourceFiles),
             ),
             secretViolations: this.sortBySeverity(secretViolations),
+            anemicModelViolations: this.sortBySeverity(
+                this.detectAnemicModels(request.sourceFiles),
+            ),
         }
     }
 
@@ -391,6 +398,37 @@ export class ExecuteDetection {
                     message: secret.getMessage(),
                     suggestion: secret.getSuggestion(),
                     severity: "critical",
+                })
+            }
+        }
+
+        return violations
+    }
+
+    private detectAnemicModels(sourceFiles: SourceFile[]): AnemicModelViolation[] {
+        const violations: AnemicModelViolation[] = []
+
+        for (const file of sourceFiles) {
+            const anemicModels = this.anemicModelDetector.detectAnemicModels(
+                file.content,
+                file.path.relative,
+                file.layer,
+            )
+
+            for (const anemicModel of anemicModels) {
+                violations.push({
+                    rule: RULES.ANEMIC_MODEL,
+                    className: anemicModel.className,
+                    file: file.path.relative,
+                    layer: anemicModel.layer,
+                    line: anemicModel.line,
+                    methodCount: anemicModel.methodCount,
+                    propertyCount: anemicModel.propertyCount,
+                    hasOnlyGettersSetters: anemicModel.hasOnlyGettersSetters,
+                    hasPublicSetters: anemicModel.hasPublicSetters,
+                    message: anemicModel.getMessage(),
+                    suggestion: anemicModel.getSuggestion(),
+                    severity: VIOLATION_SEVERITY_MAP.ANEMIC_MODEL,
                 })
             }
         }

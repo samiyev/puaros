@@ -13,6 +13,7 @@ import { IDependencyDirectionDetector } from "./domain/services/IDependencyDirec
 import { IRepositoryPatternDetector } from "./domain/services/RepositoryPatternDetectorService"
 import { IAggregateBoundaryDetector } from "./domain/services/IAggregateBoundaryDetector"
 import { ISecretDetector } from "./domain/services/ISecretDetector"
+import { IAnemicModelDetector } from "./domain/services/IAnemicModelDetector"
 import { FileScanner } from "./infrastructure/scanners/FileScanner"
 import { CodeParser } from "./infrastructure/parsers/CodeParser"
 import { HardcodeDetector } from "./infrastructure/analyzers/HardcodeDetector"
@@ -23,6 +24,7 @@ import { DependencyDirectionDetector } from "./infrastructure/analyzers/Dependen
 import { RepositoryPatternDetector } from "./infrastructure/analyzers/RepositoryPatternDetector"
 import { AggregateBoundaryDetector } from "./infrastructure/analyzers/AggregateBoundaryDetector"
 import { SecretDetector } from "./infrastructure/analyzers/SecretDetector"
+import { AnemicModelDetector } from "./infrastructure/analyzers/AnemicModelDetector"
 import { ERROR_MESSAGES } from "./shared/constants"
 
 /**
@@ -82,6 +84,7 @@ export async function analyzeProject(
     const repositoryPatternDetector: IRepositoryPatternDetector = new RepositoryPatternDetector()
     const aggregateBoundaryDetector: IAggregateBoundaryDetector = new AggregateBoundaryDetector()
     const secretDetector: ISecretDetector = new SecretDetector()
+    const anemicModelDetector: IAnemicModelDetector = new AnemicModelDetector()
     const useCase = new AnalyzeProject(
         fileScanner,
         codeParser,
@@ -93,6 +96,7 @@ export async function analyzeProject(
         repositoryPatternDetector,
         aggregateBoundaryDetector,
         secretDetector,
+        anemicModelDetector,
     )
 
     const result = await useCase.execute(options)
@@ -116,5 +120,6 @@ export type {
     DependencyDirectionViolation,
     RepositoryPatternViolation,
     AggregateBoundaryViolation,
+    AnemicModelViolation,
     ProjectMetrics,
 } from "./application/use-cases/AnalyzeProject"

@@ -93,6 +93,7 @@ program
                 repositoryPatternViolations,
                 aggregateBoundaryViolations,
                 secretViolations,
+                anemicModelViolations,
             } = result
 
             const minSeverity: SeverityLevel | undefined = options.onlyCritical
@@ -134,6 +135,7 @@ program
                     minSeverity,
                 )
                 secretViolations = grouper.filterBySeverity(secretViolations, minSeverity)
+                anemicModelViolations = grouper.filterBySeverity(anemicModelViolations, minSeverity)
 
                 statsFormatter.displaySeverityFilterMessage(
                     options.onlyCritical,
@@ -260,6 +262,19 @@ program
                 )
             }
 
+            if (anemicModelViolations.length > 0) {
+                console.log(
+                    `\n🩺 Found ${String(anemicModelViolations.length)} anemic domain model(s)`,
+                )
+                outputFormatter.displayGroupedViolations(
+                    anemicModelViolations,
+                    (am, i) => {
+                        outputFormatter.formatAnemicModelViolation(am, i)
+                    },
+                    limit,
+                )
+            }
+
             if (options.hardcode && hardcodeViolations.length > 0) {
                 console.log(
                     `\n${CLI_MESSAGES.HARDCODE_VIOLATIONS_HEADER} ${String(hardcodeViolations.length)} ${CLI_LABELS.HARDCODE_VIOLATIONS}`,
@@ -283,7 +298,8 @@ program
                 dependencyDirectionViolations.length +
                 repositoryPatternViolations.length +
                 aggregateBoundaryViolations.length +
-                secretViolations.length
+                secretViolations.length +
+                anemicModelViolations.length
 
             statsFormatter.displaySummary(totalIssues, options.verbose)
         } catch (error) {

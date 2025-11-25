@@ -27,6 +27,7 @@ describe("AnalyzeProject E2E", () => {
             expect(Array.isArray(result.dependencyDirectionViolations)).toBe(true)
             expect(Array.isArray(result.repositoryPatternViolations)).toBe(true)
             expect(Array.isArray(result.aggregateBoundaryViolations)).toBe(true)
+            expect(Array.isArray(result.anemicModelViolations)).toBe(true)
         })
 
         it("should respect exclude patterns", async () => {
@@ -65,7 +66,8 @@ describe("AnalyzeProject E2E", () => {
                 result.entityExposureViolations.length +
                 result.dependencyDirectionViolations.length +
                 result.repositoryPatternViolations.length +
-                result.aggregateBoundaryViolations.length
+                result.aggregateBoundaryViolations.length +
+                result.anemicModelViolations.length
 
             expect(totalViolations).toBeGreaterThan(0)
         })
@@ -82,6 +84,7 @@ describe("AnalyzeProject E2E", () => {
             expect(result.entityExposureViolations.length).toBe(0)
             expect(result.dependencyDirectionViolations.length).toBe(0)
             expect(result.circularDependencyViolations.length).toBe(0)
+            expect(result.anemicModelViolations.length).toBe(0)
         })
 
         it("should have no dependency direction violations", async () => {

@@ -46,6 +46,25 @@ export const TYPE_NAMES = {
 } as const
 
 /**
+ * TypeScript class and method keywords
+ */
+export const CLASS_KEYWORDS = {
+    CONSTRUCTOR: "constructor",
+    PUBLIC: "public",
+    PRIVATE: "private",
+    PROTECTED: "protected",
+} as const
+
+/**
+ * Example code constants for documentation
+ */
+export const EXAMPLE_CODE_CONSTANTS = {
+    ORDER_STATUS_PENDING: "pending",
+    ORDER_STATUS_APPROVED: "approved",
+    CANNOT_APPROVE_ERROR: "Cannot approve",
+} as const
+
+/**
  * Common regex patterns
  */
 export const REGEX_PATTERNS = {
@@ -93,6 +112,7 @@ export const VIOLATION_SEVERITY_MAP = {
     DEPENDENCY_DIRECTION: SEVERITY_LEVELS.HIGH,
     FRAMEWORK_LEAK: SEVERITY_LEVELS.HIGH,
     ENTITY_EXPOSURE: SEVERITY_LEVELS.HIGH,
+    ANEMIC_MODEL: SEVERITY_LEVELS.MEDIUM,
     NAMING_CONVENTION: SEVERITY_LEVELS.MEDIUM,
     ARCHITECTURE: SEVERITY_LEVELS.MEDIUM,
     HARDCODE: SEVERITY_LEVELS.LOW,

@@ -5,6 +5,52 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-11-26
+
+### Added
+
+- 🏛️ **Anemic Model Detection** - NEW feature to detect anemic domain models lacking business logic:
+  - Detects entities with only getters/setters (violates DDD principles)
+  - Identifies classes with public setters (breaks encapsulation)
+  - Analyzes method-to-property ratio to find data-heavy, logic-light classes
+  - Provides detailed suggestions: add business methods, move logic from services, encapsulate invariants
+  - New `AnemicModelDetector` infrastructure component
+  - New `AnemicModelViolation` value object with rich example fixes
+  - New `IAnemicModelDetector` domain interface
+  - Integrated into CLI with detailed violation reports
+  - 12 comprehensive tests for anemic model detection
+
+- 📦 **New shared constants** - Centralized constants for better code maintainability:
+  - `CLASS_KEYWORDS` - TypeScript class and method keywords (constructor, public, private, protected)
+  - `EXAMPLE_CODE_CONSTANTS` - Documentation example code strings (ORDER_STATUS_PENDING, ORDER_STATUS_APPROVED, CANNOT_APPROVE_ERROR)
+  - `ANEMIC_MODEL_MESSAGES` - 8 suggestion messages for fixing anemic models
+
+- 📚 **Example files** - Added DDD examples demonstrating anemic vs rich domain models:
+  - `examples/bad/domain/entities/anemic-model-only-getters-setters.ts`
+  - `examples/bad/domain/entities/anemic-model-public-setters.ts`
+  - `examples/good-architecture/domain/entities/Customer.ts`
+  - `examples/good-architecture/domain/entities/Order.ts`
+
+### Changed
+
+- ♻️ **Refactored hardcoded values** - Extracted all remaining hardcoded values to centralized constants:
+  - Updated `AnemicModelDetector.ts` to use `CLASS_KEYWORDS` constants
+  - Updated `AnemicModelViolation.ts` to use `EXAMPLE_CODE_CONSTANTS` for example fix strings
+  - Replaced local constants with shared constants from `shared/constants`
+  - Improved code maintainability and consistency
+
+- 🎯 **Enhanced violation detection pipeline** - Added anemic model detection to `ExecuteDetection.ts`
+- 📊 **Updated API** - Added anemic model violations to response DTO
+- 🔧 **CLI improvements** - Added anemic model section to output formatting
+
+### Quality
+
+- ✅ **Guardian self-check** - 0 issues (was 5) - 100% clean codebase
+- ✅ **All tests pass** - 578/578 tests passing (added 12 new tests)
+- ✅ **Build successful** - TypeScript compilation with no errors
+- ✅ **Linter clean** - 0 errors, 3 acceptable warnings (complexity, params)
+- ✅ **Format verified** - All files properly formatted with 4-space indentation
+
 ## [0.8.1] - 2025-11-25
 
 ### Fixed

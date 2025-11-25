@@ -10,6 +10,7 @@ import { IDependencyDirectionDetector } from "../../domain/services/IDependencyD
 import { IRepositoryPatternDetector } from "../../domain/services/RepositoryPatternDetectorService"
 import { IAggregateBoundaryDetector } from "../../domain/services/IAggregateBoundaryDetector"
 import { ISecretDetector } from "../../domain/services/ISecretDetector"
+import { IAnemicModelDetector } from "../../domain/services/IAnemicModelDetector"
 import { SourceFile } from "../../domain/entities/SourceFile"
 import { DependencyGraph } from "../../domain/entities/DependencyGraph"
 import { CollectFiles } from "./pipeline/CollectFiles"
@@ -44,6 +45,7 @@ export interface AnalyzeProjectResponse {
     repositoryPatternViolations: RepositoryPatternViolation[]
     aggregateBoundaryViolations: AggregateBoundaryViolation[]
     secretViolations: SecretViolation[]
+    anemicModelViolations: AnemicModelViolation[]
     metrics: ProjectMetrics
 }
 
@@ -176,6 +178,21 @@ export interface SecretViolation {
     severity: SeverityLevel
 }
 
+export interface AnemicModelViolation {
+    rule: typeof RULES.ANEMIC_MODEL
+    className: string
+    file: string
+    layer: string
+    line?: number
+    methodCount: number
+    propertyCount: number
+    hasOnlyGettersSetters: boolean
+    hasPublicSetters: boolean
+    message: string
+    suggestion: string
+    severity: SeverityLevel
+}
+
 export interface ProjectMetrics {
     totalFiles: number
     totalFunctions: number
@@ -207,6 +224,7 @@ export class AnalyzeProject extends UseCase<
         repositoryPatternDetector: IRepositoryPatternDetector,
         aggregateBoundaryDetector: IAggregateBoundaryDetector,
         secretDetector: ISecretDetector,
+        anemicModelDetector: IAnemicModelDetector,
     ) {
         super()
         this.fileCollectionStep = new CollectFiles(fileScanner)
@@ -220,6 +238,7 @@ export class AnalyzeProject extends UseCase<
             repositoryPatternDetector,
             aggregateBoundaryDetector,
             secretDetector,
+            anemicModelDetector,
         )
         this.resultAggregator = new AggregateResults()
     }
