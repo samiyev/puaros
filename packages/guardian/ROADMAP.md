@@ -409,7 +409,7 @@ Add integration tests for full pipeline and CLI.
 - ✅ 519 total tests (519 passing, **100% pass rate** 🎉)
 - ✅ Comprehensive E2E coverage for API and CLI
 - ✅ 3 new E2E test files with full pipeline coverage
-- [ ] Publish to npm
+- ✅ Publish to npm
 
 ---
 
