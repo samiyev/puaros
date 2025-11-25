@@ -388,7 +388,7 @@ Increase coverage for under-tested domain files.
 - ✅ RepositoryViolation.ts → 92.68% (32 tests)
 - ✅ All 457 tests passing
 - ✅ Overall coverage: 95.4% statements, 86.25% branches, 96.68% functions
-- [ ] Publish to npm
+- ✅ Publish to npm
 
 ---
 
