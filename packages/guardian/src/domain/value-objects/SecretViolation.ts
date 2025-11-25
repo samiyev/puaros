@@ -1,5 +1,7 @@
 import { ValueObject } from "./ValueObject"
 import { SECRET_VIOLATION_MESSAGES } from "../constants/Messages"
+import { SEVERITY_LEVELS } from "../../shared/constants"
+import { FILE_ENCODING, SECRET_EXAMPLE_VALUES, SECRET_KEYWORDS } from "../constants/SecretExamples"
 
 interface SecretViolationProps {
     readonly file: string
@@ -98,32 +100,31 @@ export class SecretViolation extends ValueObject<SecretViolationProps> {
         return this.getExampleFixForSecretType(this.props.secretType)
     }
 
-    public getSeverity(): "critical" {
-        return "critical"
+    public getSeverity(): typeof SEVERITY_LEVELS.CRITICAL {
+        return SEVERITY_LEVELS.CRITICAL
     }
 
     private getExampleFixForSecretType(secretType: string): string {
         const lowerType = secretType.toLowerCase()
 
-        if (lowerType.includes("aws")) {
+        if (lowerType.includes(SECRET_KEYWORDS.AWS)) {
             return `
 // ❌ Bad: Hardcoded AWS credentials
-const AWS_ACCESS_KEY_ID = "AKIA1234567890ABCDEF"
-const AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+const AWS_ACCESS_KEY_ID = "${SECRET_EXAMPLE_VALUES.AWS_ACCESS_KEY_ID}"
+const AWS_SECRET_ACCESS_KEY = "${SECRET_EXAMPLE_VALUES.AWS_SECRET_ACCESS_KEY}"
 
 // ✅ Good: Use environment variables
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY
 
-// ✅ Good: Use AWS SDK credentials provider
-import { fromEnv } from "@aws-sdk/credential-providers"
-const credentials = fromEnv()`
+// ✅ Good: Use credentials provider (in infrastructure layer)
+// Load credentials from environment or credentials file`
         }
 
-        if (lowerType.includes("github")) {
+        if (lowerType.includes(SECRET_KEYWORDS.GITHUB)) {
             return `
 // ❌ Bad: Hardcoded GitHub token
-const GITHUB_TOKEN = "ghp_1234567890abcdefghijklmnopqrstuv"
+const GITHUB_TOKEN = "${SECRET_EXAMPLE_VALUES.GITHUB_TOKEN}"
 
 // ✅ Good: Use environment variables
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN
@@ -132,10 +133,10 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 // Use GitHub Apps for automated workflows instead of personal access tokens`
         }
 
-        if (lowerType.includes("npm")) {
+        if (lowerType.includes(SECRET_KEYWORDS.NPM)) {
             return `
 // ❌ Bad: Hardcoded NPM token in code
-const NPM_TOKEN = "npm_abc123xyz"
+const NPM_TOKEN = "${SECRET_EXAMPLE_VALUES.NPM_TOKEN}"
 
 // ✅ Good: Use .npmrc file (add to .gitignore)
 // .npmrc
@@ -145,7 +146,10 @@ const NPM_TOKEN = "npm_abc123xyz"
 const NPM_TOKEN = process.env.NPM_TOKEN`
         }
 
-        if (lowerType.includes("ssh") || lowerType.includes("private key")) {
+        if (
+            lowerType.includes(SECRET_KEYWORDS.SSH) ||
+            lowerType.includes(SECRET_KEYWORDS.PRIVATE_KEY)
+        ) {
             return `
 // ❌ Bad: Hardcoded SSH private key
 const privateKey = \`-----BEGIN RSA PRIVATE KEY-----
@@ -153,16 +157,16 @@ MIIEpAIBAAKCAQEA...\`
 
 // ✅ Good: Load from secure file (not in repository)
 import fs from "fs"
-const privateKey = fs.readFileSync(process.env.SSH_KEY_PATH, "utf-8")
+const privateKey = fs.readFileSync(process.env.SSH_KEY_PATH, "${FILE_ENCODING.UTF8}")
 
 // ✅ Good: Use SSH agent
 // Configure SSH agent to handle keys securely`
         }
 
-        if (lowerType.includes("slack")) {
+        if (lowerType.includes(SECRET_KEYWORDS.SLACK)) {
             return `
 // ❌ Bad: Hardcoded Slack token
-const SLACK_TOKEN = "xoxb-XXXX-XXXX-XXXX-example-token-here"
+const SLACK_TOKEN = "${SECRET_EXAMPLE_VALUES.SLACK_TOKEN}"
 
 // ✅ Good: Use environment variables
 const SLACK_TOKEN = process.env.SLACK_BOT_TOKEN
@@ -171,23 +175,25 @@ const SLACK_TOKEN = process.env.SLACK_BOT_TOKEN
 // Implement OAuth 2.0 flow instead of hardcoding tokens`
         }
 
-        if (lowerType.includes("api key") || lowerType.includes("apikey")) {
+        if (
+            lowerType.includes(SECRET_KEYWORDS.API_KEY) ||
+            lowerType.includes(SECRET_KEYWORDS.APIKEY)
+        ) {
             return `
 // ❌ Bad: Hardcoded API key
-const API_KEY = "sk_live_XXXXXXXXXXXXXXXXXXXX_example_key"
+const API_KEY = "${SECRET_EXAMPLE_VALUES.API_KEY}"
 
 // ✅ Good: Use environment variables
 const API_KEY = process.env.API_KEY
 
-// ✅ Good: Use secret management service
-import { SecretsManager } from "aws-sdk"
-const secretsManager = new SecretsManager()
-const secret = await secretsManager.getSecretValue({ SecretId: "api-key" }).promise()`
+// ✅ Good: Use secret management service (in infrastructure layer)
+// AWS Secrets Manager, HashiCorp Vault, Azure Key Vault
+// Implement secret retrieval in infrastructure and inject via DI`
         }
 
         return `
 // ❌ Bad: Hardcoded secret
-const SECRET = "hardcoded-secret-value"
+const SECRET = "${SECRET_EXAMPLE_VALUES.HARDCODED_SECRET}"
 
 // ✅ Good: Use environment variables
 const SECRET = process.env.SECRET_KEY

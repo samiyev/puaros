@@ -5,6 +5,46 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2025-11-25
+
+### Fixed
+
+- 🧹 **Code quality improvements** - Fixed all 63 hardcoded value issues detected by Guardian self-check:
+  - Fixed 1 CRITICAL: Removed hardcoded Slack token from documentation examples
+  - Fixed 1 HIGH: Removed aws-sdk framework leak from domain layer examples
+  - Fixed 4 MEDIUM: Renamed pipeline files to follow verb-noun convention
+  - Fixed 57 LOW: Extracted all magic strings to reusable constants
+
+### Added
+
+- 📦 **New constants file** - `domain/constants/SecretExamples.ts`:
+  - 32 secret keyword constants (AWS, GitHub, NPM, SSH, Slack, etc.)
+  - 15 secret type name constants
+  - 7 example secret values for documentation
+  - Regex patterns and encoding constants
+
+### Changed
+
+- ♻️ **Refactored pipeline naming** - Updated use case files to follow naming conventions:
+  - `DetectionPipeline.ts` → `ExecuteDetection.ts`
+  - `FileCollectionStep.ts` → `CollectFiles.ts`
+  - `ParsingStep.ts` → `ParseSourceFiles.ts`
+  - `ResultAggregator.ts` → `AggregateResults.ts`
+  - Added `Aggregate`, `Collect`, `Parse` to `USE_CASE_VERBS` list
+- 🔧 **Updated 3 core files to use constants**:
+  - `SecretViolation.ts`: All secret examples use constants, `getSeverity()` returns `typeof SEVERITY_LEVELS.CRITICAL`
+  - `SecretDetector.ts`: All secret keywords use constants
+  - `MagicStringMatcher.ts`: Regex patterns extracted to constants
+- 📝 **Test updates** - Updated 2 tests to match new example fix messages
+
+### Quality
+
+- ✅ **Guardian self-check** - 0 issues (was 63) - 100% clean codebase
+- ✅ **All tests pass** - 566/566 tests passing
+- ✅ **Build successful** - TypeScript compilation with no errors
+- ✅ **Linter clean** - 0 errors, 2 acceptable warnings (complexity, params)
+- ✅ **Format verified** - All files properly formatted with 4-space indentation
+
 ## [0.8.0] - 2025-11-25
 
 ### Added

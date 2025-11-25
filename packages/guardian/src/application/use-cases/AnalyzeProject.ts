@@ -12,10 +12,10 @@ import { IAggregateBoundaryDetector } from "../../domain/services/IAggregateBoun
 import { ISecretDetector } from "../../domain/services/ISecretDetector"
 import { SourceFile } from "../../domain/entities/SourceFile"
 import { DependencyGraph } from "../../domain/entities/DependencyGraph"
-import { FileCollectionStep } from "./pipeline/FileCollectionStep"
-import { ParsingStep } from "./pipeline/ParsingStep"
-import { DetectionPipeline } from "./pipeline/DetectionPipeline"
-import { ResultAggregator } from "./pipeline/ResultAggregator"
+import { CollectFiles } from "./pipeline/CollectFiles"
+import { ParseSourceFiles } from "./pipeline/ParseSourceFiles"
+import { ExecuteDetection } from "./pipeline/ExecuteDetection"
+import { AggregateResults } from "./pipeline/AggregateResults"
 import {
     ERROR_MESSAGES,
     HARDCODE_TYPES,
@@ -191,10 +191,10 @@ export class AnalyzeProject extends UseCase<
     AnalyzeProjectRequest,
     ResponseDto<AnalyzeProjectResponse>
 > {
-    private readonly fileCollectionStep: FileCollectionStep
-    private readonly parsingStep: ParsingStep
-    private readonly detectionPipeline: DetectionPipeline
-    private readonly resultAggregator: ResultAggregator
+    private readonly fileCollectionStep: CollectFiles
+    private readonly parsingStep: ParseSourceFiles
+    private readonly detectionPipeline: ExecuteDetection
+    private readonly resultAggregator: AggregateResults
 
     constructor(
         fileScanner: IFileScanner,
@@ -209,9 +209,9 @@ export class AnalyzeProject extends UseCase<
         secretDetector: ISecretDetector,
     ) {
         super()
-        this.fileCollectionStep = new FileCollectionStep(fileScanner)
-        this.parsingStep = new ParsingStep(codeParser)
-        this.detectionPipeline = new DetectionPipeline(
+        this.fileCollectionStep = new CollectFiles(fileScanner)
+        this.parsingStep = new ParseSourceFiles(codeParser)
+        this.detectionPipeline = new ExecuteDetection(
             hardcodeDetector,
             namingConventionDetector,
             frameworkLeakDetector,
@@ -221,7 +221,7 @@ export class AnalyzeProject extends UseCase<
             aggregateBoundaryDetector,
             secretDetector,
         )
-        this.resultAggregator = new ResultAggregator()
+        this.resultAggregator = new AggregateResults()
     }
 
     public async execute(

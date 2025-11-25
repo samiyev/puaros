@@ -2,6 +2,10 @@ import { HardcodedValue } from "../../domain/value-objects/HardcodedValue"
 import { DETECTION_KEYWORDS } from "../constants/defaults"
 import { HARDCODE_TYPES } from "../../shared/constants"
 import { ExportConstantAnalyzer } from "./ExportConstantAnalyzer"
+import {
+    DYNAMIC_IMPORT_PATTERN_PARTS,
+    REGEX_ESCAPE_PATTERN,
+} from "../../domain/constants/SecretExamples"
 
 /**
  * Detects magic strings in code
@@ -189,9 +193,11 @@ export class MagicStringMatcher {
      * Checks if string is inside Symbol() call
      */
     private isInSymbolCall(line: string, stringValue: string): boolean {
-        const symbolPattern = new RegExp(
-            `Symbol\\s*\\(\\s*['"\`]${stringValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"\`]\\s*\\)`,
+        const escapedValue = stringValue.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            REGEX_ESCAPE_PATTERN.DOLLAR_AMPERSAND,
         )
+        const symbolPattern = new RegExp(`Symbol\\s*\\(\\s*['"\`]${escapedValue}['"\`]\\s*\\)`)
         return symbolPattern.test(line)
     }
 
@@ -199,7 +205,9 @@ export class MagicStringMatcher {
      * Checks if string is inside import() call
      */
     private isInImportCall(line: string, stringValue: string): boolean {
-        const importPattern = /import\s*\(\s*['"`][^'"`]+['"`]\s*\)/
+        const importPattern = new RegExp(
+            `import\\s*\\(\\s*['${DYNAMIC_IMPORT_PATTERN_PARTS.QUOTE_START}'${DYNAMIC_IMPORT_PATTERN_PARTS.QUOTE_END}"]\\s*\\)`,
+        )
         return importPattern.test(line) && line.includes(stringValue)
     }
 

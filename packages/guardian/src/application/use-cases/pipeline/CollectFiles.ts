@@ -16,7 +16,7 @@ export interface FileCollectionResult {
 /**
  * Pipeline step responsible for file collection and basic parsing
  */
-export class FileCollectionStep {
+export class CollectFiles {
     constructor(private readonly fileScanner: IFileScanner) {}
 
     public async execute(request: FileCollectionRequest): Promise<FileCollectionResult> {

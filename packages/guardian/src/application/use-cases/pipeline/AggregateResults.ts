@@ -34,7 +34,7 @@ export interface AggregationRequest {
 /**
  * Pipeline step responsible for building final response DTO
  */
-export class ResultAggregator {
+export class AggregateResults {
     public execute(request: AggregationRequest): AnalyzeProjectResponse {
         const metrics = this.calculateMetrics(
             request.sourceFiles,

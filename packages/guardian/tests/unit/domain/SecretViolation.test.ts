@@ -33,13 +33,7 @@ describe("SecretViolation", () => {
         })
 
         it("should create a secret violation with NPM token", () => {
-            const violation = SecretViolation.create(
-                ".npmrc",
-                1,
-                1,
-                "NPM Token",
-                "npm_abc123xyz",
-            )
+            const violation = SecretViolation.create(".npmrc", 1, 1, "NPM Token", "npm_abc123xyz")
 
             expect(violation.secretType).toBe("NPM Token")
         })
@@ -133,13 +127,7 @@ describe("SecretViolation", () => {
         })
 
         it("should return formatted message for NPM token", () => {
-            const violation = SecretViolation.create(
-                ".npmrc",
-                1,
-                1,
-                "NPM Token",
-                "test",
-            )
+            const violation = SecretViolation.create(".npmrc", 1, 1, "NPM Token", "test")
 
             expect(violation.getMessage()).toBe("Hardcoded NPM Token detected")
         })
@@ -199,7 +187,7 @@ describe("SecretViolation", () => {
 
             expect(example).toContain("AWS")
             expect(example).toContain("process.env.AWS_ACCESS_KEY_ID")
-            expect(example).toContain("fromEnv")
+            expect(example).toContain("credentials provider")
         })
 
         it("should return GitHub-specific example for GitHub token", () => {
@@ -219,13 +207,7 @@ describe("SecretViolation", () => {
         })
 
         it("should return NPM-specific example for NPM token", () => {
-            const violation = SecretViolation.create(
-                ".npmrc",
-                1,
-                1,
-                "NPM Token",
-                "test",
-            )
+            const violation = SecretViolation.create(".npmrc", 1, 1, "NPM Token", "test")
 
             const example = violation.getExampleFix()
 
@@ -281,19 +263,13 @@ describe("SecretViolation", () => {
         })
 
         it("should return API Key example for generic API key", () => {
-            const violation = SecretViolation.create(
-                "src/config/api.ts",
-                1,
-                1,
-                "API Key",
-                "test",
-            )
+            const violation = SecretViolation.create("src/config/api.ts", 1, 1, "API Key", "test")
 
             const example = violation.getExampleFix()
 
             expect(example).toContain("API")
             expect(example).toContain("process.env.API_KEY")
-            expect(example).toContain("SecretsManager")
+            expect(example).toContain("secret management service")
         })
 
         it("should return generic example for unknown secret type", () => {

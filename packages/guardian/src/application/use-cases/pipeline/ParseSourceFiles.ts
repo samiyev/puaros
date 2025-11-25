@@ -15,7 +15,7 @@ export interface ParsingResult {
 /**
  * Pipeline step responsible for AST parsing and dependency graph construction
  */
-export class ParsingStep {
+export class ParseSourceFiles {
     constructor(private readonly codeParser: ICodeParser) {}
 
     public execute(request: ParsingRequest): ParsingResult {

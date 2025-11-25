@@ -2,6 +2,7 @@ import { createEngine } from "@secretlint/node"
 import type { SecretLintConfigDescriptor } from "@secretlint/types"
 import { ISecretDetector } from "../../domain/services/ISecretDetector"
 import { SecretViolation } from "../../domain/value-objects/SecretViolation"
+import { SECRET_KEYWORDS, SECRET_TYPE_NAMES } from "../../domain/constants/SecretExamples"
 
 /**
  * Detects hardcoded secrets in TypeScript/JavaScript code
@@ -88,80 +89,80 @@ export class SecretDetector implements ISecretDetector {
     }
 
     private extractSecretType(message: string, ruleId: string): string {
-        if (ruleId.includes("aws")) {
-            if (message.toLowerCase().includes("access key")) {
-                return "AWS Access Key"
+        if (ruleId.includes(SECRET_KEYWORDS.AWS)) {
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.ACCESS_KEY)) {
+                return SECRET_TYPE_NAMES.AWS_ACCESS_KEY
             }
-            if (message.toLowerCase().includes("secret")) {
-                return "AWS Secret Key"
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.SECRET)) {
+                return SECRET_TYPE_NAMES.AWS_SECRET_KEY
             }
-            return "AWS Credential"
+            return SECRET_TYPE_NAMES.AWS_CREDENTIAL
         }
 
-        if (ruleId.includes("github")) {
-            if (message.toLowerCase().includes("personal access token")) {
-                return "GitHub Personal Access Token"
+        if (ruleId.includes(SECRET_KEYWORDS.GITHUB)) {
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.PERSONAL_ACCESS_TOKEN)) {
+                return SECRET_TYPE_NAMES.GITHUB_PERSONAL_ACCESS_TOKEN
             }
-            if (message.toLowerCase().includes("oauth")) {
-                return "GitHub OAuth Token"
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.OAUTH)) {
+                return SECRET_TYPE_NAMES.GITHUB_OAUTH_TOKEN
             }
-            return "GitHub Token"
+            return SECRET_TYPE_NAMES.GITHUB_TOKEN
         }
 
-        if (ruleId.includes("npm")) {
-            return "NPM Token"
+        if (ruleId.includes(SECRET_KEYWORDS.NPM)) {
+            return SECRET_TYPE_NAMES.NPM_TOKEN
         }
 
-        if (ruleId.includes("gcp") || ruleId.includes("google")) {
-            return "GCP Service Account Key"
+        if (ruleId.includes(SECRET_KEYWORDS.GCP) || ruleId.includes(SECRET_KEYWORDS.GOOGLE)) {
+            return SECRET_TYPE_NAMES.GCP_SERVICE_ACCOUNT_KEY
         }
 
-        if (ruleId.includes("privatekey") || ruleId.includes("ssh")) {
-            if (message.toLowerCase().includes("rsa")) {
-                return "SSH RSA Private Key"
+        if (ruleId.includes(SECRET_KEYWORDS.PRIVATEKEY) || ruleId.includes(SECRET_KEYWORDS.SSH)) {
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.RSA)) {
+                return SECRET_TYPE_NAMES.SSH_RSA_PRIVATE_KEY
             }
-            if (message.toLowerCase().includes("dsa")) {
-                return "SSH DSA Private Key"
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.DSA)) {
+                return SECRET_TYPE_NAMES.SSH_DSA_PRIVATE_KEY
             }
-            if (message.toLowerCase().includes("ecdsa")) {
-                return "SSH ECDSA Private Key"
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.ECDSA)) {
+                return SECRET_TYPE_NAMES.SSH_ECDSA_PRIVATE_KEY
             }
-            if (message.toLowerCase().includes("ed25519")) {
-                return "SSH Ed25519 Private Key"
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.ED25519)) {
+                return SECRET_TYPE_NAMES.SSH_ED25519_PRIVATE_KEY
             }
-            return "SSH Private Key"
+            return SECRET_TYPE_NAMES.SSH_PRIVATE_KEY
         }
 
-        if (ruleId.includes("slack")) {
-            if (message.toLowerCase().includes("bot")) {
-                return "Slack Bot Token"
+        if (ruleId.includes(SECRET_KEYWORDS.SLACK)) {
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.BOT)) {
+                return SECRET_TYPE_NAMES.SLACK_BOT_TOKEN
             }
-            if (message.toLowerCase().includes("user")) {
-                return "Slack User Token"
+            if (message.toLowerCase().includes(SECRET_KEYWORDS.USER)) {
+                return SECRET_TYPE_NAMES.SLACK_USER_TOKEN
             }
-            return "Slack Token"
+            return SECRET_TYPE_NAMES.SLACK_TOKEN
         }
 
-        if (ruleId.includes("basicauth")) {
-            return "Basic Authentication Credentials"
+        if (ruleId.includes(SECRET_KEYWORDS.BASICAUTH)) {
+            return SECRET_TYPE_NAMES.BASIC_AUTH_CREDENTIALS
         }
 
-        if (message.toLowerCase().includes("api key")) {
-            return "API Key"
+        if (message.toLowerCase().includes(SECRET_KEYWORDS.API_KEY)) {
+            return SECRET_TYPE_NAMES.API_KEY
         }
 
-        if (message.toLowerCase().includes("token")) {
-            return "Authentication Token"
+        if (message.toLowerCase().includes(SECRET_KEYWORDS.TOKEN)) {
+            return SECRET_TYPE_NAMES.AUTHENTICATION_TOKEN
         }
 
-        if (message.toLowerCase().includes("password")) {
-            return "Password"
+        if (message.toLowerCase().includes(SECRET_KEYWORDS.PASSWORD)) {
+            return SECRET_TYPE_NAMES.PASSWORD
         }
 
-        if (message.toLowerCase().includes("secret")) {
-            return "Secret"
+        if (message.toLowerCase().includes(SECRET_KEYWORDS.SECRET)) {
+            return SECRET_TYPE_NAMES.SECRET
         }
 
-        return "Sensitive Data"
+        return SECRET_TYPE_NAMES.SENSITIVE_DATA
     }
 }
