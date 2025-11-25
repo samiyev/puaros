@@ -150,4 +150,30 @@ export const CLI_HELP_TEXT = {
     FIX_REPOSITORY:
         "  Repository pattern  → Create IUserRepository in domain, implement in infra\n\n",
     FOOTER: "Each violation includes a 💡 Suggestion with specific fix instructions.\n",
+    AI_AGENT_HEADER: "AI AGENT INSTRUCTIONS:\n",
+    AI_AGENT_INTRO:
+        "  When an AI coding assistant (Claude, Copilot, Cursor, etc.) uses Guardian:\n\n",
+    AI_AGENT_STEP1: "  STEP 1: Run initial scan\n",
+    AI_AGENT_STEP1_CMD: "    $ guardian check ./src --only-critical --limit 5\n\n",
+    AI_AGENT_STEP2: "  STEP 2: For each violation in output:\n",
+    AI_AGENT_STEP2_DETAIL:
+        "    - Read the file at reported location (file:line:column)\n" +
+        "    - Apply the 💡 Suggestion provided\n" +
+        "    - The suggestion contains exact fix instructions\n\n",
+    AI_AGENT_STEP3: "  STEP 3: After fixing, verify:\n",
+    AI_AGENT_STEP3_CMD: "    $ guardian check ./src --only-critical\n\n",
+    AI_AGENT_STEP4: "  STEP 4: Expand scope progressively:\n",
+    AI_AGENT_STEP4_CMDS:
+        "    $ guardian check ./src --min-severity high    # Fix HIGH issues\n" +
+        "    $ guardian check ./src --min-severity medium  # Fix MEDIUM issues\n" +
+        "    $ guardian check ./src                        # Full scan\n\n",
+    AI_AGENT_OUTPUT: "  OUTPUT FORMAT (parse this):\n",
+    AI_AGENT_OUTPUT_DETAIL:
+        "    <index>. <file>:<line>:<column>\n" +
+        "       Severity: <emoji> <LEVEL>\n" +
+        "       Type: <violation-type>\n" +
+        "       Value: <problematic-value>\n" +
+        "       Context: <code-snippet>\n" +
+        "       💡 Suggestion: <exact-fix-instruction>\n\n",
+    AI_AGENT_PRIORITY: "  PRIORITY ORDER: CRITICAL → HIGH → MEDIUM → LOW\n\n",
 } as const
