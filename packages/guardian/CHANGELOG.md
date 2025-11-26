@@ -5,6 +5,40 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2025-11-26
+
+### Changed
+
+- 🔄 **Refactored hardcode detector** - Migrated from regex-based to AST-based analysis:
+  - Replaced regex pattern matching with tree-sitter Abstract Syntax Tree traversal
+  - Improved accuracy with AST node context awareness (exports, types, tests)
+  - Reduced false positives with better constant and context detection
+  - Added duplicate value tracking across files for better insights
+  - Implemented boolean literal detection (magic-boolean type)
+  - Added value type classification (email, url, ip_address, api_key, uuid, version, color, etc.)
+  - New modular architecture with specialized analyzers:
+    - `AstTreeTraverser` - AST walking with "almost constants" detection
+    - `DuplicateValueTracker` - Cross-file duplicate tracking
+    - `AstContextChecker` - Node context analysis (reduced nesting depth)
+    - `AstNumberAnalyzer`, `AstStringAnalyzer`, `AstBooleanAnalyzer` - Specialized analyzers
+    - `ValuePatternMatcher` - Value type pattern detection
+
+### Removed
+
+- 🗑️ **Deprecated regex components** - Removed old regex-based detection strategies:
+  - `BraceTracker.ts` - Replaced by AST context checking
+  - `ExportConstantAnalyzer.ts` - Replaced by AstContextChecker
+  - `MagicNumberMatcher.ts` - Replaced by AstNumberAnalyzer
+  - `MagicStringMatcher.ts` - Replaced by AstStringAnalyzer
+
+### Quality
+
+- ✅ **All tests pass** - 629/629 tests passing (added 51 new tests)
+- ✅ **Test coverage** - 87.97% statements, 96.75% functions
+- ✅ **Build successful** - TypeScript compilation with no errors
+- ✅ **Linter** - 0 errors, 5 acceptable warnings (complexity, params)
+- ✅ **Code size** - Net reduction: -40 lines (more features, less code)
+
 ## [0.9.0] - 2025-11-26
 
 ### Added
