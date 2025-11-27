@@ -240,6 +240,7 @@ export class ExecuteDetection {
 
         for (const file of sourceFiles) {
             const namingViolations = this.namingConventionDetector.detectViolations(
+                file.content,
                 file.path.filename,
                 file.layer,
                 file.path.relative,

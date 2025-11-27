@@ -63,6 +63,28 @@ export const NAMING_ERROR_MESSAGES = {
     USE_DTO_SUFFIX: "Use *Dto, *Request, or *Response suffix (e.g., UserResponseDto.ts)",
     USE_VERB_NOUN: "Use verb + noun in PascalCase (e.g., CreateUser.ts, UpdateProfile.ts)",
     USE_CASE_START_VERB: "Use cases should start with a verb",
+    DOMAIN_SERVICE_PASCAL_CASE: "Domain services must be PascalCase ending with 'Service'",
+    DOMAIN_ENTITY_PASCAL_CASE: "Domain entities must be PascalCase nouns",
+    DTO_PASCAL_CASE: "DTOs must be PascalCase ending with 'Dto', 'Request', or 'Response'",
+    MAPPER_PASCAL_CASE: "Mappers must be PascalCase ending with 'Mapper'",
+    USE_CASE_VERB_NOUN: "Use cases must be PascalCase Verb+Noun (e.g., CreateUser)",
+    CONTROLLER_PASCAL_CASE: "Controllers must be PascalCase ending with 'Controller'",
+    REPOSITORY_IMPL_PASCAL_CASE:
+        "Repository implementations must be PascalCase ending with 'Repository'",
+    SERVICE_ADAPTER_PASCAL_CASE:
+        "Services/Adapters must be PascalCase ending with 'Service' or 'Adapter'",
+    FUNCTION_CAMEL_CASE: "Functions and methods must be camelCase",
+    USE_CAMEL_CASE_FUNCTION: "Use camelCase for function names (e.g., getUserById, createOrder)",
+    INTERFACE_PASCAL_CASE: "Interfaces must be PascalCase",
+    USE_PASCAL_CASE_INTERFACE: "Use PascalCase for interface names",
+    REPOSITORY_INTERFACE_I_PREFIX:
+        "Domain repository interfaces must start with 'I' (e.g., IUserRepository)",
+    REPOSITORY_INTERFACE_PATTERN: "Repository interfaces must be I + PascalCase + Repository",
+    CONSTANT_UPPER_SNAKE_CASE: "Exported constants must be UPPER_SNAKE_CASE",
+    USE_UPPER_SNAKE_CASE_CONSTANT:
+        "Use UPPER_SNAKE_CASE for constant names (e.g., MAX_RETRIES, API_URL)",
+    VARIABLE_CAMEL_CASE: "Variables must be camelCase",
+    USE_CAMEL_CASE_VARIABLE: "Use camelCase for variable names (e.g., userId, orderList)",
 } as const
 
 /**

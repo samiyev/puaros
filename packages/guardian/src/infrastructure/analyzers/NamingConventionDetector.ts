@@ -1,37 +1,72 @@
+import Parser from "tree-sitter"
 import { INamingConventionDetector } from "../../domain/services/INamingConventionDetector"
 import { NamingViolation } from "../../domain/value-objects/NamingViolation"
-import {
-    LAYERS,
-    NAMING_PATTERNS,
-    NAMING_VIOLATION_TYPES,
-    USE_CASE_VERBS,
-} from "../../shared/constants/rules"
-import {
-    EXCLUDED_FILES,
-    FILE_SUFFIXES,
-    NAMING_ERROR_MESSAGES,
-    PATH_PATTERNS,
-    PATTERN_WORDS,
-} from "../constants/detectorPatterns"
-import { NAMING_SUGGESTION_DEFAULT } from "../constants/naming-patterns"
+import { FILE_EXTENSIONS } from "../../shared/constants"
+import { EXCLUDED_FILES } from "../constants/detectorPatterns"
+import { CodeParser } from "../parsers/CodeParser"
+import { AstClassNameAnalyzer } from "../strategies/naming/AstClassNameAnalyzer"
+import { AstFunctionNameAnalyzer } from "../strategies/naming/AstFunctionNameAnalyzer"
+import { AstInterfaceNameAnalyzer } from "../strategies/naming/AstInterfaceNameAnalyzer"
+import { AstNamingTraverser } from "../strategies/naming/AstNamingTraverser"
+import { AstVariableNameAnalyzer } from "../strategies/naming/AstVariableNameAnalyzer"
 
 /**
- * Detects naming convention violations based on Clean Architecture layers
+ * Detects naming convention violations using AST-based analysis
  *
- * This detector ensures that files follow naming conventions appropriate to their layer:
- * - Domain: Entities (nouns), Services (*Service), Value Objects, Repository interfaces (I*Repository)
- * - Application: Use cases (verbs), DTOs (*Dto/*Request/*Response), Mappers (*Mapper)
- * - Infrastructure: Controllers (*Controller), Repository implementations (*Repository), Services (*Service/*Adapter)
+ * This detector uses Abstract Syntax Tree (AST) analysis via tree-sitter to identify
+ * naming convention violations in classes, interfaces, functions, and variables
+ * according to Clean Architecture layer rules.
+ *
+ * The detector uses a modular architecture with specialized components:
+ * - AstClassNameAnalyzer: Analyzes class names
+ * - AstInterfaceNameAnalyzer: Analyzes interface names
+ * - AstFunctionNameAnalyzer: Analyzes function and method names
+ * - AstVariableNameAnalyzer: Analyzes variable and constant names
+ * - AstNamingTraverser: Traverses the AST and coordinates analyzers
  *
  * @example
  * ```typescript
  * const detector = new NamingConventionDetector()
- * const violations = detector.detectViolations('UserDto.ts', 'domain', 'src/domain/UserDto.ts')
- * // Returns violation: DTOs should not be in domain layer
+ * const code = `
+ *     class userService {  // Wrong: should be UserService
+ *         GetUser() {}     // Wrong: should be getUser
+ *     }
+ * `
+ * const violations = detector.detectViolations(code, 'UserService.ts', 'domain', 'src/domain/UserService.ts')
+ * // Returns array of NamingViolation objects
  * ```
  */
 export class NamingConventionDetector implements INamingConventionDetector {
+    private readonly parser: CodeParser
+    private readonly traverser: AstNamingTraverser
+
+    constructor() {
+        this.parser = new CodeParser()
+
+        const classAnalyzer = new AstClassNameAnalyzer()
+        const interfaceAnalyzer = new AstInterfaceNameAnalyzer()
+        const functionAnalyzer = new AstFunctionNameAnalyzer()
+        const variableAnalyzer = new AstVariableNameAnalyzer()
+
+        this.traverser = new AstNamingTraverser(
+            classAnalyzer,
+            interfaceAnalyzer,
+            functionAnalyzer,
+            variableAnalyzer,
+        )
+    }
+
+    /**
+     * Detects naming convention violations in the given code
+     *
+     * @param content - Source code to analyze
+     * @param fileName - Name of the file being analyzed
+     * @param layer - Architectural layer (domain, application, infrastructure, shared)
+     * @param filePath - File path for context (used in violation reports)
+     * @returns Array of detected naming violations
+     */
     public detectViolations(
+        content: string,
         fileName: string,
         layer: string | undefined,
         filePath: string,
@@ -44,235 +79,23 @@ export class NamingConventionDetector implements INamingConventionDetector {
             return []
         }
 
-        switch (layer) {
-            case LAYERS.DOMAIN:
-                return this.checkDomainLayer(fileName, filePath)
-            case LAYERS.APPLICATION:
-                return this.checkApplicationLayer(fileName, filePath)
-            case LAYERS.INFRASTRUCTURE:
-                return this.checkInfrastructureLayer(fileName, filePath)
-            case LAYERS.SHARED:
-                return []
-            default:
-                return []
+        if (!content || content.trim().length === 0) {
+            return []
         }
+
+        const tree = this.parseCode(content, filePath)
+        return this.traverser.traverse(tree, content, layer, filePath)
     }
 
-    private checkDomainLayer(fileName: string, filePath: string): NamingViolation[] {
-        const violations: NamingViolation[] = []
-
-        const forbiddenPatterns = NAMING_PATTERNS.DOMAIN.ENTITY.forbidden ?? []
-
-        for (const forbidden of forbiddenPatterns) {
-            if (fileName.includes(forbidden)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.FORBIDDEN_PATTERN,
-                        LAYERS.DOMAIN,
-                        filePath,
-                        NAMING_ERROR_MESSAGES.DOMAIN_FORBIDDEN,
-                        fileName,
-                        NAMING_SUGGESTION_DEFAULT,
-                    ),
-                )
-                return violations
-            }
+    /**
+     * Parses code based on file extension
+     */
+    private parseCode(code: string, filePath: string): Parser.Tree {
+        if (filePath.endsWith(FILE_EXTENSIONS.TYPESCRIPT_JSX)) {
+            return this.parser.parseTsx(code)
+        } else if (filePath.endsWith(FILE_EXTENSIONS.TYPESCRIPT)) {
+            return this.parser.parseTypeScript(code)
         }
-
-        if (fileName.endsWith(FILE_SUFFIXES.SERVICE)) {
-            if (!NAMING_PATTERNS.DOMAIN.SERVICE.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_CASE,
-                        LAYERS.DOMAIN,
-                        filePath,
-                        NAMING_PATTERNS.DOMAIN.SERVICE.description,
-                        fileName,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        if (
-            fileName.startsWith(PATTERN_WORDS.I_PREFIX) &&
-            fileName.includes(PATTERN_WORDS.REPOSITORY)
-        ) {
-            if (!NAMING_PATTERNS.DOMAIN.REPOSITORY_INTERFACE.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_PREFIX,
-                        LAYERS.DOMAIN,
-                        filePath,
-                        NAMING_PATTERNS.DOMAIN.REPOSITORY_INTERFACE.description,
-                        fileName,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        if (!NAMING_PATTERNS.DOMAIN.ENTITY.pattern.test(fileName)) {
-            violations.push(
-                NamingViolation.create(
-                    fileName,
-                    NAMING_VIOLATION_TYPES.WRONG_CASE,
-                    LAYERS.DOMAIN,
-                    filePath,
-                    NAMING_PATTERNS.DOMAIN.ENTITY.description,
-                    fileName,
-                    NAMING_ERROR_MESSAGES.USE_PASCAL_CASE,
-                ),
-            )
-        }
-
-        return violations
-    }
-
-    private checkApplicationLayer(fileName: string, filePath: string): NamingViolation[] {
-        const violations: NamingViolation[] = []
-
-        if (
-            fileName.endsWith(FILE_SUFFIXES.DTO) ||
-            fileName.endsWith(FILE_SUFFIXES.REQUEST) ||
-            fileName.endsWith(FILE_SUFFIXES.RESPONSE)
-        ) {
-            if (!NAMING_PATTERNS.APPLICATION.DTO.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_SUFFIX,
-                        LAYERS.APPLICATION,
-                        filePath,
-                        NAMING_PATTERNS.APPLICATION.DTO.description,
-                        fileName,
-                        NAMING_ERROR_MESSAGES.USE_DTO_SUFFIX,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        if (fileName.endsWith(FILE_SUFFIXES.MAPPER)) {
-            if (!NAMING_PATTERNS.APPLICATION.MAPPER.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_SUFFIX,
-                        LAYERS.APPLICATION,
-                        filePath,
-                        NAMING_PATTERNS.APPLICATION.MAPPER.description,
-                        fileName,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        const startsWithVerb = this.startsWithCommonVerb(fileName)
-        if (startsWithVerb) {
-            if (!NAMING_PATTERNS.APPLICATION.USE_CASE.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_VERB_NOUN,
-                        LAYERS.APPLICATION,
-                        filePath,
-                        NAMING_PATTERNS.APPLICATION.USE_CASE.description,
-                        fileName,
-                        NAMING_ERROR_MESSAGES.USE_VERB_NOUN,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        if (
-            filePath.includes(PATH_PATTERNS.USE_CASES) ||
-            filePath.includes(PATH_PATTERNS.USE_CASES_ALT)
-        ) {
-            const hasVerb = this.startsWithCommonVerb(fileName)
-            if (!hasVerb) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_VERB_NOUN,
-                        LAYERS.APPLICATION,
-                        filePath,
-                        NAMING_ERROR_MESSAGES.USE_CASE_START_VERB,
-                        fileName,
-                        `Start with a verb like: ${USE_CASE_VERBS.slice(0, 5).join(", ")}`,
-                    ),
-                )
-            }
-        }
-
-        return violations
-    }
-
-    private checkInfrastructureLayer(fileName: string, filePath: string): NamingViolation[] {
-        const violations: NamingViolation[] = []
-
-        if (fileName.endsWith(FILE_SUFFIXES.CONTROLLER)) {
-            if (!NAMING_PATTERNS.INFRASTRUCTURE.CONTROLLER.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_SUFFIX,
-                        LAYERS.INFRASTRUCTURE,
-                        filePath,
-                        NAMING_PATTERNS.INFRASTRUCTURE.CONTROLLER.description,
-                        fileName,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        if (
-            fileName.endsWith(FILE_SUFFIXES.REPOSITORY) &&
-            !fileName.startsWith(PATTERN_WORDS.I_PREFIX)
-        ) {
-            if (!NAMING_PATTERNS.INFRASTRUCTURE.REPOSITORY_IMPL.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_SUFFIX,
-                        LAYERS.INFRASTRUCTURE,
-                        filePath,
-                        NAMING_PATTERNS.INFRASTRUCTURE.REPOSITORY_IMPL.description,
-                        fileName,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        if (fileName.endsWith(FILE_SUFFIXES.SERVICE) || fileName.endsWith(FILE_SUFFIXES.ADAPTER)) {
-            if (!NAMING_PATTERNS.INFRASTRUCTURE.SERVICE.pattern.test(fileName)) {
-                violations.push(
-                    NamingViolation.create(
-                        fileName,
-                        NAMING_VIOLATION_TYPES.WRONG_SUFFIX,
-                        LAYERS.INFRASTRUCTURE,
-                        filePath,
-                        NAMING_PATTERNS.INFRASTRUCTURE.SERVICE.description,
-                        fileName,
-                    ),
-                )
-            }
-            return violations
-        }
-
-        return violations
-    }
-
-    private startsWithCommonVerb(fileName: string): boolean {
-        const baseFileName = fileName.replace(/\.tsx?$/, "")
-
-        return USE_CASE_VERBS.some((verb) => baseFileName.startsWith(verb))
+        return this.parser.parseJavaScript(code)
     }
 }
