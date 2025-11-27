@@ -5,6 +5,32 @@ All notable changes to @samiyev/guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2025-11-27
+
+### Changed
+
+- 🔄 **Refactored naming convention detector** - Migrated from regex-based to AST-based analysis:
+  - Replaced regex pattern matching with tree-sitter Abstract Syntax Tree traversal
+  - Improved accuracy with AST node context awareness (classes, interfaces, functions, variables)
+  - Reduced false positives with better naming pattern detection
+  - Added centralized AST node type constants (`ast-node-types.ts`) for maintainability
+  - New modular architecture with specialized analyzers:
+    - `AstClassNameAnalyzer` - Class naming validation
+    - `AstInterfaceNameAnalyzer` - Interface naming validation
+    - `AstFunctionNameAnalyzer` - Function naming validation
+    - `AstVariableNameAnalyzer` - Variable naming validation
+    - `AstNamingTraverser` - AST traversal for naming analysis
+  - Enhanced context-aware suggestions for hardcoded values:
+    - Added context keywords (EMAIL_CONTEXT_KEYWORDS, API_KEY_CONTEXT_KEYWORDS, URL_CONTEXT_KEYWORDS, etc.)
+    - Improved constant name generation based on context (ADMIN_EMAIL, API_SECRET_KEY, DATABASE_URL, etc.)
+    - Better file path suggestions (CONFIG_ENVIRONMENT, CONFIG_CONTACTS, CONFIG_PATHS, etc.)
+
+### Quality
+
+- ✅ **All tests pass** - Updated tests for AST-based naming detection
+- ✅ **Code organization** - Centralized AST constants reduce code duplication
+- ✅ **Maintainability** - Modular analyzers improve code separation and testability
+
 ## [0.9.1] - 2025-11-26
 
 ### Changed
