@@ -13,5 +13,8 @@ export * from "./application/index.js"
 // Shared exports
 export * from "./shared/index.js"
 
+// Infrastructure exports
+export * from "./infrastructure/index.js"
+
 // Version
-export const VERSION = "0.1.0"
+export const VERSION = "0.2.0"

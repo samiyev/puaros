@@ -36,9 +36,7 @@ describe("ChatMessage", () => {
         })
 
         it("should create assistant message with tool calls", () => {
-            const toolCalls = [
-                { id: "1", name: "get_lines", params: {}, timestamp: Date.now() },
-            ]
+            const toolCalls = [{ id: "1", name: "get_lines", params: {}, timestamp: Date.now() }]
             const stats = { tokens: 100, timeMs: 500, toolCalls: 1 }
             const msg = createAssistantMessage("Response", toolCalls, stats)
 
@@ -49,9 +47,7 @@ describe("ChatMessage", () => {
 
     describe("createToolMessage", () => {
         it("should create tool message with results", () => {
-            const results = [
-                { callId: "1", success: true, data: "data", executionTimeMs: 10 },
-            ]
+            const results = [{ callId: "1", success: true, data: "data", executionTimeMs: 10 }]
             const msg = createToolMessage(results)
 
             expect(msg.role).toBe("tool")

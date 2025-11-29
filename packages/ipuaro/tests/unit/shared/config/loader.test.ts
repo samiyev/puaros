@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { loadConfig, validateConfig, getConfigErrors } from "../../../../src/shared/config/loader.js"
+import {
+    loadConfig,
+    validateConfig,
+    getConfigErrors,
+} from "../../../../src/shared/config/loader.js"
 import { DEFAULT_CONFIG } from "../../../../src/shared/constants/config.js"
 import * as fs from "node:fs"
 
@@ -28,7 +32,7 @@ describe("config loader", () => {
                 return path === "/project/.ipuaro.json"
             })
             vi.mocked(fs.readFileSync).mockReturnValue(
-                JSON.stringify({ llm: { model: "custom-model" } })
+                JSON.stringify({ llm: { model: "custom-model" } }),
             )
 
             const config = loadConfig("/project")

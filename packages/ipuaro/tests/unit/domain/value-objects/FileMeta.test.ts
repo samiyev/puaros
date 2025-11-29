@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest"
-import {
-    createFileMeta,
-    isHubFile,
-} from "../../../../src/domain/value-objects/FileMeta.js"
+import { createFileMeta, isHubFile } from "../../../../src/domain/value-objects/FileMeta.js"
 
 describe("FileMeta", () => {
     describe("createFileMeta", () => {

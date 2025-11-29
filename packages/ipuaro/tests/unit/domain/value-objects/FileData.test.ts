@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest"
-import {
-    createFileData,
-    isFileDataEqual,
-} from "../../../../src/domain/value-objects/FileData.js"
+import { createFileData, isFileDataEqual } from "../../../../src/domain/value-objects/FileData.js"
 
 describe("FileData", () => {
     describe("createFileData", () => {

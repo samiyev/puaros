@@ -74,6 +74,7 @@ export default tseslint.config(
             '@typescript-eslint/require-await': 'warn',
             '@typescript-eslint/no-unnecessary-condition': 'off', // Sometimes useful for defensive coding
             '@typescript-eslint/no-non-null-assertion': 'warn',
+            '@typescript-eslint/no-unnecessary-type-parameters': 'warn', // Allow generic JSON parsers
 
             // ========================================
             // Code Quality & Best Practices

@@ -8,11 +8,7 @@ export default defineConfig({
     sourcemap: true,
     splitting: false,
     treeshake: true,
-    external: [
-        "tree-sitter",
-        "tree-sitter-typescript",
-        "tree-sitter-javascript",
-    ],
+    external: ["tree-sitter", "tree-sitter-typescript", "tree-sitter-javascript"],
     esbuildOptions(options) {
         options.jsx = "automatic"
     },

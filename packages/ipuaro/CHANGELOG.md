@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-01-30
+
+### Added
+
+- **Redis Storage (0.2.x milestone)**
+  - RedisClient: connection wrapper with AOF persistence configuration
+  - RedisStorage: full IStorage implementation with Redis hashes
+  - Redis key schema: project files, AST, meta, indexes, config
+  - Session keys schema: data, undo stack, sessions list
+  - `generateProjectName()` utility for consistent project naming
+
+- **Infrastructure Layer**
+  - `src/infrastructure/storage/` module
+  - Exports via `src/infrastructure/index.ts`
+
+- **Testing**
+  - 68 new unit tests for Redis module
+  - 159 total tests
+  - 99% code coverage maintained
+
+### Changed
+
+- Updated ESLint config: `@typescript-eslint/no-unnecessary-type-parameters` set to warn
+
+### Notes
+
+Redis Storage milestone complete. Next: 0.3.0 - Indexer (FileScanner, AST Parser, Watchdog)
+
 ## [0.1.0] - 2025-01-29
 
 ### Added
