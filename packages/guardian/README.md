@@ -325,17 +325,6 @@ await reportMetrics({
 | **AI Enablement** | Safely adopt AI coding tools at scale |
 | **Technical Debt Visibility** | Metrics and trends for data-driven decisions |
 
-### Enterprise Success Stories
-
-**Fortune 500 Financial Services** 🏦
-> "We have 200+ developers and were struggling with architectural consistency. Guardian reduced our code review cycle time by 35% and caught 12 hardcoded API keys before they hit production. ROI in first month." - VP Engineering
-
-**Scale-up SaaS (Series B)** 📈
-> "Guardian allowed us to confidently adopt GitHub Copilot across our team. AI writes code 3x faster, Guardian ensures quality. We ship more features without increasing tech debt." - CTO
-
-**Consulting Firm** 💼
-> "We use Guardian on every client project. It enforces our standards automatically, and clients love the quality metrics reports. Saved us from a major security incident when it caught hardcoded AWS credentials." - Lead Architect
-
 ## Installation
 
 ```bash
@@ -969,36 +958,6 @@ Guardian follows Clean Architecture principles:
 
 - Node.js >= 18.0.0
 - TypeScript >= 5.0.0 (for TypeScript projects)
-
-## Real-World Vibe Coding Stats
-
-Based on testing Guardian with AI-generated codebases:
-
-| Metric | Typical AI Code | After Guardian |
-|--------|----------------|----------------|
-| Hardcoded values | 15-30 per 1000 LOC | 0-2 per 1000 LOC |
-| Circular deps | 2-5 per project | 0 per project |
-| Architecture violations | 10-20% of files | <1% of files |
-| Time to fix issues | Manual review: 2-4 hours | Guardian + AI: 5-10 minutes |
-
-**Common Issues Guardian Finds in AI Code:**
-- 🔐 Hardcoded secrets and API keys (CRITICAL)
-- ⏱️ Magic timeouts and retry counts
-- 🌐 Hardcoded URLs and endpoints
-- 🔄 Accidental circular imports
-- 📁 Files in wrong architectural layers
-- 🏷️ Inconsistent naming patterns
-
-## Success Stories
-
-**Prototype to Production** ⚡
-> "Built a SaaS MVP with Claude in 3 days. Guardian caught 47 hardcoded values before first deploy. Saved us from production disasters." - Indie Hacker
-
-**Learning Clean Architecture** 📚
-> "Guardian taught me Clean Architecture better than any tutorial. Every violation is a mini lesson with suggestions." - Junior Dev
-
-**AI-First Startup** 🚀
-> "We ship 5+ features daily using Claude + Guardian. No human code reviews needed for AI-generated code anymore." - Tech Lead
 
 ## FAQ for Vibe Coders
 
