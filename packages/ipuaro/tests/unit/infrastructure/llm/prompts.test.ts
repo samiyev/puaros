@@ -229,9 +229,7 @@ describe("prompts", () => {
                 [
                     "/project/src/types.ts",
                     createMockAST({
-                        typeAliases: [
-                            { name: "ID", lineStart: 1, lineEnd: 1, isExported: true },
-                        ],
+                        typeAliases: [{ name: "ID", lineStart: 1, lineEnd: 1, isExported: true }],
                     }),
                 ],
             ])
@@ -318,9 +316,7 @@ describe("prompts", () => {
 
         it("should skip files with no notable content", () => {
             const structure = createMockStructure()
-            const asts = new Map<string, FileAST>([
-                ["/project/src/empty.ts", createMockAST()],
-            ])
+            const asts = new Map<string, FileAST>([["/project/src/empty.ts", createMockAST()]])
 
             const context = buildInitialContext(structure, asts)
 
