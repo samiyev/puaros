@@ -247,7 +247,6 @@ describe("ASTParser", () => {
             expect(ast.classes[0].implements).toContain("IChild")
         })
 
-
         it("should extract class properties with modifiers", () => {
             const code = `class Test {
                 public name: string

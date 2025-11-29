@@ -42,10 +42,7 @@ describe("OllamaClient", () => {
             eval_count: 10,
         })
         mockOllamaInstance.list.mockResolvedValue({
-            models: [
-                { name: "qwen2.5-coder:7b-instruct" },
-                { name: "llama2:latest" },
-            ],
+            models: [{ name: "qwen2.5-coder:7b-instruct" }, { name: "llama2:latest" }],
         })
         mockOllamaInstance.pull.mockResolvedValue(undefined)
     })
@@ -65,9 +62,7 @@ describe("OllamaClient", () => {
     describe("chat", () => {
         it("should send messages and return response", async () => {
             const client = new OllamaClient(defaultConfig)
-            const messages: ChatMessage[] = [
-                createMessage("user", "Hello"),
-            ]
+            const messages: ChatMessage[] = [createMessage("user", "Hello")]
 
             const response = await client.chat(messages)
 
@@ -110,7 +105,7 @@ describe("OllamaClient", () => {
             const messages: ChatMessage[] = [
                 createMessage("user", "Read file"),
                 createMessage("assistant", "I will read the file"),
-                createMessage("tool", "[call_123] Success: {\"content\": \"file content\"}"),
+                createMessage("tool", '[call_123] Success: {"content": "file content"}'),
             ]
 
             await client.chat(messages)
@@ -120,7 +115,10 @@ describe("OllamaClient", () => {
                     messages: [
                         { role: "user", content: "Read file" },
                         { role: "assistant", content: "I will read the file" },
-                        { role: "user", content: "[call_123] Success: {\"content\": \"file content\"}" },
+                        {
+                            role: "user",
+                            content: '[call_123] Success: {"content": "file content"}',
+                        },
                     ],
                 }),
             )
@@ -434,10 +432,11 @@ describe("OllamaClient", () => {
             let resolveChat: (() => void) | undefined
             mockOllamaInstance.chat.mockImplementation(() => {
                 return new Promise((resolve) => {
-                    resolveChat = () => resolve({
-                        message: { content: "test" },
-                        eval_count: 5,
-                    })
+                    resolveChat = () =>
+                        resolve({
+                            message: { content: "test" },
+                            eval_count: 5,
+                        })
                 })
             })
 
