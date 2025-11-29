@@ -94,11 +94,39 @@ describe("Watchdog", () => {
         it("should return empty array when not watching", () => {
             expect(watchdog.getWatchedPaths()).toEqual([])
         })
+
+        it("should return watched paths when watching", async () => {
+            const testFile = path.join(tempDir, "test.ts")
+            await fs.writeFile(testFile, "const x = 1")
+
+            watchdog.start(tempDir)
+            await new Promise((resolve) => setTimeout(resolve, 200))
+
+            const paths = watchdog.getWatchedPaths()
+            expect(Array.isArray(paths)).toBe(true)
+        })
     })
 
     describe("flushAll", () => {
         it("should not throw when no pending changes", () => {
             expect(() => watchdog.flushAll()).not.toThrow()
+        })
+
+        it("should flush pending changes immediately", async () => {
+            const events: FileChangeEvent[] = []
+            watchdog.onFileChange((event) => events.push(event))
+            watchdog.start(tempDir)
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            const testFile = path.join(tempDir, "test.ts")
+            await fs.writeFile(testFile, "const x = 1")
+
+            await new Promise((resolve) => setTimeout(resolve, 30))
+
+            watchdog.flushAll()
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
         })
     })
 

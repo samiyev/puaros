@@ -287,6 +287,20 @@ import { helper } from "./utils"
             expect(graph.imports.get("/project/src/index.ts")).toContain("/project/src/utils.ts")
         })
 
+        it("should handle .jsx extension imports", () => {
+            const code = `import Component from "./Button.jsx"`
+            const componentCode = `export default function Button() { return null }`
+
+            const asts = new Map<string, FileAST>([
+                ["/project/src/App.tsx", parser.parse(code, "tsx")],
+                ["/project/src/Button.tsx", parser.parse(componentCode, "tsx")],
+            ])
+
+            const graph = builder.buildDepsGraph(asts)
+
+            expect(graph.imports.get("/project/src/App.tsx")).toContain("/project/src/Button.tsx")
+        })
+
         it("should sort dependencies", () => {
             const code = `
 import { c } from "./c"
@@ -476,6 +490,18 @@ export function createOrder(): void {}
 
             const cycles = builder.findCircularDependencies(graph)
             expect(cycles).toEqual([])
+        })
+
+        it("should handle self-referencing file", () => {
+            const selfCode = `import { helper } from "./self"; export const helper = () => {}; export const main = helper();`
+
+            const asts = new Map<string, FileAST>([
+                ["/project/src/self.ts", parser.parse(selfCode, "ts")],
+            ])
+            const graph = builder.buildDepsGraph(asts)
+
+            const cycles = builder.findCircularDependencies(graph)
+            expect(cycles.length).toBeLessThanOrEqual(1)
         })
 
         it("should handle self-reference", () => {

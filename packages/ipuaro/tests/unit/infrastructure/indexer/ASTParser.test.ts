@@ -74,6 +74,33 @@ describe("ASTParser", () => {
             expect(ast.imports[0].type).toBe("builtin")
         })
 
+        it("should classify builtin imports without node: prefix", () => {
+            const code = `import * as fs from "fs"`
+            const ast = parser.parse(code, "ts")
+            expect(ast.imports[0].type).toBe("builtin")
+        })
+
+        it("should handle import with alias", () => {
+            const code = `import { foo as bar } from "./utils"`
+            const ast = parser.parse(code, "ts")
+            expect(ast.imports).toHaveLength(1)
+            expect(ast.imports[0].name).toBe("bar")
+        })
+
+        it("should handle side-effect import", () => {
+            const code = `import "./polyfill"`
+            const ast = parser.parse(code, "ts")
+            expect(ast.imports).toHaveLength(1)
+            expect(ast.imports[0].name).toBe("*")
+            expect(ast.imports[0].isDefault).toBe(false)
+        })
+
+        it("should handle namespace import without alias", () => {
+            const code = `import * from "./all"`
+            const ast = parser.parse(code, "ts")
+            expect(ast.imports).toHaveLength(1)
+        })
+
         it("should classify external imports", () => {
             const code = `import lodash from "lodash"`
             const ast = parser.parse(code, "ts")
@@ -131,6 +158,35 @@ describe("ASTParser", () => {
                 optional: true,
             })
         })
+
+        it("should extract function return type", () => {
+            const code = `function getValue(): string { return "" }`
+            const ast = parser.parse(code, "ts")
+            expect(ast.functions[0].returnType).toBe("string")
+        })
+
+        it("should extract exported arrow function", () => {
+            const code = `export const handler = async (req: Request) => {}`
+            const ast = parser.parse(code, "ts")
+            expect(ast.functions).toHaveLength(1)
+            expect(ast.functions[0].name).toBe("handler")
+            expect(ast.functions[0].isExported).toBe(true)
+            expect(ast.functions[0].isAsync).toBe(true)
+            expect(ast.exports).toHaveLength(1)
+            expect(ast.exports[0].kind).toBe("function")
+        })
+
+        it("should not extract function expression (not arrow)", () => {
+            const code = `const fn = function named() {}`
+            const ast = parser.parse(code, "ts")
+            expect(ast.functions).toHaveLength(0)
+        })
+
+        it("should handle parameter with default value", () => {
+            const code = `function test(value = 42) {}`
+            const ast = parser.parse(code, "ts")
+            expect(ast.functions[0].params[0].hasDefault).toBe(true)
+        })
     })
 
     describe("classes", () => {
@@ -176,6 +232,46 @@ describe("ASTParser", () => {
             const ast = parser.parse(code, "ts")
             expect(ast.classes[0].extends).toBe("Parent")
         })
+
+        it("should extract class implements", () => {
+            const code = `class Service implements IService, IDisposable {}`
+            const ast = parser.parse(code, "ts")
+            expect(ast.classes[0].implements).toContain("IService")
+            expect(ast.classes[0].implements).toContain("IDisposable")
+        })
+
+        it("should extract class extends and implements", () => {
+            const code = `class Child extends Parent implements IChild {}`
+            const ast = parser.parse(code, "ts")
+            expect(ast.classes[0].extends).toBe("Parent")
+            expect(ast.classes[0].implements).toContain("IChild")
+        })
+
+
+        it("should extract class properties with modifiers", () => {
+            const code = `class Test {
+                public name: string
+                private id: number
+                protected data: any
+                static count = 0
+                readonly version = "1.0"
+            }`
+            const ast = parser.parse(code, "ts")
+            expect(ast.classes[0].properties.length).toBeGreaterThanOrEqual(3)
+        })
+
+        it("should extract method with visibility modifiers", () => {
+            const code = `class Service {
+                public get() {}
+                private process() {}
+                protected validate() {}
+            }`
+            const ast = parser.parse(code, "ts")
+            const methods = ast.classes[0].methods
+            expect(methods.some((m) => m.visibility === "public")).toBe(true)
+            expect(methods.some((m) => m.visibility === "private")).toBe(true)
+            expect(methods.some((m) => m.visibility === "protected")).toBe(true)
+        })
     })
 
     describe("interfaces", () => {
@@ -205,6 +301,23 @@ describe("ASTParser", () => {
             }`
             const ast = parser.parse(code, "ts")
             expect(ast.interfaces[0].properties.length).toBeGreaterThanOrEqual(1)
+        })
+
+        it("should extract interface extends", () => {
+            const code = `interface ExtendedUser extends BaseUser, Timestamps {
+                role: string
+            }`
+            const ast = parser.parse(code, "ts")
+            expect(ast.interfaces[0].extends).toContain("BaseUser")
+            expect(ast.interfaces[0].extends).toContain("Timestamps")
+        })
+
+        it("should extract readonly interface properties", () => {
+            const code = `interface Config {
+                readonly version: string
+            }`
+            const ast = parser.parse(code, "ts")
+            expect(ast.interfaces[0].properties[0].isReadonly).toBe(true)
         })
     })
 
@@ -278,6 +391,21 @@ describe("ASTParser", () => {
             `
             const ast = parser.parse(code, "jsx")
             expect(ast.parseError).toBe(false)
+        })
+
+        it("should handle simple JS function parameters", () => {
+            const code = `function test(a, b, c) { return a + b + c }`
+            const ast = parser.parse(code, "js")
+            expect(ast.functions).toHaveLength(1)
+            expect(ast.functions[0].params).toHaveLength(3)
+            expect(ast.functions[0].params[0].name).toBe("a")
+        })
+
+        it("should handle arrow function with simple params", () => {
+            const code = `const fn = (x, y) => x * y`
+            const ast = parser.parse(code, "js")
+            expect(ast.functions).toHaveLength(1)
+            expect(ast.functions[0].params).toHaveLength(2)
         })
     })
 

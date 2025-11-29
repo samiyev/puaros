@@ -183,6 +183,18 @@ describe("FileScanner", () => {
             const isText = await FileScanner.isTextFile("/non/existent/file.ts")
             expect(isText).toBe(false)
         })
+
+        it("should return true for empty files", async () => {
+            const emptyFilePath = path.join(FIXTURES_DIR, "empty-test.txt")
+            await fs.writeFile(emptyFilePath, "")
+
+            try {
+                const isText = await FileScanner.isTextFile(emptyFilePath)
+                expect(isText).toBe(true)
+            } finally {
+                await fs.unlink(emptyFilePath)
+            }
+        })
     })
 
     describe("readFileContent", () => {
