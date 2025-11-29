@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Puaros is a TypeScript monorepo using pnpm workspaces. Currently contains the `@puaros/guardian` package - a code quality guardian for detecting hardcoded values, circular dependencies, framework leaks, naming violations, and architecture violations. The project uses Node.js 22.18.0 (see `.nvmrc`).
+Puaros is a TypeScript monorepo using pnpm workspaces. Contains two packages:
+
+- **`@puaros/guardian`** - Code quality guardian for detecting hardcoded values, circular dependencies, framework leaks, naming violations, and architecture violations.
+
+- **`@puaros/ipuaro`** - Local AI agent for codebase operations with "infinite" context feeling. Uses lazy loading, Redis persistence, tree-sitter AST parsing, and Ollama LLM integration.
+
+The project uses Node.js 22.18.0 (see `.nvmrc`).
 
 ## Essential Commands
 
@@ -110,18 +116,27 @@ Commits should only follow the Conventional Commits format without any additiona
 ```
 puaros/
 ├── packages/
-│   └── guardian/                # @puaros/guardian - Code quality analyzer
-│       ├── src/                 # Source files (Clean Architecture layers)
-│       │   ├── domain/          # Domain layer (entities, value objects)
-│       │   ├── application/     # Application layer (use cases, DTOs)
-│       │   ├── infrastructure/  # Infrastructure layer (parsers, analyzers)
-│       │   ├── cli/            # CLI implementation
-│       │   └── shared/          # Shared utilities
-│       ├── dist/                # Build output
+│   ├── guardian/                # @puaros/guardian - Code quality analyzer
+│   │   ├── src/                 # Source files (Clean Architecture)
+│   │   │   ├── domain/          # Entities, value objects
+│   │   │   ├── application/     # Use cases, DTOs
+│   │   │   ├── infrastructure/  # Parsers, analyzers
+│   │   │   ├── cli/             # CLI implementation
+│   │   │   └── shared/          # Shared utilities
+│   │   ├── bin/                 # CLI entry point
+│   │   ├── tests/               # Test files
+│   │   └── examples/            # Usage examples
+│   └── ipuaro/                  # @puaros/ipuaro - Local AI agent
+│       ├── src/                 # Source files (Clean Architecture)
+│       │   ├── domain/          # Entities, value objects, services
+│       │   ├── application/     # Use cases, DTOs, mappers
+│       │   ├── infrastructure/  # Storage, LLM, indexer, tools
+│       │   ├── tui/             # Terminal UI (Ink/React)
+│       │   ├── cli/             # CLI commands
+│       │   └── shared/          # Types, constants, utils
 │       ├── bin/                 # CLI entry point
-│       ├── tests/               # Test files
-│       ├── examples/            # Usage examples
-│       └── package.json         # Uses Vitest for testing
+│       ├── tests/               # Unit and E2E tests
+│       └── examples/            # Demo projects
 ├── pnpm-workspace.yaml          # Workspace configuration
 └── tsconfig.base.json           # Shared TypeScript config
 ```
@@ -141,6 +156,34 @@ Key features:
 - Naming convention validation
 - Architecture violation detection
 - CLI tool with `guardian` command
+
+### ipuaro Package Architecture
+
+The ipuaro package follows Clean Architecture principles:
+- **Domain Layer**: Entities (Session, Project), value objects (FileData, FileAST, ChatMessage), service interfaces
+- **Application Layer**: Use cases (StartSession, HandleMessage, IndexProject, ExecuteTool), DTOs, mappers
+- **Infrastructure Layer**: Redis storage, Ollama client, indexer, 18 tool implementations, security
+- **TUI Layer**: Ink/React components (StatusBar, Chat, Input, DiffView, ConfirmDialog)
+- **CLI Layer**: Commander.js entry point and commands
+
+Key features:
+- 18 LLM tools (read, edit, search, analysis, git, run)
+- Redis persistence with AOF
+- tree-sitter AST parsing (ts, tsx, js, jsx)
+- Ollama LLM integration (qwen2.5-coder:7b-instruct)
+- File watching via chokidar
+- Session and undo management
+- Security (blacklist/whitelist for commands)
+
+**Tools summary:**
+| Category | Tools |
+|----------|-------|
+| Read | get_lines, get_function, get_class, get_structure |
+| Edit | edit_lines, create_file, delete_file |
+| Search | find_references, find_definition |
+| Analysis | get_dependencies, get_dependents, get_complexity, get_todos |
+| Git | git_status, git_diff, git_commit |
+| Run | run_command, run_tests |
 
 ### TypeScript Configuration
 
@@ -169,19 +212,30 @@ Guardian package (`packages/guardian/tsconfig.json`):
 
 ## Dependencies
 
-Guardian package uses:
-- `commander` - CLI framework for command-line interface
+**Guardian package:**
+- `commander` - CLI framework
 - `simple-git` - Git operations
-- `tree-sitter` - Abstract syntax tree parsing
-- `tree-sitter-javascript` - JavaScript parser
-- `tree-sitter-typescript` - TypeScript parser
+- `tree-sitter` - AST parsing
+- `tree-sitter-javascript/typescript` - JS/TS parsers
 - `uuid` - UUID generation
 
-Development tools:
-- Vitest for testing with coverage thresholds
+**ipuaro package:**
+- `ink`, `ink-text-input`, `react` - Terminal UI
+- `ioredis` - Redis client
+- `tree-sitter` - AST parsing
+- `tree-sitter-javascript/typescript` - JS/TS parsers
+- `ollama` - LLM client
+- `simple-git` - Git operations
+- `chokidar` - File watching
+- `commander` - CLI framework
+- `zod` - Validation
+- `ignore` - Gitignore parsing
+
+**Development tools (shared):**
+- Vitest for testing (80% coverage threshold)
 - ESLint with TypeScript strict rules
-- Prettier for formatting
-- `@vitest/ui` - Vitest UI for interactive testing
+- Prettier (4-space indentation)
+- `@vitest/ui` - Interactive testing UI
 - `@vitest/coverage-v8` - Coverage reporting
 
 ## Development Workflow

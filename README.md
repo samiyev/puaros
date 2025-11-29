@@ -6,6 +6,8 @@ A TypeScript monorepo for code quality and analysis tools.
 
 - **[@puaros/guardian](./packages/guardian)** - Research-backed code quality guardian for vibe coders and enterprise teams. Detects hardcoded values, secrets, circular dependencies, architecture violations, and anemic domain models. Every rule is based on academic research, industry standards (OWASP, SonarQube), and authoritative books (Martin Fowler, Uncle Bob, Eric Evans). Perfect for AI-assisted development and enforcing Clean Architecture at scale.
 
+- **[@puaros/ipuaro](./packages/ipuaro)** - Local AI agent for codebase operations with "infinite" context feeling. Uses lazy loading and smart context management to work with codebases of any size. Features 18 LLM tools for reading, editing, searching, and analyzing code. Built with Ink/React TUI, Redis persistence, tree-sitter AST parsing, and Ollama integration.
+
 ## Prerequisites
 
 - Node.js 22.18.0 (use `nvm use` to automatically switch to the correct version)
@@ -75,18 +77,27 @@ pnpm eslint "packages/**/*.ts"
 ```
 puaros/
 ├── packages/
-│   └── guardian/              # @puaros/guardian - Code quality analyzer
+│   ├── guardian/              # @puaros/guardian - Code quality analyzer
+│   │   ├── src/               # Source files (Clean Architecture)
+│   │   │   ├── domain/        # Domain layer
+│   │   │   ├── application/   # Application layer
+│   │   │   ├── infrastructure/# Infrastructure layer
+│   │   │   ├── cli/           # CLI implementation
+│   │   │   └── shared/        # Shared utilities
+│   │   ├── bin/               # CLI entry point
+│   │   ├── tests/             # Unit and integration tests
+│   │   └── examples/          # Usage examples
+│   └── ipuaro/                # @puaros/ipuaro - Local AI agent
 │       ├── src/               # Source files (Clean Architecture)
-│       │   ├── domain/        # Domain layer
-│       │   ├── application/   # Application layer
-│       │   ├── infrastructure/# Infrastructure layer
-│       │   ├── cli/          # CLI implementation
-│       │   └── shared/        # Shared utilities
-│       ├── dist/              # Build output (generated)
+│       │   ├── domain/        # Entities, value objects, services
+│       │   ├── application/   # Use cases, DTOs, mappers
+│       │   ├── infrastructure/# Storage, LLM, indexer, tools
+│       │   ├── tui/           # Terminal UI (Ink/React)
+│       │   ├── cli/           # CLI commands
+│       │   └── shared/        # Types, constants, utils
 │       ├── bin/               # CLI entry point
-│       ├── tests/             # Unit and integration tests
-│       ├── examples/          # Usage examples
-│       └── package.json
+│       ├── tests/             # Unit and E2E tests
+│       └── examples/          # Demo projects
 ├── pnpm-workspace.yaml        # Workspace configuration
 ├── tsconfig.base.json         # Shared TypeScript config
 ├── eslint.config.mjs          # ESLint configuration
@@ -203,6 +214,79 @@ node bin/guardian.js analyze <project-path>
 guardian check ./src --format json > report.json
 guardian check ./src --fail-on hardcode --fail-on circular
 ```
+
+## ipuaro Package
+
+The `@puaros/ipuaro` package is a local AI agent for codebase operations:
+
+### Features
+
+- **Infinite Context Feeling**: Lazy loading and smart context management for any codebase size
+- **18 LLM Tools**: Read, edit, search, analyze code through natural language
+- **Terminal UI**: Full-featured TUI built with Ink/React
+- **Redis Persistence**: Sessions, undo stack, and project index stored in Redis
+- **AST Parsing**: tree-sitter for TypeScript/JavaScript analysis
+- **File Watching**: Real-time index updates via chokidar
+- **Security**: Blacklist/whitelist for command execution
+
+### Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Runtime | Node.js + TypeScript |
+| TUI | Ink (React for terminal) |
+| Storage | Redis with AOF persistence |
+| AST | tree-sitter (ts, tsx, js, jsx) |
+| LLM | Ollama (qwen2.5-coder:7b-instruct) |
+| Git | simple-git |
+| File watching | chokidar |
+
+### Tools (18 total)
+
+| Category | Tools |
+|----------|-------|
+| **Read** | get_lines, get_function, get_class, get_structure |
+| **Edit** | edit_lines, create_file, delete_file |
+| **Search** | find_references, find_definition |
+| **Analysis** | get_dependencies, get_dependents, get_complexity, get_todos |
+| **Git** | git_status, git_diff, git_commit |
+| **Run** | run_command, run_tests |
+
+### Architecture
+
+Built with Clean Architecture principles:
+- **Domain Layer**: Entities, value objects, service interfaces
+- **Application Layer**: Use cases, DTOs, mappers
+- **Infrastructure Layer**: Redis storage, Ollama client, indexer, tools
+- **TUI Layer**: Ink/React components and hooks
+- **CLI Layer**: Commander.js entry point
+
+### Usage
+
+```bash
+# Start TUI in current directory
+ipuaro
+
+# Start in specific directory
+ipuaro /path/to/project
+
+# Index only (no TUI)
+ipuaro index
+
+# With auto-apply mode
+ipuaro --auto-apply
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Show all commands |
+| `/clear` | Clear chat history |
+| `/undo` | Revert last file change |
+| `/sessions` | Manage sessions |
+| `/status` | System status |
+| `/reindex` | Force reindexation |
 
 ## Dependencies
 
