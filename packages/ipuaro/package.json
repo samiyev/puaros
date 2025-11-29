@@ -1,0 +1,80 @@
+{
+    "name": "@samiyev/ipuaro",
+    "version": "0.1.0",
+    "description": "Local AI agent for codebase operations with infinite context feeling",
+    "author": "Fozilbek Samiyev <fozilbek.samiyev@gmail.com>",
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "bin": {
+        "ipuaro": "./bin/ipuaro.js"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist",
+        "bin"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "watch": "tsup --watch",
+        "clean": "rm -rf dist",
+        "test": "vitest",
+        "test:run": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:ui": "vitest --ui",
+        "test:watch": "vitest --watch",
+        "lint": "eslint src --fix",
+        "format": "prettier --write src"
+    },
+    "dependencies": {
+        "ink": "^4.4.1",
+        "ink-text-input": "^5.0.1",
+        "react": "^18.2.0",
+        "ioredis": "^5.4.1",
+        "tree-sitter": "^0.21.1",
+        "tree-sitter-typescript": "^0.21.2",
+        "tree-sitter-javascript": "^0.21.0",
+        "ollama": "^0.5.11",
+        "simple-git": "^3.27.0",
+        "chokidar": "^3.6.0",
+        "commander": "^11.1.0",
+        "zod": "^3.23.8",
+        "ignore": "^5.3.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.1",
+        "@types/react": "^18.2.0",
+        "vitest": "^1.6.0",
+        "@vitest/coverage-v8": "^1.6.0",
+        "@vitest/ui": "^1.6.0",
+        "tsup": "^8.3.5",
+        "typescript": "^5.7.2"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "keywords": [
+        "ai",
+        "agent",
+        "codebase",
+        "llm",
+        "ollama",
+        "cli",
+        "terminal"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/samiyev/puaros.git",
+        "directory": "packages/ipuaro"
+    },
+    "bugs": {
+        "url": "https://github.com/samiyev/puaros/issues"
+    },
+    "homepage": "https://github.com/samiyev/puaros/tree/main/packages/ipuaro#readme"
+}

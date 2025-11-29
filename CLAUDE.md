@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Puaros is a TypeScript monorepo using pnpm workspaces. Contains two packages:
 
-- **`@puaros/guardian`** - Code quality guardian for detecting hardcoded values, circular dependencies, framework leaks, naming violations, and architecture violations.
+- **`@samiyev/guardian`** - Code quality guardian for detecting hardcoded values, circular dependencies, framework leaks, naming violations, and architecture violations.
 
-- **`@puaros/ipuaro`** - Local AI agent for codebase operations with "infinite" context feeling. Uses lazy loading, Redis persistence, tree-sitter AST parsing, and Ollama LLM integration.
+- **`@samiyev/ipuaro`** - Local AI agent for codebase operations with "infinite" context feeling. Uses lazy loading, Redis persistence, tree-sitter AST parsing, and Ollama LLM integration.
 
 The project uses Node.js 22.18.0 (see `.nvmrc`).
 
@@ -170,7 +170,7 @@ Examples:
 ```
 puaros/
 ├── packages/
-│   ├── guardian/                # @puaros/guardian - Code quality analyzer
+│   ├── guardian/                # @samiyev/guardian - Code quality analyzer
 │   │   ├── src/                 # Source files (Clean Architecture)
 │   │   │   ├── domain/          # Entities, value objects
 │   │   │   ├── application/     # Use cases, DTOs
@@ -180,7 +180,7 @@ puaros/
 │   │   ├── bin/                 # CLI entry point
 │   │   ├── tests/               # Test files
 │   │   └── examples/            # Usage examples
-│   └── ipuaro/                  # @puaros/ipuaro - Local AI agent
+│   └── ipuaro/                  # @samiyev/ipuaro - Local AI agent
 │       ├── src/                 # Source files (Clean Architecture)
 │       │   ├── domain/          # Entities, value objects, services
 │       │   ├── application/     # Use cases, DTOs, mappers
@@ -260,7 +260,7 @@ Guardian package (`packages/guardian/tsconfig.json`):
 ## Adding New Packages
 
 1. Create `packages/new-package/` directory
-2. Add `package.json` with name `@puaros/new-package`
+2. Add `package.json` with name `@samiyev/new-package`
 3. Create `tsconfig.json` extending `../../tsconfig.base.json`
 4. Package auto-discovered via `pnpm-workspace.yaml` glob pattern
 
@@ -412,7 +412,7 @@ npm pack --dry-run
 npm publish --access public
 
 # Verify
-npm info @puaros/<package>
+npm info @samiyev/<package>
 ```
 
 ## Pipeline Checklist
