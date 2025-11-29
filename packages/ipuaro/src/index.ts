@@ -4,6 +4,11 @@
  * Main entry point for the library.
  */
 
+import { createRequire } from "node:module"
+
+const require = createRequire(import.meta.url)
+const pkg = require("../package.json") as { version: string }
+
 // Domain exports
 export * from "./domain/index.js"
 
@@ -17,4 +22,4 @@ export * from "./shared/index.js"
 export * from "./infrastructure/index.js"
 
 // Version
-export const VERSION = "0.2.0"
+export const VERSION = pkg.version

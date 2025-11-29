@@ -11,6 +11,7 @@
         "declarationMap": true,
         "sourceMap": true,
         "strict": true,
+        "resolveJsonModule": true,
         "skipLibCheck": true,
         "esModuleInterop": true,
         "resolvePackageJsonExports": true,

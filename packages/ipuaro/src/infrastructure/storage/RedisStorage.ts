@@ -25,7 +25,7 @@ export class RedisStorage implements IStorage {
         if (!data) {
             return null
         }
-        return this.parseJSON<FileData>(data, "FileData")
+        return this.parseJSON(data, "FileData") as FileData
     }
 
     async setFile(path: string, data: FileData): Promise<void> {
@@ -44,7 +44,7 @@ export class RedisStorage implements IStorage {
         const result = new Map<string, FileData>()
 
         for (const [path, value] of Object.entries(data)) {
-            const parsed = this.parseJSON<FileData>(value, "FileData")
+            const parsed = this.parseJSON(value, "FileData") as FileData | null
             if (parsed) {
                 result.set(path, parsed)
             }
@@ -64,7 +64,7 @@ export class RedisStorage implements IStorage {
         if (!data) {
             return null
         }
-        return this.parseJSON<FileAST>(data, "FileAST")
+        return this.parseJSON(data, "FileAST") as FileAST
     }
 
     async setAST(path: string, ast: FileAST): Promise<void> {
@@ -83,7 +83,7 @@ export class RedisStorage implements IStorage {
         const result = new Map<string, FileAST>()
 
         for (const [path, value] of Object.entries(data)) {
-            const parsed = this.parseJSON<FileAST>(value, "FileAST")
+            const parsed = this.parseJSON(value, "FileAST") as FileAST | null
             if (parsed) {
                 result.set(path, parsed)
             }
@@ -98,7 +98,7 @@ export class RedisStorage implements IStorage {
         if (!data) {
             return null
         }
-        return this.parseJSON<FileMeta>(data, "FileMeta")
+        return this.parseJSON(data, "FileMeta") as FileMeta
     }
 
     async setMeta(path: string, meta: FileMeta): Promise<void> {
@@ -117,7 +117,7 @@ export class RedisStorage implements IStorage {
         const result = new Map<string, FileMeta>()
 
         for (const [path, value] of Object.entries(data)) {
-            const parsed = this.parseJSON<FileMeta>(value, "FileMeta")
+            const parsed = this.parseJSON(value, "FileMeta") as FileMeta | null
             if (parsed) {
                 result.set(path, parsed)
             }
@@ -133,7 +133,7 @@ export class RedisStorage implements IStorage {
             return new Map()
         }
 
-        const parsed = this.parseJSON<[string, unknown[]][]>(data, "SymbolIndex")
+        const parsed = this.parseJSON(data, "SymbolIndex") as [string, unknown[]][] | null
         if (!parsed) {
             return new Map()
         }
@@ -157,10 +157,10 @@ export class RedisStorage implements IStorage {
             }
         }
 
-        const parsed = this.parseJSON<{
+        const parsed = this.parseJSON(data, "DepsGraph") as {
             imports: [string, string[]][]
             importedBy: [string, string[]][]
-        }>(data, "DepsGraph")
+        } | null
 
         if (!parsed) {
             return {
@@ -190,7 +190,7 @@ export class RedisStorage implements IStorage {
         if (!data) {
             return null
         }
-        return this.parseJSON<unknown>(data, "ProjectConfig")
+        return this.parseJSON(data, "ProjectConfig")
     }
 
     async setProjectConfig(key: string, value: unknown): Promise<void> {
@@ -225,9 +225,9 @@ export class RedisStorage implements IStorage {
         return this.client.getClient()
     }
 
-    private parseJSON<T>(data: string, type: string): T | null {
+    private parseJSON(data: string, type: string): unknown {
         try {
-            return JSON.parse(data) as T
+            return JSON.parse(data) as unknown
         } catch (error) {
             const message = error instanceof Error ? error.message : "Unknown error"
             throw IpuaroError.parse(`Failed to parse ${type}: ${message}`)

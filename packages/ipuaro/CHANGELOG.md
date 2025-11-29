@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-11-30
+
+### Added
+
+- **VERSION export** - Package version is now exported from index.ts, automatically read from package.json via `createRequire`
+
+### Changed
+
+- 🔄 **Refactored ASTParser** - Reduced complexity and nesting depth:
+  - Extracted `extractClassHeritage()`, `parseHeritageClause()`, `findTypeIdentifier()`, `collectImplements()` helper methods
+  - Max nesting depth reduced from 5 to 4
+- 🔄 **Refactored RedisStorage** - Removed unnecessary type parameter from `parseJSON()` method
+
+### Quality
+
+- ✅ **Zero lint warnings** - All ESLint warnings resolved
+- ✅ **All 321 tests pass**
+
 ## [0.3.0] - 2025-11-30 - Indexer
 
 ### Added

@@ -306,38 +306,7 @@ export class ASTParser {
             }
         }
 
-        let extendsName: string | undefined
-        const implementsList: string[] = []
-
-        for (const child of node.children) {
-            if (child.type === NodeType.CLASS_HERITAGE) {
-                for (const clause of child.children) {
-                    if (clause.type === NodeType.EXTENDS_CLAUSE) {
-                        const typeNode = clause.children.find(
-                            (c) =>
-                                c.type === NodeType.TYPE_IDENTIFIER ||
-                                c.type === NodeType.IDENTIFIER,
-                        )
-                        extendsName = typeNode?.text
-                    } else if (clause.type === NodeType.IMPLEMENTS_CLAUSE) {
-                        for (const impl of clause.children) {
-                            if (
-                                impl.type === NodeType.TYPE_IDENTIFIER ||
-                                impl.type === NodeType.IDENTIFIER
-                            ) {
-                                implementsList.push(impl.text)
-                            }
-                        }
-                    }
-                }
-            } else if (child.type === NodeType.EXTENDS_CLAUSE) {
-                const typeNode = child.children.find(
-                    (c) => c.type === NodeType.TYPE_IDENTIFIER || c.type === NodeType.IDENTIFIER,
-                )
-                extendsName = typeNode?.text
-            }
-        }
-
+        const { extendsName, implementsList } = this.extractClassHeritage(node)
         const isAbstract = node.children.some((c) => c.type === NodeType.ABSTRACT)
 
         ast.classes.push({
@@ -351,6 +320,56 @@ export class ASTParser {
             isExported,
             isAbstract,
         })
+    }
+
+    private extractClassHeritage(node: SyntaxNode): {
+        extendsName: string | undefined
+        implementsList: string[]
+    } {
+        let extendsName: string | undefined
+        const implementsList: string[] = []
+
+        for (const child of node.children) {
+            if (child.type === NodeType.CLASS_HERITAGE) {
+                this.parseHeritageClause(child, (ext) => (extendsName = ext), implementsList)
+            } else if (child.type === NodeType.EXTENDS_CLAUSE) {
+                extendsName = this.findTypeIdentifier(child)
+            }
+        }
+
+        return { extendsName, implementsList }
+    }
+
+    private parseHeritageClause(
+        heritage: SyntaxNode,
+        setExtends: (name: string) => void,
+        implementsList: string[],
+    ): void {
+        for (const clause of heritage.children) {
+            if (clause.type === NodeType.EXTENDS_CLAUSE) {
+                const typeId = this.findTypeIdentifier(clause)
+                if (typeId) {
+                    setExtends(typeId)
+                }
+            } else if (clause.type === NodeType.IMPLEMENTS_CLAUSE) {
+                this.collectImplements(clause, implementsList)
+            }
+        }
+    }
+
+    private findTypeIdentifier(node: SyntaxNode): string | undefined {
+        const typeNode = node.children.find(
+            (c) => c.type === NodeType.TYPE_IDENTIFIER || c.type === NodeType.IDENTIFIER,
+        )
+        return typeNode?.text
+    }
+
+    private collectImplements(clause: SyntaxNode, list: string[]): void {
+        for (const impl of clause.children) {
+            if (impl.type === NodeType.TYPE_IDENTIFIER || impl.type === NodeType.IDENTIFIER) {
+                list.push(impl.text)
+            }
+        }
     }
 
     private extractMethod(node: SyntaxNode): MethodInfo {
