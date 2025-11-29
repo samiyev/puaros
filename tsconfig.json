@@ -9,19 +9,7 @@
             "path": "./packages/guardian"
         },
         {
-            "path": "./packages/server"
-        },
-        {
-            "path": "./packages/cli"
-        },
-        {
-            "path": "./packages/sdk"
-        },
-        {
-            "path": "./packages/mcp"
-        },
-        {
-            "path": "./packages/vscode"
+            "path": "./packages/ipuaro"
         }
     ],
     "files": []

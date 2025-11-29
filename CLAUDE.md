@@ -12,6 +12,46 @@ Puaros is a TypeScript monorepo using pnpm workspaces. Contains two packages:
 
 The project uses Node.js 22.18.0 (see `.nvmrc`).
 
+## Path Reference
+
+**Root:** `/Users/fozilbeksamiyev/projects/ailabs/puaros`
+
+### Key Paths
+
+| Description | Path |
+|-------------|------|
+| **Root** | `.` |
+| **Guardian package** | `packages/guardian` |
+| **Guardian src** | `packages/guardian/src` |
+| **Guardian tests** | `packages/guardian/tests` |
+| **Guardian CLI** | `packages/guardian/src/cli` |
+| **Guardian domain** | `packages/guardian/src/domain` |
+| **Guardian infrastructure** | `packages/guardian/src/infrastructure` |
+| **ipuaro package** | `packages/ipuaro` |
+| **ipuaro docs** | `packages/ipuaro/docs` |
+
+### File Locations
+
+| File | Location |
+|------|----------|
+| Root package.json | `./package.json` |
+| Guardian package.json | `packages/guardian/package.json` |
+| Guardian tsconfig | `packages/guardian/tsconfig.json` |
+| Guardian TODO | `packages/guardian/TODO.md` |
+| Guardian CHANGELOG | `packages/guardian/CHANGELOG.md` |
+| ipuaro ROADMAP | `packages/ipuaro/ROADMAP.md` |
+| ESLint config | `./eslint.config.mjs` |
+| Prettier config | `./.prettierrc` |
+| Base tsconfig | `./tsconfig.base.json` |
+
+### Path Rules
+
+1. **Always use relative paths from project root** (not absolute)
+2. **Package paths start with** `packages/<name>/`
+3. **Source code is in** `packages/<name>/src/`
+4. **Tests are in** `packages/<name>/tests/`
+5. **Docs are in** `packages/<name>/docs/` or `./docs/`
+
 ## Essential Commands
 
 ### Build & Development
@@ -106,10 +146,24 @@ From `eslint.config.mjs` and detailed in `LINTING.md`:
 
 Follow Conventional Commits format. See `.gitmessage` for full rules.
 
-Format: `<type>: <subject>` (imperative mood, no caps, max 50 chars)
+**Monorepo format:** `<type>(<package>): <subject>`
 
-**IMPORTANT: Do NOT add "Generated with Claude Code" footer or "Co-Authored-By: Claude" to commit messages.**
-Commits should only follow the Conventional Commits format without any additional attribution.
+Examples:
+- `feat(guardian): add circular dependency detector`
+- `fix(ipuaro): resolve memory leak in indexer`
+- `docs(guardian): update CLI usage examples`
+- `refactor(ipuaro): extract tool registry`
+
+**Root-level changes:** `<type>: <subject>` (no scope)
+- `chore: update eslint config`
+- `docs: update root README`
+
+**Types:** feat, fix, docs, style, refactor, test, chore
+
+**Rules:**
+- Imperative mood, no caps, max 50 chars
+- Do NOT add "Generated with Claude Code" footer
+- Do NOT add "Co-Authored-By: Claude"
 
 ## Monorepo Structure
 
@@ -238,232 +292,222 @@ Guardian package (`packages/guardian/tsconfig.json`):
 - `@vitest/ui` - Interactive testing UI
 - `@vitest/coverage-v8` - Coverage reporting
 
-## Development Workflow
+## Monorepo Versioning Strategy
 
-### Complete Feature Development & Release Workflow
+### Git Tag Format
 
-This workflow ensures high quality and consistency from feature implementation to package publication.
-
-#### Phase 1: Feature Planning & Implementation
-
-```bash
-# 1. Create feature branch (if needed)
-git checkout -b feature/your-feature-name
-
-# 2. Implement feature following Clean Architecture
-# - Add to appropriate layer (domain/application/infrastructure/cli)
-# - Follow naming conventions
-# - Keep functions small and focused
-
-# 3. Update constants if adding CLI options
-# Edit: packages/guardian/src/cli/constants.ts
+**Prefixed tags for each package:**
+```
+guardian-v0.5.0
+ipuaro-v0.1.0
 ```
 
-#### Phase 2: Quality Checks (Run After Implementation)
+**Why prefixed tags:**
+- Independent versioning per package
+- Clear release history for each package
+- Works with npm publish and CI/CD
+- Easy to filter: `git tag -l "guardian-*"`
+
+**Legacy tags:** Tags before monorepo (v0.1.0, v0.2.0, etc.) are kept as-is for historical reference.
+
+### Semantic Versioning
+
+All packages follow SemVer: `MAJOR.MINOR.PATCH`
+
+- **MAJOR** (1.0.0) - Breaking API changes
+- **MINOR** (0.1.0) - New features, backwards compatible
+- **PATCH** (0.0.1) - Bug fixes, backwards compatible
+
+**Pre-1.0 policy:** Minor bumps (0.x.0) may include breaking changes.
+
+## Release Pipeline
+
+**Quick reference:** Say "run pipeline for [package]" to execute full release flow.
+
+The pipeline has 6 phases. Each phase must pass before proceeding.
+
+### Phase 1: Quality Gates
 
 ```bash
-# Navigate to package
-cd packages/guardian
+cd packages/<package>
 
-# 1. Format code (REQUIRED - 4 spaces indentation)
-pnpm format
-
-# 2. Build to check compilation
-pnpm build
-
-# 3. Run linter (must pass with 0 errors, 0 warnings)
-cd ../.. && pnpm eslint "packages/**/*.ts" --fix
-
-# 4. Run tests (all must pass)
-pnpm test:run
-
-# 5. Check coverage (must be ≥80%)
-pnpm test:coverage
+# All must pass:
+pnpm format                              # 4-space indentation
+pnpm build                               # TypeScript compiles
+cd ../.. && pnpm eslint "packages/**/*.ts" --fix  # 0 errors, 0 warnings
+cd packages/<package>
+pnpm test:run                            # All tests pass
+pnpm test:coverage                       # Coverage ≥80%
 ```
 
-**Quality Gates:**
-- ✅ Format: No changes after `pnpm format`
-- ✅ Build: TypeScript compiles without errors
-- ✅ Lint: 0 errors, 0 warnings
-- ✅ Tests: All tests pass (292/292)
-- ✅ Coverage: ≥80% on all metrics
+### Phase 2: Documentation
 
-#### Phase 3: Documentation Updates
+Update these files in `packages/<package>/`:
+
+| File | Action |
+|------|--------|
+| `README.md` | Add feature docs, update CLI usage, update API |
+| `TODO.md` | Mark completed tasks, add new tech debt if any |
+| `CHANGELOG.md` | Add version entry with all changes |
+| `ROADMAP.md` | Update if milestone completed |
+
+**Tech debt rule:** If implementation leaves known issues, shortcuts, or future improvements needed — add them to TODO.md before committing.
+
+### Phase 3: Manual Testing
 
 ```bash
-# 1. Update README.md
-# - Add new feature to Features section
-# - Update CLI Usage examples if CLI changed
-# - Update API documentation if public API changed
-# - Update TypeScript interfaces
+cd packages/<package>
 
-# 2. Update TODO.md
-# - Mark completed tasks as done
-# - Add new technical debt if discovered
-# - Document coverage issues for new files
-# - Update "Recent Updates" section with changes
+# Test CLI/API manually
+node dist/cli/index.js <command> ./examples
 
-# 3. Update CHANGELOG.md (for releases)
-# - Add entry with version number
-# - List all changes (features, fixes, improvements)
-# - Follow Keep a Changelog format
+# Verify output, edge cases, error handling
 ```
 
-#### Phase 4: Verification & Testing
+### Phase 4: Commit
 
 ```bash
-# 1. Test CLI manually with examples
-cd packages/guardian
-node dist/cli/index.js check ./examples --limit 5
-
-# 2. Test new feature with different options
-node dist/cli/index.js check ./examples --only-critical
-node dist/cli/index.js check ./examples --min-severity high
-
-# 3. Verify output formatting and messages
-# - Check that all violations display correctly
-# - Verify severity labels and suggestions
-# - Test edge cases and error handling
-
-# 4. Run full quality check suite
-pnpm format && pnpm eslint "packages/**/*.ts" && pnpm build && pnpm test:run
-```
-
-#### Phase 5: Commit & Version
-
-```bash
-# 1. Stage changes
 git add .
+git commit -m "<type>(<package>): <description>"
 
-# 2. Commit with Conventional Commits format
-git commit -m "feat: add --limit option for output control"
-# or
-git commit -m "fix: resolve unused variable in detector"
-# or
-git commit -m "docs: update README with new features"
-
-# Types: feat, fix, docs, style, refactor, test, chore
-
-# 3. Update package version (if releasing)
-cd packages/guardian
-npm version patch  # Bug fixes (0.5.2 → 0.5.3)
-npm version minor  # New features (0.5.2 → 0.6.0)
-npm version major  # Breaking changes (0.5.2 → 1.0.0)
-
-# 4. Push changes
-git push origin main  # or your branch
-git push --tags      # Push version tags
+# Examples:
+# feat(guardian): add --limit option
+# fix(ipuaro): resolve memory leak in indexer
+# docs(guardian): update API examples
 ```
 
-#### Phase 6: Publication (Maintainers Only)
+**Commit types:** feat, fix, docs, style, refactor, test, chore
+
+### Phase 5: Version & Tag
 
 ```bash
-# 1. Final verification before publish
-cd packages/guardian
+cd packages/<package>
+
+# Bump version
+npm version patch  # 0.5.2 → 0.5.3 (bug fix)
+npm version minor  # 0.5.2 → 0.6.0 (new feature)
+npm version major  # 0.5.2 → 1.0.0 (breaking change)
+
+# Create prefixed git tag
+git tag <package>-v<version>
+# Example: git tag guardian-v0.6.0
+
+# Push
+git push origin main
+git push origin <package>-v<version>
+```
+
+### Phase 6: Publish (Maintainers Only)
+
+```bash
+cd packages/<package>
+
+# Final verification
 pnpm build && pnpm test:run && pnpm test:coverage
 
-# 2. Verify package contents
+# Check package contents
 npm pack --dry-run
 
-# 3. Publish to npm
+# Publish
 npm publish --access public
 
-# 4. Verify publication
-npm info @samiyev/guardian
-
-# 5. Test installation
-npm install -g @samiyev/guardian@latest
-guardian --version
+# Verify
+npm info @puaros/<package>
 ```
 
-### Quick Checklist for New Features
+## Pipeline Checklist
 
-**Before Committing:**
-- [ ] Feature implemented in correct layer
-- [ ] Code formatted with `pnpm format`
-- [ ] Lint passes: `pnpm eslint "packages/**/*.ts"`
-- [ ] Build succeeds: `pnpm build`
-- [ ] All tests pass: `pnpm test:run`
-- [ ] Coverage ≥80%: `pnpm test:coverage`
-- [ ] CLI tested manually if CLI changed
-- [ ] README.md updated with examples
-- [ ] TODO.md updated with progress
-- [ ] No `console.log` in production code
-- [ ] TypeScript interfaces documented
+Copy and use for each release:
 
-**Before Publishing:**
-- [ ] CHANGELOG.md updated
+```markdown
+## Release: <package> v<version>
+
+### Quality Gates
+- [ ] `pnpm format` - no changes
+- [ ] `pnpm build` - compiles
+- [ ] `pnpm eslint` - 0 errors, 0 warnings
+- [ ] `pnpm test:run` - all pass
+- [ ] `pnpm test:coverage` - ≥80%
+
+### Documentation
+- [ ] README.md updated
+- [ ] TODO.md - completed tasks marked, new debt added
+- [ ] CHANGELOG.md - version entry added
+- [ ] ROADMAP.md updated (if needed)
+
+### Testing
+- [ ] CLI/API tested manually
+- [ ] Edge cases verified
+
+### Release
+- [ ] Commit with conventional format
 - [ ] Version bumped in package.json
-- [ ] All quality gates pass
-- [ ] Examples work correctly
-- [ ] Git tags pushed
+- [ ] Git tag created: <package>-v<version>
+- [ ] Pushed to origin
+- [ ] Published to npm (if public release)
+```
 
-### Common Workflows
+## Common Workflows
 
-**Adding a new CLI option:**
+### Adding a new CLI option
+
 ```bash
 # 1. Add to cli/constants.ts (CLI_OPTIONS, CLI_DESCRIPTIONS)
 # 2. Add option in cli/index.ts (.option() call)
 # 3. Parse and use option in action handler
-# 4. Test with: node dist/cli/index.js check ./examples --your-option
-# 5. Update README.md CLI Usage section
-# 6. Run quality checks
+# 4. Test: node dist/cli/index.js <command> --your-option
+# 5. Run pipeline
 ```
 
-**Adding a new detector:**
+### Adding a new detector (guardian)
+
 ```bash
 # 1. Create value object in domain/value-objects/
 # 2. Create detector in infrastructure/analyzers/
-# 3. Add detector interface to domain/services/
+# 3. Add interface to domain/services/
 # 4. Integrate in application/use-cases/AnalyzeProject.ts
 # 5. Add CLI output in cli/index.ts
 # 6. Write tests (aim for >90% coverage)
-# 7. Update README.md Features section
-# 8. Run full quality suite
+# 7. Run pipeline
 ```
 
-**Fixing technical debt:**
+### Adding a new tool (ipuaro)
+
+```bash
+# 1. Define tool schema in infrastructure/tools/schemas/
+# 2. Implement tool in infrastructure/tools/
+# 3. Register in infrastructure/tools/index.ts
+# 4. Add tests
+# 5. Run pipeline
+```
+
+### Fixing technical debt
+
 ```bash
 # 1. Find issue in TODO.md
 # 2. Implement fix
-# 3. Run quality checks
-# 4. Update TODO.md (mark as completed)
-# 5. Commit with type: "refactor:" or "fix:"
+# 3. Update TODO.md (mark as completed)
+# 4. Run pipeline with type: "refactor:" or "fix:"
 ```
 
-### Debugging Tips
+## Debugging Tips
 
 **Build errors:**
 ```bash
-# Check TypeScript errors in detail
 pnpm tsc --noEmit
-
-# Check specific file
-pnpm tsc --noEmit packages/guardian/src/path/to/file.ts
+pnpm tsc --noEmit packages/<package>/src/path/to/file.ts
 ```
 
 **Test failures:**
 ```bash
-# Run single test file
 pnpm vitest tests/path/to/test.test.ts
-
-# Run tests with UI
 pnpm test:ui
-
-# Run tests in watch mode for debugging
-pnpm test
 ```
 
 **Coverage issues:**
 ```bash
-# Generate detailed coverage report
 pnpm test:coverage
-
-# View HTML report
 open coverage/index.html
-
-# Check specific file coverage
-pnpm vitest --coverage --reporter=verbose
 ```
 
 ## Important Notes
