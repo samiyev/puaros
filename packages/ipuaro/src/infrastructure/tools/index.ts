@@ -27,3 +27,29 @@ export {
     type FindDefinitionResult,
     type DefinitionLocation,
 } from "./search/FindDefinitionTool.js"
+
+// Analysis tools
+export {
+    GetDependenciesTool,
+    type GetDependenciesResult,
+    type DependencyEntry,
+} from "./analysis/GetDependenciesTool.js"
+
+export {
+    GetDependentsTool,
+    type GetDependentsResult,
+    type DependentEntry,
+} from "./analysis/GetDependentsTool.js"
+
+export {
+    GetComplexityTool,
+    type GetComplexityResult,
+    type ComplexityEntry,
+} from "./analysis/GetComplexityTool.js"
+
+export {
+    GetTodosTool,
+    type GetTodosResult,
+    type TodoEntry,
+    type TodoType,
+} from "./analysis/GetTodosTool.js"

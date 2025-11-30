@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-12-01 - Analysis Tools
+
+### Added
+
+- **GetDependenciesTool (0.8.1)**
+  - `get_dependencies(path)`: Get files that a specific file imports
+  - Returns internal dependencies resolved to file paths
+  - Includes metadata: exists, isHub, isEntryPoint, fileType
+  - Sorted by path for consistent output
+  - 23 unit tests
+
+- **GetDependentsTool (0.8.2)**
+  - `get_dependents(path)`: Get files that import a specific file
+  - Shows hub status for the analyzed file
+  - Includes metadata: isHub, isEntryPoint, fileType, complexityScore
+  - Sorted by path for consistent output
+  - 24 unit tests
+
+- **GetComplexityTool (0.8.3)**
+  - `get_complexity(path?, limit?)`: Get complexity metrics for files
+  - Returns LOC, nesting depth, cyclomatic complexity, and overall score
+  - Summary statistics: high/medium/low complexity counts
+  - Average score calculation
+  - Sorted by complexity score descending
+  - Default limit of 20 files
+  - 31 unit tests
+
+- **GetTodosTool (0.8.4)**
+  - `get_todos(path?, type?)`: Find TODO/FIXME/HACK/XXX/BUG/NOTE comments
+  - Supports multiple comment styles: `//`, `/* */`, `#`
+  - Filter by type (case-insensitive)
+  - Counts by type
+  - Includes line context
+  - 42 unit tests
+
+### Changed
+
+- Total tests: 853 (was 733)
+- Coverage: 97.91% lines, 92.32% branches
+- Analysis tools category now fully implemented (4/4 tools)
+
+---
+
 ## [0.7.0] - 2025-12-01 - Search Tools
 
 ### Added
