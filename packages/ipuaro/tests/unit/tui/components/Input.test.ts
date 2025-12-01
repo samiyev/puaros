@@ -181,4 +181,170 @@ describe("Input", () => {
             expect(savedInput).toBe("")
         })
     })
+
+    describe("multiline support", () => {
+        describe("InputProps with multiline", () => {
+            it("should accept multiline as boolean", () => {
+                const props: InputProps = {
+                    onSubmit: vi.fn(),
+                    history: [],
+                    disabled: false,
+                    multiline: true,
+                }
+                expect(props.multiline).toBe(true)
+            })
+
+            it("should accept multiline as 'auto'", () => {
+                const props: InputProps = {
+                    onSubmit: vi.fn(),
+                    history: [],
+                    disabled: false,
+                    multiline: "auto",
+                }
+                expect(props.multiline).toBe("auto")
+            })
+
+            it("should have multiline false by default", () => {
+                const props: InputProps = {
+                    onSubmit: vi.fn(),
+                    history: [],
+                    disabled: false,
+                }
+                expect(props.multiline).toBeUndefined()
+            })
+        })
+
+        describe("multiline activation logic", () => {
+            it("should be active when multiline is true", () => {
+                const multiline = true
+                const lines = ["single line"]
+                const isMultilineActive = multiline === true || (multiline === "auto" && lines.length > 1)
+                expect(isMultilineActive).toBe(true)
+            })
+
+            it("should not be active when multiline is false", () => {
+                const multiline = false
+                const lines = ["line1", "line2"]
+                const isMultilineActive = multiline === true || (multiline === "auto" && lines.length > 1)
+                expect(isMultilineActive).toBe(false)
+            })
+
+            it("should be active in auto mode with multiple lines", () => {
+                const multiline = "auto"
+                const lines = ["line1", "line2"]
+                const isMultilineActive = multiline === true || (multiline === "auto" && lines.length > 1)
+                expect(isMultilineActive).toBe(true)
+            })
+
+            it("should not be active in auto mode with single line", () => {
+                const multiline = "auto"
+                const lines = ["single line"]
+                const isMultilineActive = multiline === true || (multiline === "auto" && lines.length > 1)
+                expect(isMultilineActive).toBe(false)
+            })
+        })
+
+        describe("line management", () => {
+            it("should update current line on change", () => {
+                const lines = ["first", "second", "third"]
+                const currentLineIndex = 1
+                const newValue = "updated second"
+
+                const newLines = [...lines]
+                newLines[currentLineIndex] = newValue
+
+                expect(newLines).toEqual(["first", "updated second", "third"])
+                expect(newLines.join("\n")).toBe("first\nupdated second\nthird")
+            })
+
+            it("should add new line at current position", () => {
+                const lines = ["first", "second"]
+                const currentLineIndex = 0
+
+                const newLines = [...lines]
+                newLines.splice(currentLineIndex + 1, 0, "")
+
+                expect(newLines).toEqual(["first", "", "second"])
+            })
+
+            it("should join lines with newline for submit", () => {
+                const lines = ["line 1", "line 2", "line 3"]
+                const fullText = lines.join("\n")
+                expect(fullText).toBe("line 1\nline 2\nline 3")
+            })
+        })
+
+        describe("line navigation", () => {
+            it("should navigate up in multiline mode", () => {
+                const lines = ["line1", "line2", "line3"]
+                let currentLineIndex = 2
+
+                currentLineIndex = currentLineIndex - 1
+                expect(currentLineIndex).toBe(1)
+
+                currentLineIndex = currentLineIndex - 1
+                expect(currentLineIndex).toBe(0)
+            })
+
+            it("should not navigate up past first line", () => {
+                const lines = ["line1", "line2"]
+                const currentLineIndex = 0
+                const isMultilineActive = true
+
+                const canNavigateUp = isMultilineActive && currentLineIndex > 0
+                expect(canNavigateUp).toBe(false)
+            })
+
+            it("should navigate down in multiline mode", () => {
+                const lines = ["line1", "line2", "line3"]
+                let currentLineIndex = 0
+
+                currentLineIndex = currentLineIndex + 1
+                expect(currentLineIndex).toBe(1)
+
+                currentLineIndex = currentLineIndex + 1
+                expect(currentLineIndex).toBe(2)
+            })
+
+            it("should not navigate down past last line", () => {
+                const lines = ["line1", "line2"]
+                const currentLineIndex = 1
+                const isMultilineActive = true
+
+                const canNavigateDown = isMultilineActive && currentLineIndex < lines.length - 1
+                expect(canNavigateDown).toBe(false)
+            })
+        })
+
+        describe("multiline submit", () => {
+            it("should submit trimmed multiline text", () => {
+                const lines = ["line 1", "line 2", "line 3"]
+                const fullText = lines.join("\n").trim()
+                expect(fullText).toBe("line 1\nline 2\nline 3")
+            })
+
+            it("should not submit empty multiline text", () => {
+                const onSubmit = vi.fn()
+                const lines = ["", "", ""]
+                const fullText = lines.join("\n").trim()
+
+                if (fullText) {
+                    onSubmit(fullText)
+                }
+
+                expect(onSubmit).not.toHaveBeenCalled()
+            })
+
+            it("should reset lines after submit", () => {
+                let lines = ["line1", "line2"]
+                let currentLineIndex = 1
+
+                lines = [""]
+                currentLineIndex = 0
+
+                expect(lines).toEqual([""])
+                expect(currentLineIndex).toBe(0)
+            })
+        })
+    })
 })

@@ -76,6 +76,14 @@ export const UndoConfigSchema = z.object({
  */
 export const EditConfigSchema = z.object({
     autoApply: z.boolean().default(false),
+    syntaxHighlight: z.boolean().default(true),
+})
+
+/**
+ * Input configuration schema.
+ */
+export const InputConfigSchema = z.object({
+    multiline: z.union([z.boolean(), z.literal("auto")]).default(false),
 })
 
 /**
@@ -88,6 +96,7 @@ export const ConfigSchema = z.object({
     watchdog: WatchdogConfigSchema.default({}),
     undo: UndoConfigSchema.default({}),
     edit: EditConfigSchema.default({}),
+    input: InputConfigSchema.default({}),
 })
 
 /**
@@ -100,6 +109,7 @@ export type ProjectConfig = z.infer<typeof ProjectConfigSchema>
 export type WatchdogConfig = z.infer<typeof WatchdogConfigSchema>
 export type UndoConfig = z.infer<typeof UndoConfigSchema>
 export type EditConfig = z.infer<typeof EditConfigSchema>
+export type InputConfig = z.infer<typeof InputConfigSchema>
 
 /**
  * Default configuration.

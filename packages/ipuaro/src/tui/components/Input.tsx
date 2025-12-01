@@ -17,6 +17,7 @@ export interface InputProps {
     storage?: IStorage
     projectRoot?: string
     autocompleteEnabled?: boolean
+    multiline?: boolean | "auto"
 }
 
 export function Input({
@@ -27,10 +28,15 @@ export function Input({
     storage,
     projectRoot = "",
     autocompleteEnabled = true,
+    multiline = false,
 }: InputProps): React.JSX.Element {
     const [value, setValue] = useState("")
     const [historyIndex, setHistoryIndex] = useState(-1)
     const [savedInput, setSavedInput] = useState("")
+    const [lines, setLines] = useState<string[]>([""])
+    const [currentLineIndex, setCurrentLineIndex] = useState(0)
+
+    const isMultilineActive = multiline === true || (multiline === "auto" && lines.length > 1)
 
     /*
      * Initialize autocomplete hook if storage is provided
@@ -62,12 +68,39 @@ export function Input({
             }
             onSubmit(text)
             setValue("")
+            setLines([""])
+            setCurrentLineIndex(0)
             setHistoryIndex(-1)
             setSavedInput("")
             autocomplete.reset()
         },
         [disabled, onSubmit, autocomplete],
     )
+
+    const handleLineChange = useCallback(
+        (newValue: string) => {
+            const newLines = [...lines]
+            newLines[currentLineIndex] = newValue
+            setLines(newLines)
+            setValue(newLines.join("\n"))
+        },
+        [lines, currentLineIndex],
+    )
+
+    const handleAddLine = useCallback(() => {
+        const newLines = [...lines]
+        newLines.splice(currentLineIndex + 1, 0, "")
+        setLines(newLines)
+        setCurrentLineIndex(currentLineIndex + 1)
+        setValue(newLines.join("\n"))
+    }, [lines, currentLineIndex])
+
+    const handleMultilineSubmit = useCallback(() => {
+        const fullText = lines.join("\n").trim()
+        if (fullText) {
+            handleSubmit(fullText)
+        }
+    }, [lines, handleSubmit])
 
     const handleTabKey = useCallback(() => {
         if (storage && autocompleteEnabled && value.trim()) {
@@ -116,11 +149,22 @@ export function Input({
             if (key.tab) {
                 handleTabKey()
             }
+            if (key.return && key.shift && isMultilineActive) {
+                handleAddLine()
+            }
             if (key.upArrow) {
-                handleUpArrow()
+                if (isMultilineActive && currentLineIndex > 0) {
+                    setCurrentLineIndex(currentLineIndex - 1)
+                } else if (!isMultilineActive) {
+                    handleUpArrow()
+                }
             }
             if (key.downArrow) {
-                handleDownArrow()
+                if (isMultilineActive && currentLineIndex < lines.length - 1) {
+                    setCurrentLineIndex(currentLineIndex + 1)
+                } else if (!isMultilineActive) {
+                    handleDownArrow()
+                }
             }
         },
         { isActive: !disabled },
@@ -130,21 +174,56 @@ export function Input({
 
     return (
         <Box flexDirection="column">
-            <Box borderStyle="single" borderColor={disabled ? "gray" : "cyan"} paddingX={1}>
-                <Text color={disabled ? "gray" : "green"} bold>
-                    {">"}{" "}
-                </Text>
+            <Box
+                borderStyle="single"
+                borderColor={disabled ? "gray" : "cyan"}
+                paddingX={1}
+                flexDirection="column"
+            >
                 {disabled ? (
-                    <Text color="gray" dimColor>
-                        {placeholder}
-                    </Text>
+                    <Box>
+                        <Text color="gray" bold>
+                            {">"}{" "}
+                        </Text>
+                        <Text color="gray" dimColor>
+                            {placeholder}
+                        </Text>
+                    </Box>
+                ) : isMultilineActive ? (
+                    <Box flexDirection="column">
+                        {lines.map((line, index) => (
+                            <Box key={index}>
+                                <Text color="green" bold>
+                                    {index === currentLineIndex ? ">" : " "}{" "}
+                                </Text>
+                                {index === currentLineIndex ? (
+                                    <TextInput
+                                        value={line}
+                                        onChange={handleLineChange}
+                                        onSubmit={handleMultilineSubmit}
+                                        placeholder={index === 0 ? placeholder : ""}
+                                    />
+                                ) : (
+                                    <Text>{line}</Text>
+                                )}
+                            </Box>
+                        ))}
+                        <Box marginTop={1}>
+                            <Text dimColor>Shift+Enter: new line | Enter: submit</Text>
+                        </Box>
+                    </Box>
                 ) : (
-                    <TextInput
-                        value={value}
-                        onChange={handleChange}
-                        onSubmit={handleSubmit}
-                        placeholder={placeholder}
-                    />
+                    <Box>
+                        <Text color="green" bold>
+                            {">"}{" "}
+                        </Text>
+                        <TextInput
+                            value={value}
+                            onChange={handleChange}
+                            onSubmit={handleSubmit}
+                            placeholder={placeholder}
+                        />
+                    </Box>
                 )}
             </Box>
             {hasSuggestions && !disabled && (

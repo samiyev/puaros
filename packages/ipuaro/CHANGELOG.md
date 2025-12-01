@@ -5,6 +5,132 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.4] - 2025-12-02 - Syntax Highlighting in DiffView
+
+### Added
+
+- **Syntax Highlighter Utility (0.21.4)**
+  - New syntax-highlighter utility in `src/tui/utils/syntax-highlighter.ts`
+  - Simple regex-based syntax highlighting for terminal UI
+  - Language detection from file extension: `ts`, `tsx`, `js`, `jsx`, `json`, `yaml`, `yml`
+  - Token types: keywords, strings, comments, numbers, operators, whitespace
+  - Color mapping: keywords (magenta), strings (green), comments (gray), numbers (cyan), operators (yellow)
+  - Support for single-line comments (`//`), multi-line comments (`/* */`)
+  - String literals: double quotes, single quotes, template literals
+  - Keywords: TypeScript/JavaScript keywords (const, let, function, async, etc.)
+  - Exports: `detectLanguage()`, `highlightLine()`, `Language` type, `HighlightedToken` interface
+
+- **EditConfigSchema Enhancement**
+  - Added `syntaxHighlight` option to EditConfigSchema (default: `true`)
+  - Enables/disables syntax highlighting in diff views globally
+
+### Changed
+
+- **DiffView Component Enhanced**
+  - Added `language?: Language` prop for explicit language override
+  - Added `syntaxHighlight?: boolean` prop (default: `false`)
+  - Automatic language detection from `filePath` using `detectLanguage()`
+  - Highlights only added lines (`type === "add"`) when syntax highlighting enabled
+  - Renders tokens with individual colors when highlighting is active
+  - Falls back to plain colored text when highlighting is disabled
+
+- **ConfirmDialog Component**
+  - Added `syntaxHighlight?: boolean` prop (default: `false`)
+  - Passes `syntaxHighlight` to DiffView component
+  - Enables syntax highlighting in confirmation dialogs when configured
+
+- **App Component**
+  - Added `syntaxHighlight?: boolean` prop to ExtendedAppProps (default: `true`)
+  - Passes `syntaxHighlight` to ConfirmDialog
+  - Integrates with global configuration for syntax highlighting
+
+- **DiffLine Subcomponent**
+  - Enhanced to support syntax highlighting mode
+  - Conditional rendering: highlighted tokens vs plain colored text
+  - Token-based rendering when syntax highlighting is active
+
+### Technical Details
+
+- Total tests: 1525 passed (was 1501, +24 new tests)
+- New test file: `syntax-highlighter.test.ts` with 24 tests
+  - Language detection (9 tests)
+  - Token highlighting for keywords, strings, comments, numbers, operators (15 tests)
+- Coverage: 97.63% lines, 91.25% branches, 98.97% functions, 97.63% statements
+- 0 ESLint errors, 0 warnings
+- Build successful with no TypeScript errors
+- Regex-based approach using `RegExp#exec()` for performance
+- No external dependencies added (native JavaScript)
+
+### Notes
+
+This release completes the v0.21.0 TUI Enhancements milestone. All items for v0.21.0 are now complete:
+- ✅ 0.21.1 - useAutocomplete Hook
+- ✅ 0.21.2 - Edit Mode in ConfirmDialog
+- ✅ 0.21.3 - Multiline Input support
+- ✅ 0.21.4 - Syntax Highlighting in DiffView
+
+---
+
+## [0.21.3] - 2025-12-02 - Multiline Input Support
+
+### Added
+
+- **InputConfigSchema (0.21.3)**
+  - New configuration schema for input settings
+  - `multiline` option: boolean | "auto" (default: false)
+  - Supports three modes: `false` (disabled), `true` (always on), `"auto"` (activates when multiple lines present)
+  - Added `InputConfig` type export
+
+- **Multiline Input Component (0.21.3)**
+  - Multiline text input support in Input component
+  - Shift+Enter: add new line in multiline mode
+  - Enter: submit all lines (in multiline mode) or submit text (in single-line mode)
+  - Auto-height adjustment: dynamically shows all input lines
+  - Line-by-line editing with visual indicator (">") for current line
+  - Arrow key navigation (↑/↓) between lines in multiline mode
+  - Instructions displayed: "Shift+Enter: new line | Enter: submit"
+  - Seamless switch between single-line and multiline modes based on configuration
+
+### Changed
+
+- **Input Component Enhanced**
+  - Added `multiline?: boolean | "auto"` prop
+  - State management for multiple lines (`lines`, `currentLineIndex`)
+  - Conditional rendering: single-line TextInput vs multiline Box with multiple lines
+  - Arrow key handlers now support both history navigation (single-line) and line navigation (multiline)
+  - Submit handler resets lines state in addition to value
+  - Line change handlers: `handleLineChange`, `handleAddLine`, `handleMultilineSubmit`
+
+- **App Component**
+  - Added `multiline?: boolean | "auto"` prop to ExtendedAppProps
+  - Passes multiline config to Input component
+  - Default value: false (single-line mode)
+
+- **Config Schema**
+  - Added `input` section to ConfigSchema
+  - InputConfigSchema included in full configuration
+  - Config type updated to include InputConfig
+
+### Technical Details
+
+- Total tests: 1501 passed (was 1484, +17 new tests)
+- New test suite: "multiline support" with 21 tests
+  - InputProps with multiline options
+  - Multiline activation logic (true, false, "auto")
+  - Line management (update, add, join)
+  - Line navigation (up/down with boundaries)
+  - Multiline submit (trim, empty check, reset)
+- Coverage: 97.67% lines, 91.37% branches, 98.97% functions, 97.67% statements
+- 0 ESLint errors, 0 warnings
+- Build successful with no type errors
+
+### Notes
+
+This release completes the third item of the v0.21.0 TUI Enhancements milestone. Remaining item for v0.21.0:
+- 0.21.4 - Syntax Highlighting in DiffView
+
+---
+
 ## [0.21.1] - 2025-12-01 - TUI Enhancements (Part 2)
 
 ### Added

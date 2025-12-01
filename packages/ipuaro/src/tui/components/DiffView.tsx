@@ -5,12 +5,15 @@
 
 import { Box, Text } from "ink"
 import type React from "react"
+import { detectLanguage, highlightLine, type Language } from "../utils/syntax-highlighter.js"
 
 export interface DiffViewProps {
     filePath: string
     oldLines: string[]
     newLines: string[]
     startLine: number
+    language?: Language
+    syntaxHighlight?: boolean
 }
 
 interface DiffLine {
@@ -97,20 +100,37 @@ function formatLineNumber(num: number | undefined, width: number): string {
 function DiffLine({
     line,
     lineNumberWidth,
+    language,
+    syntaxHighlight,
 }: {
     line: DiffLine
     lineNumberWidth: number
+    language?: Language
+    syntaxHighlight?: boolean
 }): React.JSX.Element {
     const prefix = getLinePrefix(line)
     const color = getLineColor(line)
     const lineNum = formatLineNumber(line.lineNumber, lineNumberWidth)
 
+    const shouldHighlight = syntaxHighlight && language && line.type === "add"
+
     return (
         <Box>
             <Text color="gray">{lineNum} </Text>
-            <Text color={color}>
-                {prefix} {line.content}
-            </Text>
+            {shouldHighlight ? (
+                <Box>
+                    <Text color={color}>{prefix} </Text>
+                    {highlightLine(line.content, language).map((token, idx) => (
+                        <Text key={idx} color={token.color}>
+                            {token.text}
+                        </Text>
+                    ))}
+                </Box>
+            ) : (
+                <Text color={color}>
+                    {prefix} {line.content}
+                </Text>
+            )}
         </Box>
     )
 }
@@ -166,6 +186,8 @@ export function DiffView({
     oldLines,
     newLines,
     startLine,
+    language,
+    syntaxHighlight = false,
 }: DiffViewProps): React.JSX.Element {
     const diffLines = computeDiff(oldLines, newLines, startLine)
     const endLine = startLine + newLines.length - 1
@@ -173,6 +195,8 @@ export function DiffView({
 
     const additions = diffLines.filter((l) => l.type === "add").length
     const deletions = diffLines.filter((l) => l.type === "remove").length
+
+    const detectedLanguage = language ?? detectLanguage(filePath)
 
     return (
         <Box flexDirection="column" paddingX={1}>
@@ -183,6 +207,8 @@ export function DiffView({
                         key={`${line.type}-${String(index)}`}
                         line={line}
                         lineNumberWidth={lineNumberWidth}
+                        language={detectedLanguage}
+                        syntaxHighlight={syntaxHighlight}
                     />
                 ))}
             </Box>

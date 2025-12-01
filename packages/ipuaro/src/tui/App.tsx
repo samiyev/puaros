@@ -29,6 +29,8 @@ export interface AppDependencies {
 export interface ExtendedAppProps extends AppProps {
     deps: AppDependencies
     onExit?: () => void
+    multiline?: boolean | "auto"
+    syntaxHighlight?: boolean
 }
 
 function LoadingScreen(): React.JSX.Element {
@@ -65,6 +67,8 @@ export function App({
     autoApply: initialAutoApply = false,
     deps,
     onExit,
+    multiline = false,
+    syntaxHighlight = true,
 }: ExtendedAppProps): React.JSX.Element {
     const { exit } = useApp()
 
@@ -253,6 +257,7 @@ export function App({
                     }
                     onSelect={handleConfirmSelect}
                     editableContent={pendingConfirmation.diff?.newLines}
+                    syntaxHighlight={syntaxHighlight}
                 />
             )}
             <Input
@@ -263,6 +268,7 @@ export function App({
                 storage={deps.storage}
                 projectRoot={projectPath}
                 autocompleteEnabled={true}
+                multiline={multiline}
             />
         </Box>
     )

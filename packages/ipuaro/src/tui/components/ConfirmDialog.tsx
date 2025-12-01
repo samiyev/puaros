@@ -15,6 +15,7 @@ export interface ConfirmDialogProps {
     diff?: DiffViewProps
     onSelect: (choice: ConfirmChoice, editedContent?: string[]) => void
     editableContent?: string[]
+    syntaxHighlight?: boolean
 }
 
 type DialogMode = "confirm" | "edit"
@@ -42,6 +43,7 @@ export function ConfirmDialog({
     diff,
     onSelect,
     editableContent,
+    syntaxHighlight = false,
 }: ConfirmDialogProps): React.JSX.Element {
     const [mode, setMode] = useState<DialogMode>("confirm")
     const [selected, setSelected] = useState<ConfirmChoice | null>(null)
@@ -113,7 +115,7 @@ export function ConfirmDialog({
 
             {diff && (
                 <Box marginBottom={1}>
-                    <DiffView {...diff} />
+                    <DiffView {...diff} syntaxHighlight={syntaxHighlight} />
                 </Box>
             )}
 
