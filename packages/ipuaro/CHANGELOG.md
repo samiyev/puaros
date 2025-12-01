@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2025-12-01 - Documentation Complete
+
+### Added
+
+- **Complete README.md Documentation**
+  - Updated status to Release Candidate (v0.16.0 → v1.0.0)
+  - Comprehensive tools reference with 18 tools and usage examples
+  - Slash commands documentation (8 commands)
+  - Hotkeys reference (5 shortcuts)
+  - Programmatic API examples with real code
+  - Enhanced "How It Works" section with 5 detailed subsections
+  - Troubleshooting guide with 6 common issues and solutions
+  - FAQ section with 8 frequently asked questions
+  - Updated development status showing all completed milestones
+
+- **ARCHITECTURE.md (New File)**
+  - Complete architecture overview with Clean Architecture principles
+  - Detailed layer breakdown (Domain, Application, Infrastructure, TUI, CLI)
+  - Data flow diagrams for startup, messages, edits, and indexing
+  - Key design decisions with rationale (Redis, tree-sitter, Ollama, XML, etc.)
+  - Complete tech stack documentation
+  - Performance considerations and optimizations
+  - Future roadmap (v1.1.0 - v1.3.0)
+
+- **TOOLS.md (New File)**
+  - Complete reference for all 18 tools organized by category
+  - TypeScript signatures for each tool
+  - Parameter descriptions and return types
+  - Multiple usage examples per tool
+  - Example outputs and use cases
+  - Error cases and handling
+  - Tool confirmation flow explanation
+  - Best practices and common workflow patterns
+  - Refactoring, bug fix, and feature development flows
+
+### Changed
+
+- **README.md Improvements**
+  - Features table now shows all tools implemented ✅
+  - Terminal UI section enhanced with better examples
+  - Security section expanded with three-layer security model
+  - Development status updated to show 1420 tests with 98% coverage
+
+### Documentation Statistics
+
+- Total documentation: ~2500 lines across 3 files
+- Tools documented: 18/18 (100%)
+- Slash commands: 8/8 (100%)
+- Code examples: 50+ throughout documentation
+- Troubleshooting entries: 6 issues covered
+- FAQ answers: 8 questions answered
+
+### Technical Details
+
+- No code changes (documentation-only release)
+- All 1420 tests passing
+- Coverage maintained at 97.59%
+- Zero ESLint errors/warnings
+
+---
+
 ## [0.16.0] - 2025-12-01 - Error Handling
 
 ### Added
