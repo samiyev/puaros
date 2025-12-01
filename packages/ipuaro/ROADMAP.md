@@ -1328,6 +1328,461 @@ class ErrorHandler {
 
 ---
 
+## Version 0.19.0 - XML Tool Format Refactor 🔄
+
+**Priority:** HIGH
+**Status:** Pending
+
+Рефакторинг: переход на чистый XML формат для tool calls (как в CONCEPT.md).
+
+### Текущая проблема
+
+OllamaClient использует Ollama native tool calling (JSON Schema), а ResponseParser реализует XML парсинг. Это создаёт путаницу и не соответствует CONCEPT.md.
+
+### 0.19.1 - OllamaClient Refactor
+
+```typescript
+// src/infrastructure/llm/OllamaClient.ts
+
+// БЫЛО:
+// - Передаём tools в Ollama SDK format
+// - Извлекаем tool_calls из response.message.tool_calls
+
+// СТАНЕТ:
+// - НЕ передаём tools в SDK
+// - Tools описаны в system prompt как XML
+// - LLM возвращает XML в content
+// - Парсим через ResponseParser
+```
+
+**Изменения:**
+- [ ] Удалить `convertTools()` метод
+- [ ] Удалить `extractToolCalls()` метод
+- [ ] Убрать передачу `tools` в `client.chat()`
+- [ ] Возвращать только `content` без `toolCalls`
+
+### 0.19.2 - System Prompt Update
+
+```typescript
+// src/infrastructure/llm/prompts.ts
+
+// Добавить в SYSTEM_PROMPT полное описание XML формата:
+
+const TOOL_FORMAT_INSTRUCTIONS = `
+## Tool Calling Format
+
+When you need to use a tool, format your call as XML:
+
+<tool_call name="tool_name">
+  <param_name>value</param_name>
+  <another_param>value</another_param>
+</tool_call>
+
+Examples:
+<tool_call name="get_lines">
+  <path>src/index.ts</path>
+  <start>1</start>
+  <end>50</end>
+</tool_call>
+
+<tool_call name="edit_lines">
+  <path>src/utils.ts</path>
+  <start>10</start>
+  <end>15</end>
+  <content>const newCode = "hello";</content>
+</tool_call>
+
+You can use multiple tool calls in one response.
+Always wait for tool results before making conclusions.
+`
+```
+
+**Изменения:**
+- [ ] Добавить `TOOL_FORMAT_INSTRUCTIONS` в prompts.ts
+- [ ] Включить в `SYSTEM_PROMPT`
+- [ ] Добавить примеры для всех 18 tools
+
+### 0.19.3 - HandleMessage Simplification
+
+```typescript
+// src/application/use-cases/HandleMessage.ts
+
+// БЫЛО:
+// const response = await this.llm.chat(messages)
+// const parsed = parseToolCalls(response.content)
+
+// СТАНЕТ:
+// const response = await this.llm.chat(messages)  // без tools
+// const parsed = parseToolCalls(response.content) // единственный источник
+```
+
+**Изменения:**
+- [ ] Убрать передачу tool definitions в `llm.chat()`
+- [ ] ResponseParser — единственный источник tool calls
+- [ ] Упростить логику обработки
+
+### 0.19.4 - ILLMClient Interface Update
+
+```typescript
+// src/domain/services/ILLMClient.ts
+
+// БЫЛО:
+interface ILLMClient {
+    chat(messages: ChatMessage[], tools?: ToolDef[]): Promise<LLMResponse>
+}
+
+// СТАНЕТ:
+interface ILLMClient {
+    chat(messages: ChatMessage[]): Promise<LLMResponse>
+    // tools больше не передаются - они в system prompt
+}
+```
+
+**Изменения:**
+- [ ] Убрать `tools` параметр из `chat()`
+- [ ] Убрать `toolCalls` из `LLMResponse` (парсятся из content)
+- [ ] Обновить все реализации
+
+### 0.19.5 - ResponseParser Enhancements
+
+```typescript
+// src/infrastructure/llm/ResponseParser.ts
+
+// Улучшения:
+// - Лучшая обработка ошибок парсинга
+// - Поддержка CDATA для многострочного content
+// - Валидация имён tools
+```
+
+**Изменения:**
+- [ ] Добавить поддержку `<![CDATA[...]]>` для content
+- [ ] Валидация: tool name должен быть из известного списка
+- [ ] Улучшить сообщения об ошибках парсинга
+
+**Tests:**
+- [ ] Обновить тесты OllamaClient
+- [ ] Обновить тесты HandleMessage
+- [ ] Добавить тесты ResponseParser для edge cases
+- [ ] E2E тест полного flow с XML
+
+---
+
+## Version 0.20.0 - Missing Use Cases 🔧
+
+**Priority:** HIGH
+**Status:** Pending
+
+### 0.20.1 - IndexProject Use Case
+
+```typescript
+// src/application/use-cases/IndexProject.ts
+class IndexProject {
+    constructor(
+        private storage: IStorage,
+        private indexer: IIndexer
+    )
+
+    async execute(
+        projectRoot: string,
+        onProgress?: (progress: IndexProgress) => void
+    ): Promise<IndexingStats>
+    // Full indexing pipeline:
+    // 1. Scan files
+    // 2. Parse AST
+    // 3. Analyze metadata
+    // 4. Build indexes
+    // 5. Store in Redis
+}
+```
+
+**Deliverables:**
+- [ ] IndexProject use case implementation
+- [ ] Integration with CLI `index` command
+- [ ] Integration with `/reindex` slash command
+- [ ] Progress reporting via callback
+- [ ] Unit tests
+
+### 0.20.2 - ExecuteTool Use Case
+
+```typescript
+// src/application/use-cases/ExecuteTool.ts
+class ExecuteTool {
+    constructor(
+        private tools: IToolRegistry,
+        private storage: IStorage
+    )
+
+    async execute(
+        toolName: string,
+        params: Record<string, unknown>,
+        context: ToolContext
+    ): Promise<ToolResult>
+    // Orchestrates tool execution with:
+    // - Parameter validation
+    // - Confirmation flow
+    // - Undo stack management
+    // - Storage updates
+}
+```
+
+**Deliverables:**
+- [ ] ExecuteTool use case implementation
+- [ ] Refactor HandleMessage to use ExecuteTool
+- [ ] Unit tests
+
+**Tests:**
+- [ ] Unit tests for IndexProject
+- [ ] Unit tests for ExecuteTool
+
+---
+
+## Version 0.21.0 - TUI Enhancements 🎨
+
+**Priority:** MEDIUM
+**Status:** Pending
+
+### 0.21.1 - useAutocomplete Hook
+
+```typescript
+// src/tui/hooks/useAutocomplete.ts
+function useAutocomplete(options: {
+    storage: IStorage
+    projectRoot: string
+}): {
+    suggestions: string[]
+    complete: (partial: string) => string[]
+    accept: (suggestion: string) => void
+}
+
+// Tab autocomplete for file paths
+// Sources: Redis file index, filesystem
+```
+
+**Deliverables:**
+- [ ] useAutocomplete hook implementation
+- [ ] Integration with Input component (Tab key)
+- [ ] Path completion from Redis index
+- [ ] Fuzzy matching support
+- [ ] Unit tests
+
+### 0.21.2 - Edit Mode in ConfirmDialog
+
+```typescript
+// Enhanced ConfirmDialog with edit mode
+// When user presses [E]:
+// 1. Show editable text area with proposed changes
+// 2. User modifies the content
+// 3. Apply modified version
+
+interface ConfirmDialogProps {
+    // ... existing props
+    onEdit?: (editedContent: string) => void
+    editableContent?: string
+}
+```
+
+**Deliverables:**
+- [ ] EditableContent component for inline editing
+- [ ] Integration with ConfirmDialog [E] option
+- [ ] Handler in App.tsx for edit choice
+- [ ] Unit tests
+
+### 0.21.3 - Multiline Input
+
+```typescript
+// src/tui/components/Input.tsx enhancements
+interface InputProps {
+    // ... existing props
+    multiline?: boolean | "auto"  // auto = detect based on content
+}
+
+// Shift+Enter for new line
+// Auto-expand height
+```
+
+**Deliverables:**
+- [ ] Multiline support in Input component
+- [ ] Shift+Enter handling
+- [ ] Auto-height adjustment
+- [ ] Config option: `input.multiline`
+- [ ] Unit tests
+
+### 0.21.4 - Syntax Highlighting in DiffView
+
+```typescript
+// src/tui/components/DiffView.tsx enhancements
+// Full syntax highlighting for code in diff
+
+interface DiffViewProps {
+    // ... existing props
+    language?: "ts" | "tsx" | "js" | "jsx"
+    syntaxHighlight?: boolean
+}
+
+// Use ink-syntax-highlight or custom tokenizer
+```
+
+**Deliverables:**
+- [ ] Syntax highlighting integration
+- [ ] Language detection from file extension
+- [ ] Config option: `edit.syntaxHighlight`
+- [ ] Unit tests
+
+**Tests:**
+- [ ] Unit tests for useAutocomplete
+- [ ] Unit tests for enhanced ConfirmDialog
+- [ ] Unit tests for multiline Input
+- [ ] Unit tests for syntax highlighting
+
+---
+
+## Version 0.22.0 - Extended Configuration ⚙️
+
+**Priority:** MEDIUM
+**Status:** Pending
+
+### 0.22.1 - Display Configuration
+
+```typescript
+// src/shared/constants/config.ts additions
+export const DisplayConfigSchema = z.object({
+    showStats: z.boolean().default(true),
+    showToolCalls: z.boolean().default(true),
+    theme: z.enum(["dark", "light"]).default("dark"),
+    bellOnComplete: z.boolean().default(false),
+    progressBar: z.boolean().default(true),
+})
+```
+
+**Deliverables:**
+- [ ] DisplayConfigSchema in config.ts
+- [ ] Bell notification on response complete
+- [ ] Theme support (dark/light color schemes)
+- [ ] Configurable stats display
+- [ ] Unit tests
+
+### 0.22.2 - Session Configuration
+
+```typescript
+// src/shared/constants/config.ts additions
+export const SessionConfigSchema = z.object({
+    persistIndefinitely: z.boolean().default(true),
+    maxHistoryMessages: z.number().int().positive().default(100),
+    saveInputHistory: z.boolean().default(true),
+})
+```
+
+**Deliverables:**
+- [ ] SessionConfigSchema in config.ts
+- [ ] History truncation based on maxHistoryMessages
+- [ ] Input history persistence toggle
+- [ ] Unit tests
+
+### 0.22.3 - Context Configuration
+
+```typescript
+// src/shared/constants/config.ts additions
+export const ContextConfigSchema = z.object({
+    systemPromptTokens: z.number().int().positive().default(2000),
+    maxContextUsage: z.number().min(0).max(1).default(0.8),
+    autoCompressAt: z.number().min(0).max(1).default(0.8),
+    compressionMethod: z.enum(["llm-summary", "truncate"]).default("llm-summary"),
+})
+```
+
+**Deliverables:**
+- [ ] ContextConfigSchema in config.ts
+- [ ] ContextManager reads from config
+- [ ] Configurable compression threshold
+- [ ] Unit tests
+
+### 0.22.4 - Autocomplete Configuration
+
+```typescript
+// src/shared/constants/config.ts additions
+export const AutocompleteConfigSchema = z.object({
+    enabled: z.boolean().default(true),
+    source: z.enum(["redis-index", "filesystem", "both"]).default("redis-index"),
+    maxSuggestions: z.number().int().positive().default(10),
+})
+```
+
+**Deliverables:**
+- [ ] AutocompleteConfigSchema in config.ts
+- [ ] useAutocomplete reads from config
+- [ ] Unit tests
+
+### 0.22.5 - Commands Configuration
+
+```typescript
+// src/shared/constants/config.ts additions
+export const CommandsConfigSchema = z.object({
+    timeout: z.number().int().positive().nullable().default(null),
+})
+```
+
+**Deliverables:**
+- [ ] CommandsConfigSchema in config.ts
+- [ ] Timeout support for run_command tool
+- [ ] Unit tests
+
+**Tests:**
+- [ ] Unit tests for all new config schemas
+- [ ] Integration tests for config loading
+
+---
+
+## Version 0.23.0 - JSON/YAML & Symlinks 📄
+
+**Priority:** LOW
+**Status:** Pending
+
+### 0.23.1 - JSON/YAML AST Parsing
+
+```typescript
+// src/infrastructure/indexer/ASTParser.ts enhancements
+type Language = "ts" | "tsx" | "js" | "jsx" | "json" | "yaml"
+
+// For JSON: extract keys, structure
+// For YAML: extract keys, structure
+// Use tree-sitter-json and tree-sitter-yaml
+```
+
+**Deliverables:**
+- [ ] Add tree-sitter-json dependency
+- [ ] Add tree-sitter-yaml dependency
+- [ ] JSON parsing in ASTParser
+- [ ] YAML parsing in ASTParser
+- [ ] Unit tests
+
+### 0.23.2 - Symlinks Metadata
+
+```typescript
+// src/domain/services/IIndexer.ts enhancements
+export interface ScanResult {
+    path: string
+    type: "file" | "directory" | "symlink"
+    size: number
+    lastModified: number
+    symlinkTarget?: string  // <-- NEW: target path for symlinks
+}
+
+// Store symlink metadata in Redis
+// project:{name}:meta includes symlink info
+```
+
+**Deliverables:**
+- [ ] Add symlinkTarget to ScanResult
+- [ ] FileScanner extracts symlink targets
+- [ ] Store symlink metadata in Redis
+- [ ] Unit tests
+
+**Tests:**
+- [ ] Unit tests for JSON/YAML parsing
+- [ ] Unit tests for symlink handling
+
+---
+
 ## Version 1.0.0 - Production Ready 🚀
 
 **Target:** Stable release
