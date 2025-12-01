@@ -117,6 +117,15 @@ export const ContextConfigSchema = z.object({
 })
 
 /**
+ * Autocomplete configuration schema.
+ */
+export const AutocompleteConfigSchema = z.object({
+    enabled: z.boolean().default(true),
+    source: z.enum(["redis-index", "filesystem", "both"]).default("redis-index"),
+    maxSuggestions: z.number().int().positive().default(10),
+})
+
+/**
  * Full configuration schema.
  */
 export const ConfigSchema = z.object({
@@ -130,6 +139,7 @@ export const ConfigSchema = z.object({
     display: DisplayConfigSchema.default({}),
     session: SessionConfigSchema.default({}),
     context: ContextConfigSchema.default({}),
+    autocomplete: AutocompleteConfigSchema.default({}),
 })
 
 /**
@@ -146,6 +156,7 @@ export type InputConfig = z.infer<typeof InputConfigSchema>
 export type DisplayConfig = z.infer<typeof DisplayConfigSchema>
 export type SessionConfig = z.infer<typeof SessionConfigSchema>
 export type ContextConfig = z.infer<typeof ContextConfigSchema>
+export type AutocompleteConfig = z.infer<typeof AutocompleteConfigSchema>
 
 /**
  * Default configuration.

@@ -1648,7 +1648,7 @@ interface DiffViewProps {
 ## Version 0.22.0 - Extended Configuration ⚙️
 
 **Priority:** MEDIUM
-**Status:** In Progress (3/5 complete)
+**Status:** In Progress (4/5 complete)
 
 ### 0.22.1 - Display Configuration ✅
 
@@ -1705,7 +1705,7 @@ export const ContextConfigSchema = z.object({
 - [x] Configurable compression threshold
 - [x] Unit tests (40 new tests: 32 schema, 8 ContextManager integration)
 
-### 0.22.4 - Autocomplete Configuration
+### 0.22.4 - Autocomplete Configuration ✅
 
 ```typescript
 // src/shared/constants/config.ts additions
@@ -1717,9 +1717,9 @@ export const AutocompleteConfigSchema = z.object({
 ```
 
 **Deliverables:**
-- [ ] AutocompleteConfigSchema in config.ts
-- [ ] useAutocomplete reads from config
-- [ ] Unit tests
+- [x] AutocompleteConfigSchema in config.ts
+- [x] useAutocomplete reads from config
+- [x] Unit tests (27 tests)
 
 ### 0.22.5 - Commands Configuration
 

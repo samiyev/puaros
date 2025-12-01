@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import type { IStorage } from "../../domain/services/IStorage.js"
+import type { AutocompleteConfig } from "../../shared/constants/config.js"
 import path from "node:path"
 
 export interface UseAutocompleteOptions {
@@ -12,6 +13,7 @@ export interface UseAutocompleteOptions {
     projectRoot: string
     enabled?: boolean
     maxSuggestions?: number
+    config?: AutocompleteConfig
 }
 
 export interface UseAutocompleteReturn {
@@ -107,13 +109,18 @@ function getCommonPrefix(suggestions: string[]): string {
 }
 
 export function useAutocomplete(options: UseAutocompleteOptions): UseAutocompleteReturn {
-    const { storage, projectRoot, enabled = true, maxSuggestions = 10 } = options
+    const { storage, projectRoot, enabled, maxSuggestions, config } = options
+
+    // Read from config if provided, otherwise use options, otherwise use defaults
+    const isEnabled = config?.enabled ?? enabled ?? true
+    const maxSuggestionsCount = config?.maxSuggestions ?? maxSuggestions ?? 10
+
     const [filePaths, setFilePaths] = useState<string[]>([])
     const [suggestions, setSuggestions] = useState<string[]>([])
 
     // Load file paths from storage
     useEffect(() => {
-        if (!enabled) {
+        if (!isEnabled) {
             return
         }
 
@@ -135,11 +142,11 @@ export function useAutocomplete(options: UseAutocompleteOptions): UseAutocomplet
         loadPaths().catch(() => {
             // Ignore errors
         })
-    }, [storage, projectRoot, enabled])
+    }, [storage, projectRoot, isEnabled])
 
     const complete = useCallback(
         (partial: string): string[] => {
-            if (!enabled || !partial.trim()) {
+            if (!isEnabled || !partial.trim()) {
                 setSuggestions([])
                 return []
             }
@@ -154,13 +161,13 @@ export function useAutocomplete(options: UseAutocompleteOptions): UseAutocomplet
                 }))
                 .filter((item) => item.score > 0)
                 .sort((a, b) => b.score - a.score)
-                .slice(0, maxSuggestions)
+                .slice(0, maxSuggestionsCount)
                 .map((item) => item.path)
 
             setSuggestions(scored)
             return scored
         },
-        [enabled, filePaths, maxSuggestions],
+        [isEnabled, filePaths, maxSuggestionsCount],
     )
 
     const accept = useCallback(

@@ -120,9 +120,7 @@ function AssistantMessage({
     )
 }
 
-function ToolMessage({ message, theme }: MessageComponentProps): React.JSX.Element {
-    const roleColor = getRoleColor("tool", theme)
-
+function ToolMessage({ message }: MessageComponentProps): React.JSX.Element {
     return (
         <Box flexDirection="column" marginBottom={1} marginLeft={2}>
             {message.toolResults?.map((result) => (

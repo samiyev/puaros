@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.4] - 2025-12-02 - Autocomplete Configuration
+
+### Added
+
+- **AutocompleteConfigSchema (0.22.4)**
+  - New configuration schema for autocomplete settings in `src/shared/constants/config.ts`
+  - `enabled: boolean` (default: true) - toggle autocomplete feature
+  - `source: "redis-index" | "filesystem" | "both"` (default: "redis-index") - autocomplete source
+  - `maxSuggestions: number` (default: 10) - maximum number of suggestions to display
+  - Integrated into main ConfigSchema with `.default({})`
+  - Exported `AutocompleteConfig` type from config module
+
+### Changed
+
+- **useAutocomplete Hook**
+  - Added optional `config?: AutocompleteConfig` parameter to `UseAutocompleteOptions`
+  - Config priority: `config` → `props` → `defaults`
+  - Reads `enabled` and `maxSuggestions` from config if provided
+  - Falls back to prop values, then to defaults
+  - Internal variables renamed: `enabled` → `isEnabled`, `maxSuggestions` → `maxSuggestionsCount`
+
+- **Chat Component**
+  - Fixed ESLint error: removed unused `roleColor` variable in `ToolMessage` component
+  - Removed unused `theme` parameter from `ToolMessage` function signature
+
+### Technical Details
+
+- Total tests: 1657 passed (was 1630, +27 new tests)
+- New test file: `autocomplete-config.test.ts` with 27 tests
+  - Default values validation (enabled, source, maxSuggestions)
+  - `enabled` boolean validation
+  - `source` enum validation ("redis-index", "filesystem", "both")
+  - `maxSuggestions` positive integer validation (including edge cases: zero, negative, float rejection)
+  - Partial and full config merging tests
+- Coverage: 97.59% lines, 91.23% branches, 98.77% functions, 97.59% statements
+- 0 ESLint errors, 5 warnings (acceptable TUI component warnings)
+- Build successful with no TypeScript errors
+
+### Notes
+
+This release completes the fourth item (0.22.4) of the v0.22.0 Extended Configuration milestone. Remaining item for v0.22.0:
+- 0.22.5 - Commands Configuration
+
+---
+
 ## [0.22.3] - 2025-12-02 - Context Configuration
 
 ### Added
