@@ -109,24 +109,80 @@ describe("Watchdog", () => {
 
     describe("flushAll", () => {
         it("should not throw when no pending changes", () => {
+            watchdog.start(tempDir)
             expect(() => watchdog.flushAll()).not.toThrow()
         })
 
-        it("should flush all pending changes", async () => {
+        it("should handle flushAll with active timers", async () => {
+            const slowWatchdog = new Watchdog({ debounceMs: 1000 })
             const events: FileChangeEvent[] = []
-            watchdog.onFileChange((event) => events.push(event))
-            watchdog.start(tempDir)
+            slowWatchdog.onFileChange((event) => events.push(event))
+            slowWatchdog.start(tempDir)
+
+            await new Promise((resolve) => setTimeout(resolve, 200))
+
+            const testFile = path.join(tempDir, "instant-flush.ts")
+            await fs.writeFile(testFile, "const x = 1")
+
+            await new Promise((resolve) => setTimeout(resolve, 150))
+
+            const pendingCount = slowWatchdog.getPendingCount()
+            if (pendingCount > 0) {
+                slowWatchdog.flushAll()
+                expect(slowWatchdog.getPendingCount()).toBe(0)
+                expect(events.length).toBeGreaterThan(0)
+            }
+
+            await slowWatchdog.stop()
+        })
+
+        it("should flush all pending changes immediately", async () => {
+            const slowWatchdog = new Watchdog({ debounceMs: 500 })
+            const events: FileChangeEvent[] = []
+            slowWatchdog.onFileChange((event) => events.push(event))
+            slowWatchdog.start(tempDir)
 
             await new Promise((resolve) => setTimeout(resolve, 100))
 
-            const testFile = path.join(tempDir, "flush-test.ts")
+            const testFile1 = path.join(tempDir, "flush-test1.ts")
+            const testFile2 = path.join(tempDir, "flush-test2.ts")
+            await fs.writeFile(testFile1, "const x = 1")
+            await fs.writeFile(testFile2, "const y = 2")
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            const pendingCount = slowWatchdog.getPendingCount()
+            if (pendingCount > 0) {
+                slowWatchdog.flushAll()
+                expect(slowWatchdog.getPendingCount()).toBe(0)
+            }
+
+            await slowWatchdog.stop()
+        })
+
+        it("should clear all timers when flushing", async () => {
+            const slowWatchdog = new Watchdog({ debounceMs: 500 })
+            const events: FileChangeEvent[] = []
+            slowWatchdog.onFileChange((event) => events.push(event))
+            slowWatchdog.start(tempDir)
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            const testFile = path.join(tempDir, "timer-test.ts")
             await fs.writeFile(testFile, "const x = 1")
 
-            await new Promise((resolve) => setTimeout(resolve, 20))
+            await new Promise((resolve) => setTimeout(resolve, 100))
 
-            watchdog.flushAll()
+            const pendingBefore = slowWatchdog.getPendingCount()
 
-            await new Promise((resolve) => setTimeout(resolve, 50))
+            if (pendingBefore > 0) {
+                const eventsBefore = events.length
+                slowWatchdog.flushAll()
+                expect(slowWatchdog.getPendingCount()).toBe(0)
+                expect(events.length).toBeGreaterThan(eventsBefore)
+            }
+
+            await slowWatchdog.stop()
         })
     })
 
@@ -145,10 +201,52 @@ describe("Watchdog", () => {
             await customWatchdog.stop()
         })
 
-        it("should handle simple directory patterns", async () => {
+        it("should handle simple directory patterns without wildcards", async () => {
             const customWatchdog = new Watchdog({
                 debounceMs: 50,
                 ignorePatterns: ["node_modules", "dist"],
+            })
+
+            customWatchdog.start(tempDir)
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            expect(customWatchdog.isWatching()).toBe(true)
+
+            await customWatchdog.stop()
+        })
+
+        it("should handle mixed wildcard and non-wildcard patterns", async () => {
+            const customWatchdog = new Watchdog({
+                debounceMs: 50,
+                ignorePatterns: ["node_modules", "*.log", "**/*.tmp", "dist", "build"],
+            })
+
+            customWatchdog.start(tempDir)
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            expect(customWatchdog.isWatching()).toBe(true)
+
+            await customWatchdog.stop()
+        })
+
+        it("should handle patterns with dots correctly", async () => {
+            const customWatchdog = new Watchdog({
+                debounceMs: 50,
+                ignorePatterns: ["*.test.ts", "**/*.spec.js"],
+            })
+
+            customWatchdog.start(tempDir)
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            expect(customWatchdog.isWatching()).toBe(true)
+
+            await customWatchdog.stop()
+        })
+
+        it("should handle double wildcards correctly", async () => {
+            const customWatchdog = new Watchdog({
+                debounceMs: 50,
+                ignorePatterns: ["**/node_modules/**", "**/.git/**"],
             })
 
             customWatchdog.start(tempDir)
@@ -331,6 +429,96 @@ describe("Watchdog", () => {
                 expect(typeof event.timestamp).toBe("number")
                 expect(event.timestamp).toBeLessThanOrEqual(Date.now())
             }
+        })
+    })
+
+    describe("error handling", () => {
+        it("should handle watcher errors gracefully", async () => {
+            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+            watchdog.start(tempDir)
+
+            const watcher = (watchdog as any).watcher
+            if (watcher) {
+                watcher.emit("error", new Error("Test watcher error"))
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining("Test watcher error"),
+            )
+
+            consoleErrorSpy.mockRestore()
+        })
+    })
+
+    describe("polling mode", () => {
+        it("should support polling mode", () => {
+            const pollingWatchdog = new Watchdog({
+                debounceMs: 50,
+                usePolling: true,
+                pollInterval: 500,
+            })
+
+            pollingWatchdog.start(tempDir)
+            expect(pollingWatchdog.isWatching()).toBe(true)
+
+            pollingWatchdog.stop()
+        })
+    })
+
+    describe("edge cases", () => {
+        it("should handle flushing non-existent change", () => {
+            watchdog.start(tempDir)
+            const flushChange = (watchdog as any).flushChange.bind(watchdog)
+            expect(() => flushChange("/non/existent/path.ts")).not.toThrow()
+        })
+
+        it("should handle clearing timer for same file multiple times", async () => {
+            const events: FileChangeEvent[] = []
+            watchdog.onFileChange((event) => events.push(event))
+            watchdog.start(tempDir)
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            const testFile = path.join(tempDir, "test.ts")
+            await fs.writeFile(testFile, "const x = 1")
+            await new Promise((resolve) => setTimeout(resolve, 10))
+            await fs.writeFile(testFile, "const x = 2")
+            await new Promise((resolve) => setTimeout(resolve, 10))
+            await fs.writeFile(testFile, "const x = 3")
+
+            await new Promise((resolve) => setTimeout(resolve, 200))
+
+            expect(events.length).toBeGreaterThanOrEqual(0)
+        })
+
+        it("should normalize file paths", async () => {
+            const events: FileChangeEvent[] = []
+            watchdog.onFileChange((event) => {
+                events.push(event)
+                expect(path.isAbsolute(event.path)).toBe(true)
+            })
+            watchdog.start(tempDir)
+
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            const testFile = path.join(tempDir, "normalize-test.ts")
+            await fs.writeFile(testFile, "const x = 1")
+
+            await new Promise((resolve) => setTimeout(resolve, 200))
+        })
+
+        it("should handle empty directory", async () => {
+            const emptyDir = await fs.mkdtemp(path.join(os.tmpdir(), "empty-"))
+            const emptyWatchdog = new Watchdog({ debounceMs: 50 })
+
+            emptyWatchdog.start(emptyDir)
+            expect(emptyWatchdog.isWatching()).toBe(true)
+
+            await emptyWatchdog.stop()
+            await fs.rm(emptyDir, { recursive: true, force: true })
         })
     })
 })

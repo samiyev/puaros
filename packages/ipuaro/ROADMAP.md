@@ -1339,7 +1339,7 @@ class ErrorHandler {
 - [x] Error handling complete ✅ (v0.16.0)
 - [ ] Performance optimized
 - [x] Documentation complete ✅ (v0.17.0)
-- [x] 80%+ test coverage ✅ (~98%)
+- [x] Test coverage ≥92% branches, ≥95% lines/functions/statements ✅ (92.01% branches, 97.84% lines, 99.16% functions, 97.84% statements - 1441 tests)
 - [x] 0 ESLint errors ✅
 - [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅

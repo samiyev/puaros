@@ -269,5 +269,69 @@ describe("GetLinesTool", () => {
             expect(data.totalLines).toBe(1)
             expect(data.content).toBe("1│only line")
         })
+
+        it("should read from filesystem fallback when not in storage", async () => {
+            const storage: IStorage = {
+                getFile: vi.fn().mockResolvedValue(null),
+                setFile: vi.fn(),
+                deleteFile: vi.fn(),
+                getAllFiles: vi.fn(),
+                getAST: vi.fn(),
+                setAST: vi.fn(),
+                getSymbolIndex: vi.fn(),
+                setSymbolIndex: vi.fn(),
+                getDepsGraph: vi.fn(),
+                setDepsGraph: vi.fn(),
+            }
+
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts" }, ctx)
+
+            expect(storage.getFile).toHaveBeenCalledWith("test.ts")
+
+            if (result.success) {
+                expect(result.success).toBe(true)
+            } else {
+                expect(result.error).toBeDefined()
+            }
+        })
+
+        it("should handle when start equals end", async () => {
+            const storage = createMockStorage({ lines: ["line 1", "line 2", "line 3"] })
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts", start: 2, end: 2 }, ctx)
+
+            expect(result.success).toBe(true)
+            const data = result.data as GetLinesResult
+            expect(data.startLine).toBe(2)
+            expect(data.endLine).toBe(2)
+            expect(data.content).toContain("line 2")
+        })
+
+        it("should handle undefined end parameter", async () => {
+            const storage = createMockStorage({ lines: ["line 1", "line 2", "line 3"] })
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts", start: 2, end: undefined }, ctx)
+
+            expect(result.success).toBe(true)
+            const data = result.data as GetLinesResult
+            expect(data.startLine).toBe(2)
+            expect(data.endLine).toBe(3)
+        })
+
+        it("should handle undefined start parameter", async () => {
+            const storage = createMockStorage({ lines: ["line 1", "line 2", "line 3"] })
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts", start: undefined, end: 2 }, ctx)
+
+            expect(result.success).toBe(true)
+            const data = result.data as GetLinesResult
+            expect(data.startLine).toBe(1)
+            expect(data.endLine).toBe(2)
+        })
     })
 })

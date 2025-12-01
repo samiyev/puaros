@@ -484,5 +484,23 @@ describe("OllamaClient", () => {
 
             await expect(client.pullModel("test")).rejects.toThrow(/Failed to pull model/)
         })
+
+        it("should handle AbortError correctly", async () => {
+            const abortError = new Error("aborted")
+            abortError.name = "AbortError"
+            mockOllamaInstance.chat.mockRejectedValue(abortError)
+
+            const client = new OllamaClient(defaultConfig)
+
+            await expect(client.chat([createUserMessage("Hello")])).rejects.toThrow(/Request was aborted/)
+        })
+
+        it("should handle model not found errors", async () => {
+            mockOllamaInstance.chat.mockRejectedValue(new Error("model 'unknown' not found"))
+
+            const client = new OllamaClient(defaultConfig)
+
+            await expect(client.chat([createUserMessage("Hello")])).rejects.toThrow(/Model.*not found/)
+        })
     })
 })

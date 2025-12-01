@@ -301,5 +301,47 @@ describe("GetFunctionTool", () => {
             const data = result.data as GetFunctionResult
             expect(data.params).toEqual([])
         })
+
+        it("should handle error when reading lines fails", async () => {
+            const ast = createMockAST([createMockFunction({ name: "test", lineStart: 1, lineEnd: 1 })])
+            const storage: IStorage = {
+                getFile: vi.fn().mockResolvedValue(null),
+                getAST: vi.fn().mockResolvedValue(ast),
+                setFile: vi.fn(),
+                deleteFile: vi.fn(),
+                getAllFiles: vi.fn(),
+                setAST: vi.fn(),
+                getSymbolIndex: vi.fn(),
+                setSymbolIndex: vi.fn(),
+                getDepsGraph: vi.fn(),
+                setDepsGraph: vi.fn(),
+            }
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts", name: "test" }, ctx)
+
+            expect(result.success).toBe(false)
+        })
+
+        it("should handle undefined returnType", async () => {
+            const lines = ["function implicitReturn() { return }"]
+            const func = createMockFunction({
+                name: "implicitReturn",
+                lineStart: 1,
+                lineEnd: 1,
+                returnType: undefined,
+                isAsync: false,
+            })
+            const ast = createMockAST([func])
+            const storage = createMockStorage({ lines }, ast)
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts", name: "implicitReturn" }, ctx)
+
+            expect(result.success).toBe(true)
+            const data = result.data as GetFunctionResult
+            expect(data.returnType).toBeUndefined()
+            expect(data.isAsync).toBe(false)
+        })
     })
 })

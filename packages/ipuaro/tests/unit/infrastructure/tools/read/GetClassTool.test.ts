@@ -344,5 +344,47 @@ describe("GetClassTool", () => {
 
             expect(result.callId).toMatch(/^get_class-\d+$/)
         })
+
+        it("should handle undefined extends in class", async () => {
+            const lines = ["class StandaloneClass { method() {} }"]
+            const cls = createMockClass({
+                name: "StandaloneClass",
+                lineStart: 1,
+                lineEnd: 1,
+                extends: undefined,
+                methods: [{ name: "method", lineStart: 1, lineEnd: 1 }],
+            })
+            const ast = createMockAST([cls])
+            const storage = createMockStorage({ lines }, ast)
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts", name: "StandaloneClass" }, ctx)
+
+            expect(result.success).toBe(true)
+            const data = result.data as GetClassResult
+            expect(data.extends).toBeUndefined()
+            expect(data.methods.length).toBe(1)
+        })
+
+        it("should handle error when reading lines fails", async () => {
+            const ast = createMockAST([createMockClass({ name: "Test", lineStart: 1, lineEnd: 1 })])
+            const storage: IStorage = {
+                getFile: vi.fn().mockResolvedValue(null),
+                getAST: vi.fn().mockResolvedValue(ast),
+                setFile: vi.fn(),
+                deleteFile: vi.fn(),
+                getAllFiles: vi.fn(),
+                setAST: vi.fn(),
+                getSymbolIndex: vi.fn(),
+                setSymbolIndex: vi.fn(),
+                getDepsGraph: vi.fn(),
+                setDepsGraph: vi.fn(),
+            }
+            const ctx = createMockContext(storage)
+
+            const result = await tool.execute({ path: "test.ts", name: "Test" }, ctx)
+
+            expect(result.success).toBe(false)
+        })
     })
 })
