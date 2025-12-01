@@ -229,7 +229,7 @@ describe("GetFunctionTool", () => {
             const result = await tool.execute({ path: "../outside/file.ts", name: "myFunc" }, ctx)
 
             expect(result.success).toBe(false)
-            expect(result.error).toBe("Path must be within project root")
+            expect(result.error).toBe("Path contains traversal patterns")
         })
 
         it("should pad line numbers correctly for large files", async () => {

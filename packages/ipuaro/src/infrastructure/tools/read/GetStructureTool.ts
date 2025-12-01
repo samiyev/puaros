@@ -7,6 +7,7 @@ import {
     type ToolResult,
 } from "../../../domain/value-objects/ToolResult.js"
 import { DEFAULT_IGNORE_PATTERNS } from "../../../domain/constants/index.js"
+import { PathValidator } from "../../security/PathValidator.js"
 
 /**
  * Tree node representing a file or directory.
@@ -89,16 +90,17 @@ export class GetStructureTool implements ITool {
         const startTime = Date.now()
         const callId = `${this.name}-${String(startTime)}`
 
-        const relativePath = (params.path as string | undefined) ?? ""
+        const inputPath = (params.path as string | undefined) ?? "."
         const maxDepth = params.depth as number | undefined
-        const absolutePath = path.resolve(ctx.projectRoot, relativePath)
+        const pathValidator = new PathValidator(ctx.projectRoot)
 
-        if (!absolutePath.startsWith(ctx.projectRoot)) {
-            return createErrorResult(
-                callId,
-                "Path must be within project root",
-                Date.now() - startTime,
-            )
+        let absolutePath: string
+        let relativePath: string
+        try {
+            ;[absolutePath, relativePath] = pathValidator.resolveOrThrow(inputPath)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            return createErrorResult(callId, message, Date.now() - startTime)
         }
 
         try {

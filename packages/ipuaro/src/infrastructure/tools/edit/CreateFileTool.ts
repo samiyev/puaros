@@ -8,6 +8,7 @@ import {
     type ToolResult,
 } from "../../../domain/value-objects/ToolResult.js"
 import { hashLines } from "../../../shared/utils/hash.js"
+import { PathValidator } from "../../security/PathValidator.js"
 
 /**
  * Result data from create_file tool.
@@ -62,17 +63,18 @@ export class CreateFileTool implements ITool {
         const startTime = Date.now()
         const callId = `${this.name}-${String(startTime)}`
 
-        const relativePath = params.path as string
+        const inputPath = params.path as string
         const content = params.content as string
 
-        const absolutePath = path.resolve(ctx.projectRoot, relativePath)
+        const pathValidator = new PathValidator(ctx.projectRoot)
 
-        if (!absolutePath.startsWith(ctx.projectRoot)) {
-            return createErrorResult(
-                callId,
-                "Path must be within project root",
-                Date.now() - startTime,
-            )
+        let absolutePath: string
+        let relativePath: string
+        try {
+            ;[absolutePath, relativePath] = pathValidator.resolveOrThrow(inputPath)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            return createErrorResult(callId, message, Date.now() - startTime)
         }
 
         try {

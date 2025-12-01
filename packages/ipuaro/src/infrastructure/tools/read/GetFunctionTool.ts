@@ -1,5 +1,4 @@
 import { promises as fs } from "node:fs"
-import * as path from "node:path"
 import type { ITool, ToolContext, ToolParameterSchema } from "../../../domain/services/ITool.js"
 import type { FunctionInfo } from "../../../domain/value-objects/FileAST.js"
 import {
@@ -7,6 +6,7 @@ import {
     createSuccessResult,
     type ToolResult,
 } from "../../../domain/value-objects/ToolResult.js"
+import { PathValidator } from "../../security/PathValidator.js"
 
 /**
  * Result data from get_function tool.
@@ -65,16 +65,17 @@ export class GetFunctionTool implements ITool {
         const startTime = Date.now()
         const callId = `${this.name}-${String(startTime)}`
 
-        const relativePath = params.path as string
+        const inputPath = params.path as string
         const functionName = params.name as string
-        const absolutePath = path.resolve(ctx.projectRoot, relativePath)
+        const pathValidator = new PathValidator(ctx.projectRoot)
 
-        if (!absolutePath.startsWith(ctx.projectRoot)) {
-            return createErrorResult(
-                callId,
-                "Path must be within project root",
-                Date.now() - startTime,
-            )
+        let absolutePath: string
+        let relativePath: string
+        try {
+            ;[absolutePath, relativePath] = pathValidator.resolveOrThrow(inputPath)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            return createErrorResult(callId, message, Date.now() - startTime)
         }
 
         try {

@@ -1,5 +1,4 @@
 import { promises as fs } from "node:fs"
-import * as path from "node:path"
 import type { ITool, ToolContext, ToolParameterSchema } from "../../../domain/services/ITool.js"
 import { createFileData } from "../../../domain/value-objects/FileData.js"
 import {
@@ -8,6 +7,7 @@ import {
     type ToolResult,
 } from "../../../domain/value-objects/ToolResult.js"
 import { hashLines } from "../../../shared/utils/hash.js"
+import { PathValidator } from "../../security/PathValidator.js"
 
 /**
  * Result data from edit_lines tool.
@@ -94,19 +94,20 @@ export class EditLinesTool implements ITool {
         const startTime = Date.now()
         const callId = `${this.name}-${String(startTime)}`
 
-        const relativePath = params.path as string
+        const inputPath = params.path as string
         const startLine = params.start as number
         const endLine = params.end as number
         const newContent = params.content as string
 
-        const absolutePath = path.resolve(ctx.projectRoot, relativePath)
+        const pathValidator = new PathValidator(ctx.projectRoot)
 
-        if (!absolutePath.startsWith(ctx.projectRoot)) {
-            return createErrorResult(
-                callId,
-                "Path must be within project root",
-                Date.now() - startTime,
-            )
+        let absolutePath: string
+        let relativePath: string
+        try {
+            ;[absolutePath, relativePath] = pathValidator.resolveOrThrow(inputPath)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            return createErrorResult(callId, message, Date.now() - startTime)
         }
 
         try {

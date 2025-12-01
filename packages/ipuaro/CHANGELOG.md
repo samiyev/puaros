@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2025-12-01 - Security
+
+### Added
+
+- **PathValidator Utility (0.13.3)**
+  - Centralized path validation for all file operations
+  - Prevents path traversal attacks (`..`, `~`)
+  - Validates paths are within project root
+  - Sync (`validateSync`) and async (`validate`) validation methods
+  - Quick check method (`isWithin`) for simple validations
+  - Resolution methods (`resolve`, `relativize`, `resolveOrThrow`)
+  - Detailed validation results with status and reason
+  - Options for file existence, directory/file type checks
+
+- **Security Module**
+  - New `infrastructure/security` module
+  - Exports: `PathValidator`, `createPathValidator`, `validatePath`
+  - Type exports: `PathValidationResult`, `PathValidationStatus`, `PathValidatorOptions`
+
+### Changed
+
+- **Refactored All File Tools to Use PathValidator**
+  - GetLinesTool: Uses PathValidator for path validation
+  - GetFunctionTool: Uses PathValidator for path validation
+  - GetClassTool: Uses PathValidator for path validation
+  - GetStructureTool: Uses PathValidator for path validation
+  - EditLinesTool: Uses PathValidator for path validation
+  - CreateFileTool: Uses PathValidator for path validation
+  - DeleteFileTool: Uses PathValidator for path validation
+
+- **Improved Error Messages**
+  - More specific error messages from PathValidator
+  - "Path contains traversal patterns" for `..` attempts
+  - "Path is outside project root" for absolute paths outside project
+  - "Path is empty" for empty/whitespace paths
+
+### Technical Details
+
+- Total tests: 1305 (51 new PathValidator tests)
+- Test coverage: ~98% maintained
+- No breaking changes to existing tool APIs
+- Security validation is now consistent across all 7 file tools
+
+---
+
 ## [0.12.0] - 2025-12-01 - TUI Advanced
 
 ### Added

@@ -214,7 +214,7 @@ describe("GetLinesTool", () => {
             const result = await tool.execute({ path: "../outside/file.ts" }, ctx)
 
             expect(result.success).toBe(false)
-            expect(result.error).toBe("Path must be within project root")
+            expect(result.error).toBe("Path contains traversal patterns")
         })
 
         it("should return error when file not found", async () => {

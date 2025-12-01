@@ -271,7 +271,7 @@ describe("GetClassTool", () => {
             const result = await tool.execute({ path: "../outside/file.ts", name: "MyClass" }, ctx)
 
             expect(result.success).toBe(false)
-            expect(result.error).toBe("Path must be within project root")
+            expect(result.error).toBe("Path contains traversal patterns")
         })
 
         it("should handle class with no extends", async () => {
