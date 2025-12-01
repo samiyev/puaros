@@ -1,6 +1,6 @@
 {
     "name": "@samiyev/ipuaro",
-    "version": "0.21.4",
+    "version": "0.22.1",
     "description": "Local AI agent for codebase operations with infinite context feeling",
     "author": "Fozilbek Samiyev <fozilbek.samiyev@gmail.com>",
     "license": "MIT",
