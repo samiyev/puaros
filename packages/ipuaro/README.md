@@ -151,6 +151,23 @@ ipuaro --model qwen2.5-coder:32b-instruct
 ipuaro --auto-apply
 ```
 
+## Quick Start
+
+Try ipuaro with our demo project:
+
+```bash
+# Navigate to demo project
+cd examples/demo-project
+
+# Install dependencies
+npm install
+
+# Start ipuaro
+npx @samiyev/ipuaro
+```
+
+See [examples/demo-project](./examples/demo-project) for detailed usage guide and example conversations.
+
 ## Commands
 
 | Command | Description |

@@ -1,0 +1,21 @@
+{
+    "redis": {
+        "host": "localhost",
+        "port": 6379
+    },
+    "llm": {
+        "model": "qwen2.5-coder:7b-instruct",
+        "temperature": 0.1
+    },
+    "project": {
+        "ignorePatterns": [
+            "node_modules",
+            "dist",
+            ".git",
+            "*.log"
+        ]
+    },
+    "edit": {
+        "autoApply": false
+    }
+}
