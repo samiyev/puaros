@@ -1648,7 +1648,7 @@ interface DiffViewProps {
 ## Version 0.22.0 - Extended Configuration ⚙️
 
 **Priority:** MEDIUM
-**Status:** In Progress (4/5 complete)
+**Status:** Complete (5/5 complete) ✅
 
 ### 0.22.1 - Display Configuration ✅
 
@@ -1721,7 +1721,7 @@ export const AutocompleteConfigSchema = z.object({
 - [x] useAutocomplete reads from config
 - [x] Unit tests (27 tests)
 
-### 0.22.5 - Commands Configuration
+### 0.22.5 - Commands Configuration ✅
 
 ```typescript
 // src/shared/constants/config.ts additions
@@ -1731,13 +1731,13 @@ export const CommandsConfigSchema = z.object({
 ```
 
 **Deliverables:**
-- [ ] CommandsConfigSchema in config.ts
-- [ ] Timeout support for run_command tool
-- [ ] Unit tests
+- [x] CommandsConfigSchema in config.ts
+- [x] Timeout support for run_command tool
+- [x] Unit tests (19 schema tests + 3 RunCommandTool integration tests)
 
 **Tests:**
-- [ ] Unit tests for all new config schemas
-- [ ] Integration tests for config loading
+- [x] Unit tests for CommandsConfigSchema (19 tests)
+- [x] Integration tests for RunCommandTool with config (3 tests)
 
 ---
 

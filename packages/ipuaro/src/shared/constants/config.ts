@@ -126,6 +126,13 @@ export const AutocompleteConfigSchema = z.object({
 })
 
 /**
+ * Commands configuration schema.
+ */
+export const CommandsConfigSchema = z.object({
+    timeout: z.number().int().positive().nullable().default(null),
+})
+
+/**
  * Full configuration schema.
  */
 export const ConfigSchema = z.object({
@@ -140,6 +147,7 @@ export const ConfigSchema = z.object({
     session: SessionConfigSchema.default({}),
     context: ContextConfigSchema.default({}),
     autocomplete: AutocompleteConfigSchema.default({}),
+    commands: CommandsConfigSchema.default({}),
 })
 
 /**
@@ -157,6 +165,7 @@ export type DisplayConfig = z.infer<typeof DisplayConfigSchema>
 export type SessionConfig = z.infer<typeof SessionConfigSchema>
 export type ContextConfig = z.infer<typeof ContextConfigSchema>
 export type AutocompleteConfig = z.infer<typeof AutocompleteConfigSchema>
+export type CommandsConfig = z.infer<typeof CommandsConfigSchema>
 
 /**
  * Default configuration.

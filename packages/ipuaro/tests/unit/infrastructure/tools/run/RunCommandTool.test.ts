@@ -354,6 +354,36 @@ describe("RunCommandTool", () => {
             expect(execFn).toHaveBeenCalledWith("ls", expect.objectContaining({ timeout: 5000 }))
         })
 
+        it("should use config timeout", async () => {
+            const execFn = createMockExec({})
+            const toolWithMock = new RunCommandTool(undefined, execFn, { timeout: 45000 })
+            const ctx = createMockContext()
+
+            await toolWithMock.execute({ command: "ls" }, ctx)
+
+            expect(execFn).toHaveBeenCalledWith("ls", expect.objectContaining({ timeout: 45000 }))
+        })
+
+        it("should use null config timeout as default", async () => {
+            const execFn = createMockExec({})
+            const toolWithMock = new RunCommandTool(undefined, execFn, { timeout: null })
+            const ctx = createMockContext()
+
+            await toolWithMock.execute({ command: "ls" }, ctx)
+
+            expect(execFn).toHaveBeenCalledWith("ls", expect.objectContaining({ timeout: 30000 }))
+        })
+
+        it("should prefer param timeout over config timeout", async () => {
+            const execFn = createMockExec({})
+            const toolWithMock = new RunCommandTool(undefined, execFn, { timeout: 45000 })
+            const ctx = createMockContext()
+
+            await toolWithMock.execute({ command: "ls", timeout: 5000 }, ctx)
+
+            expect(execFn).toHaveBeenCalledWith("ls", expect.objectContaining({ timeout: 5000 }))
+        })
+
         it("should execute in project root", async () => {
             const execFn = createMockExec({})
             const toolWithMock = new RunCommandTool(undefined, execFn)

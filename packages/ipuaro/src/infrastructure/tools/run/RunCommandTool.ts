@@ -6,6 +6,7 @@ import {
     createSuccessResult,
     type ToolResult,
 } from "../../../domain/value-objects/ToolResult.js"
+import type { CommandsConfig } from "../../../shared/constants/config.js"
 import { CommandSecurity } from "./CommandSecurity.js"
 
 const execAsync = promisify(exec)
@@ -60,7 +61,7 @@ export class RunCommandTool implements ITool {
         {
             name: "timeout",
             type: "number",
-            description: "Timeout in milliseconds (default: 30000)",
+            description: "Timeout in milliseconds (default: from config or 30000, max: 600000)",
             required: false,
         },
     ]
@@ -69,10 +70,12 @@ export class RunCommandTool implements ITool {
 
     private readonly security: CommandSecurity
     private readonly execFn: typeof execAsync
+    private readonly configTimeout: number | null
 
-    constructor(security?: CommandSecurity, execFn?: typeof execAsync) {
+    constructor(security?: CommandSecurity, execFn?: typeof execAsync, config?: CommandsConfig) {
         this.security = security ?? new CommandSecurity()
         this.execFn = execFn ?? execAsync
+        this.configTimeout = config?.timeout ?? null
     }
 
     validateParams(params: Record<string, unknown>): string | null {
@@ -104,7 +107,7 @@ export class RunCommandTool implements ITool {
         const callId = `${this.name}-${String(startTime)}`
 
         const command = params.command as string
-        const timeout = (params.timeout as number) ?? DEFAULT_TIMEOUT
+        const timeout = (params.timeout as number) ?? this.configTimeout ?? DEFAULT_TIMEOUT
 
         const securityCheck = this.security.check(command)
 

@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.5] - 2025-12-02 - Commands Configuration
+
+### Added
+
+- **CommandsConfigSchema (0.22.5)**
+  - New configuration schema for command settings in `src/shared/constants/config.ts`
+  - `timeout: number | null` (default: null) - global timeout for shell commands in milliseconds
+  - Integrated into main ConfigSchema with `.default({})`
+  - Exported `CommandsConfig` type from config module
+
+### Changed
+
+- **RunCommandTool**
+  - Added optional `config?: CommandsConfig` parameter to constructor
+  - Timeout priority: `params.timeout` → `config.timeout` → `DEFAULT_TIMEOUT (30000)`
+  - Updated parameter description to reflect configuration support
+  - Config-based timeout enables global command timeout without per-call specification
+
+### Technical Details
+
+- Total tests: 1679 passed (was 1657, +22 new tests)
+- New test file: `commands-config.test.ts` with 19 tests
+  - Default values validation (timeout: null)
+  - `timeout` nullable positive integer validation (including edge cases: zero, negative, float rejection)
+  - Partial and full config merging tests
+- Updated RunCommandTool tests: 3 new tests for configuration integration
+  - Config timeout behavior
+  - Null config timeout fallback to default
+  - Param timeout priority over config timeout
+- Coverage: 97.64% lines, 91.36% branches, 98.77% functions, 97.64% statements
+- 0 ESLint errors, 5 warnings (acceptable TUI component warnings)
+- Build successful with no TypeScript errors
+
+### Notes
+
+This release completes the v0.22.0 Extended Configuration milestone. All items for v0.22.0 are now complete:
+- ✅ 0.22.1 - Display Configuration
+- ✅ 0.22.2 - Session Configuration
+- ✅ 0.22.3 - Context Configuration
+- ✅ 0.22.4 - Autocomplete Configuration
+- ✅ 0.22.5 - Commands Configuration
+
+---
+
 ## [0.22.4] - 2025-12-02 - Autocomplete Configuration
 
 ### Added
