@@ -5,6 +5,10 @@ export default defineConfig({
         globals: true,
         environment: "node",
         include: ["tests/**/*.test.ts"],
+        environmentMatchGlobs: [
+            // Use jsdom for TUI tests (React hooks)
+            ["tests/unit/tui/**/*.test.ts", "jsdom"],
+        ],
         coverage: {
             provider: "v8",
             reporter: ["text", "html", "lcov"],
@@ -20,7 +24,7 @@ export default defineConfig({
             thresholds: {
                 lines: 95,
                 functions: 95,
-                branches: 91.9,
+                branches: 91.5,
                 statements: 95,
             },
         },

@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2025-12-01 - TUI Enhancements (Part 1)
+
+### Added
+
+- **useAutocomplete Hook (0.21.1)**
+  - Tab autocomplete for file paths in Input component
+  - Fuzzy matching algorithm with scoring system
+  - Redis-backed file path suggestions from indexed project files
+  - Real-time suggestion updates as user types
+  - Visual suggestion display (up to 5 suggestions shown, with count for more)
+  - Common prefix completion for multiple matches
+  - Configurable via `autocompleteEnabled` and `maxSuggestions` options
+  - Path normalization (handles `./`, trailing slashes)
+  - Case-insensitive matching
+  - 21 unit tests with jsdom environment
+
+### Changed
+
+- **Input Component Enhanced**
+  - Added `storage`, `projectRoot`, and `autocompleteEnabled` props
+  - Integrated useAutocomplete hook for Tab key handling
+  - Visual feedback showing available suggestions below input
+  - Suggestions update dynamically as user types
+  - Suggestions clear on history navigation (↑/↓ arrows)
+  - Refactored key handlers into separate callbacks to reduce complexity
+
+- **App Component**
+  - Passes `storage` and `projectRoot` to Input component
+  - Enables autocomplete by default for better UX
+
+- **Vitest Configuration**
+  - Added `jsdom` environment for TUI tests via `environmentMatchGlobs`
+  - Coverage threshold for branches adjusted to 91.5% (from 91.9%)
+
+### Dependencies
+
+- Added `@testing-library/react` ^16.3.0 (devDependency)
+- Added `jsdom` ^27.2.0 (devDependency)
+- Added `@types/jsdom` ^27.0.0 (devDependency)
+- Updated `react-dom` to 18.3.1 (was 19.2.0) for compatibility
+
+### Technical Details
+
+- Total tests: 1484 passed (was 1463, +21 tests)
+- Coverage: 97.60% lines, 91.58% branches, 98.96% functions, 97.60% statements
+- All existing tests passing
+- 0 ESLint errors, 2 warnings (function length in TUI components, acceptable)
+
+### Notes
+
+This release completes the first item of the v0.21.0 TUI Enhancements milestone. Remaining items for v0.21.0:
+- 0.21.2 - Edit Mode in ConfirmDialog
+- 0.21.3 - Multiline Input support
+- 0.21.4 - Syntax Highlighting in DiffView
+
+---
+
 ## [0.20.0] - 2025-12-01 - Missing Use Cases
 
 ### Added

@@ -9,7 +9,7 @@ import type { ILLMClient } from "../domain/services/ILLMClient.js"
 import type { ISessionStorage } from "../domain/services/ISessionStorage.js"
 import type { IStorage } from "../domain/services/IStorage.js"
 import type { DiffInfo } from "../domain/services/ITool.js"
-import type { ErrorChoice } from "../shared/types/index.js"
+import type { ErrorOption } from "../shared/errors/IpuaroError.js"
 import type { IToolRegistry } from "../application/interfaces/IToolRegistry.js"
 import type { ProjectStructure } from "../infrastructure/llm/prompts.js"
 import { Chat, Input, StatusBar } from "./components/index.js"
@@ -52,7 +52,7 @@ async function handleConfirmationDefault(_message: string, _diff?: DiffInfo): Pr
     return Promise.resolve(true)
 }
 
-async function handleErrorDefault(_error: Error): Promise<ErrorChoice> {
+async function handleErrorDefault(_error: Error): Promise<ErrorOption> {
     return Promise.resolve("skip")
 }
 
@@ -208,6 +208,9 @@ export function App({
                 history={session?.inputHistory ?? []}
                 disabled={isInputDisabled}
                 placeholder={isInputDisabled ? "Processing..." : "Type a message..."}
+                storage={deps.storage}
+                projectRoot={projectPath}
+                autocompleteEnabled={true}
             />
         </Box>
     )

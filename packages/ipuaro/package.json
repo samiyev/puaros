@@ -1,6 +1,6 @@
 {
     "name": "@samiyev/ipuaro",
-    "version": "0.20.0",
+    "version": "0.21.0",
     "description": "Local AI agent for codebase operations with infinite context feeling",
     "author": "Fozilbek Samiyev <fozilbek.samiyev@gmail.com>",
     "license": "MIT",
@@ -48,10 +48,14 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
+        "@testing-library/react": "^16.3.0",
+        "@types/jsdom": "^27.0.0",
         "@types/node": "^22.10.1",
         "@types/react": "^18.2.0",
         "@vitest/coverage-v8": "^1.6.0",
         "@vitest/ui": "^1.6.0",
+        "jsdom": "^27.2.0",
+        "react-dom": "18.3.1",
         "tsup": "^8.3.5",
         "typescript": "^5.7.2",
         "vitest": "^1.6.0"

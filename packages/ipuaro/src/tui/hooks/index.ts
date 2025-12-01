@@ -19,3 +19,8 @@ export {
     type CommandResult,
     type CommandDefinition,
 } from "./useCommands.js"
+export {
+    useAutocomplete,
+    type UseAutocompleteOptions,
+    type UseAutocompleteReturn,
+} from "./useAutocomplete.js"

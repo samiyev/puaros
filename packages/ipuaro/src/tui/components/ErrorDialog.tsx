@@ -5,7 +5,7 @@
 
 import { Box, Text, useInput } from "ink"
 import React, { useState } from "react"
-import type { ErrorChoice } from "../../shared/types/index.js"
+import type { ErrorOption } from "../../shared/errors/IpuaroError.js"
 
 export interface ErrorInfo {
     type: string
@@ -15,7 +15,7 @@ export interface ErrorInfo {
 
 export interface ErrorDialogProps {
     error: ErrorInfo
-    onChoice: (choice: ErrorChoice) => void
+    onChoice: (choice: ErrorOption) => void
 }
 
 function ChoiceButton({
@@ -49,7 +49,7 @@ function ChoiceButton({
 }
 
 export function ErrorDialog({ error, onChoice }: ErrorDialogProps): React.JSX.Element {
-    const [selected, setSelected] = useState<ErrorChoice | null>(null)
+    const [selected, setSelected] = useState<ErrorOption | null>(null)
 
     useInput((input, key) => {
         const lowerInput = input.toLowerCase()

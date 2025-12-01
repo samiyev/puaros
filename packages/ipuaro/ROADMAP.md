@@ -1539,31 +1539,37 @@ class ExecuteTool {
 ## Version 0.21.0 - TUI Enhancements 🎨
 
 **Priority:** MEDIUM
-**Status:** Pending
+**Status:** In Progress (1/4 complete)
 
-### 0.21.1 - useAutocomplete Hook
+### 0.21.1 - useAutocomplete Hook ✅
 
 ```typescript
 // src/tui/hooks/useAutocomplete.ts
 function useAutocomplete(options: {
     storage: IStorage
     projectRoot: string
+    enabled?: boolean
+    maxSuggestions?: number
 }): {
     suggestions: string[]
     complete: (partial: string) => string[]
-    accept: (suggestion: string) => void
+    accept: (suggestion: string) => string
+    reset: () => void
 }
 
 // Tab autocomplete for file paths
-// Sources: Redis file index, filesystem
+// Sources: Redis file index
+// Fuzzy matching with scoring algorithm
 ```
 
 **Deliverables:**
-- [ ] useAutocomplete hook implementation
-- [ ] Integration with Input component (Tab key)
-- [ ] Path completion from Redis index
-- [ ] Fuzzy matching support
-- [ ] Unit tests
+- [x] useAutocomplete hook implementation
+- [x] Integration with Input component (Tab key)
+- [x] Path completion from Redis index
+- [x] Fuzzy matching support
+- [x] Unit tests (21 tests)
+- [x] Visual feedback in Input component
+- [x] Real-time suggestion updates
 
 ### 0.21.2 - Edit Mode in ConfirmDialog
 
