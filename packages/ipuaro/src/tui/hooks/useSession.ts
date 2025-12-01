@@ -18,6 +18,7 @@ import {
 } from "../../application/use-cases/HandleMessage.js"
 import { StartSession } from "../../application/use-cases/StartSession.js"
 import { UndoChange } from "../../application/use-cases/UndoChange.js"
+import type { ConfirmationResult } from "../../application/use-cases/ExecuteTool.js"
 import type { ProjectStructure } from "../../infrastructure/llm/prompts.js"
 import type { TuiStatus } from "../types.js"
 
@@ -33,7 +34,7 @@ export interface UseSessionDependencies {
 
 export interface UseSessionOptions {
     autoApply?: boolean
-    onConfirmation?: (message: string, diff?: DiffInfo) => Promise<boolean>
+    onConfirmation?: (message: string, diff?: DiffInfo) => Promise<boolean | ConfirmationResult>
     onError?: (error: Error) => Promise<ErrorOption>
 }
 

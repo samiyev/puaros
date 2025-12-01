@@ -9,9 +9,21 @@ import { createUndoEntry } from "../../domain/value-objects/UndoEntry.js"
 import type { IToolRegistry } from "../interfaces/IToolRegistry.js"
 
 /**
- * Confirmation handler callback type.
+ * Result of confirmation dialog.
  */
-export type ConfirmationHandler = (message: string, diff?: DiffInfo) => Promise<boolean>
+export interface ConfirmationResult {
+    confirmed: boolean
+    editedContent?: string[]
+}
+
+/**
+ * Confirmation handler callback type.
+ * Can return either a boolean (for backward compatibility) or a ConfirmationResult.
+ */
+export type ConfirmationHandler = (
+    message: string,
+    diff?: DiffInfo,
+) => Promise<boolean | ConfirmationResult>
 
 /**
  * Progress handler callback type.
@@ -143,6 +155,7 @@ export class ExecuteTool {
 
     /**
      * Handle confirmation for tool actions.
+     * Supports edited content from user.
      */
     private async handleConfirmation(
         msg: string,
@@ -159,9 +172,19 @@ export class ExecuteTool {
         }
 
         if (options.onConfirmation) {
-            const confirmed = await options.onConfirmation(msg, diff)
+            const result = await options.onConfirmation(msg, diff)
+
+            const confirmed = typeof result === "boolean" ? result : result.confirmed
+            const editedContent = typeof result === "boolean" ? undefined : result.editedContent
 
             if (confirmed && diff) {
+                if (editedContent && editedContent.length > 0) {
+                    diff.newLines = editedContent
+                    if (toolCall.params.content && typeof toolCall.params.content === "string") {
+                        toolCall.params.content = editedContent.join("\n")
+                    }
+                }
+
                 this.lastUndoEntryId = await this.createUndoEntry(diff, toolCall, session)
             }
 

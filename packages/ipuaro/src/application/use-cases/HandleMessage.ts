@@ -22,7 +22,7 @@ import {
 import { parseToolCalls } from "../../infrastructure/llm/ResponseParser.js"
 import type { IToolRegistry } from "../interfaces/IToolRegistry.js"
 import { ContextManager } from "./ContextManager.js"
-import { ExecuteTool } from "./ExecuteTool.js"
+import { type ConfirmationResult, ExecuteTool } from "./ExecuteTool.js"
 
 /**
  * Status during message handling.
@@ -56,7 +56,7 @@ export interface HandleMessageEvents {
     onMessage?: (message: ChatMessage) => void
     onToolCall?: (call: ToolCall) => void
     onToolResult?: (result: ToolResult) => void
-    onConfirmation?: (message: string, diff?: DiffInfo) => Promise<boolean>
+    onConfirmation?: (message: string, diff?: DiffInfo) => Promise<boolean | ConfirmationResult>
     onError?: (error: IpuaroError) => Promise<ErrorOption>
     onStatusChange?: (status: HandleMessageStatus) => void
     onUndoEntry?: (entry: UndoEntry) => void

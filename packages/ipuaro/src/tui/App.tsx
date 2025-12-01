@@ -11,10 +11,12 @@ import type { IStorage } from "../domain/services/IStorage.js"
 import type { DiffInfo } from "../domain/services/ITool.js"
 import type { ErrorOption } from "../shared/errors/IpuaroError.js"
 import type { IToolRegistry } from "../application/interfaces/IToolRegistry.js"
+import type { ConfirmationResult } from "../application/use-cases/ExecuteTool.js"
 import type { ProjectStructure } from "../infrastructure/llm/prompts.js"
-import { Chat, Input, StatusBar } from "./components/index.js"
+import { Chat, ConfirmDialog, Input, StatusBar } from "./components/index.js"
 import { type CommandResult, useCommands, useHotkeys, useSession } from "./hooks/index.js"
 import type { AppProps, BranchInfo } from "./types.js"
+import type { ConfirmChoice } from "../shared/types/index.js"
 
 export interface AppDependencies {
     storage: IStorage
@@ -48,12 +50,14 @@ function ErrorScreen({ error }: { error: Error }): React.JSX.Element {
     )
 }
 
-async function handleConfirmationDefault(_message: string, _diff?: DiffInfo): Promise<boolean> {
-    return Promise.resolve(true)
-}
-
 async function handleErrorDefault(_error: Error): Promise<ErrorOption> {
     return Promise.resolve("skip")
+}
+
+interface PendingConfirmation {
+    message: string
+    diff?: DiffInfo
+    resolve: (result: boolean | ConfirmationResult) => void
 }
 
 export function App({
@@ -68,8 +72,39 @@ export function App({
     const [sessionTime, setSessionTime] = useState("0m")
     const [autoApply, setAutoApply] = useState(initialAutoApply)
     const [commandResult, setCommandResult] = useState<CommandResult | null>(null)
+    const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null)
 
     const projectName = projectPath.split("/").pop() ?? "unknown"
+
+    const handleConfirmation = useCallback(
+        async (message: string, diff?: DiffInfo): Promise<boolean | ConfirmationResult> => {
+            return new Promise((resolve) => {
+                setPendingConfirmation({ message, diff, resolve })
+            })
+        },
+        [],
+    )
+
+    const handleConfirmSelect = useCallback(
+        (choice: ConfirmChoice, editedContent?: string[]) => {
+            if (!pendingConfirmation) {
+                return
+            }
+
+            if (choice === "apply") {
+                if (editedContent) {
+                    pendingConfirmation.resolve({ confirmed: true, editedContent })
+                } else {
+                    pendingConfirmation.resolve(true)
+                }
+            } else {
+                pendingConfirmation.resolve(false)
+            }
+
+            setPendingConfirmation(null)
+        },
+        [pendingConfirmation],
+    )
 
     const { session, messages, status, isLoading, error, sendMessage, undo, clearHistory, abort } =
         useSession(
@@ -84,7 +119,7 @@ export function App({
             },
             {
                 autoApply,
-                onConfirmation: handleConfirmationDefault,
+                onConfirmation: handleConfirmation,
                 onError: handleErrorDefault,
             },
         )
@@ -179,7 +214,7 @@ export function App({
         return <ErrorScreen error={error} />
     }
 
-    const isInputDisabled = status === "thinking" || status === "tool_call"
+    const isInputDisabled = status === "thinking" || status === "tool_call" || !!pendingConfirmation
 
     return (
         <Box flexDirection="column" height="100%">
@@ -202,6 +237,23 @@ export function App({
                         {commandResult.message}
                     </Text>
                 </Box>
+            )}
+            {pendingConfirmation && (
+                <ConfirmDialog
+                    message={pendingConfirmation.message}
+                    diff={
+                        pendingConfirmation.diff
+                            ? {
+                                  filePath: pendingConfirmation.diff.filePath,
+                                  oldLines: pendingConfirmation.diff.oldLines,
+                                  newLines: pendingConfirmation.diff.newLines,
+                                  startLine: pendingConfirmation.diff.startLine,
+                              }
+                            : undefined
+                    }
+                    onSelect={handleConfirmSelect}
+                    editableContent={pendingConfirmation.diff?.newLines}
+                />
             )}
             <Input
                 onSubmit={handleSubmit}

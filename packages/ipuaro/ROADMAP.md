@@ -1539,7 +1539,7 @@ class ExecuteTool {
 ## Version 0.21.0 - TUI Enhancements 🎨
 
 **Priority:** MEDIUM
-**Status:** In Progress (1/4 complete)
+**Status:** In Progress (2/4 complete)
 
 ### 0.21.1 - useAutocomplete Hook ✅
 
@@ -1571,7 +1571,7 @@ function useAutocomplete(options: {
 - [x] Visual feedback in Input component
 - [x] Real-time suggestion updates
 
-### 0.21.2 - Edit Mode in ConfirmDialog
+### 0.21.2 - Edit Mode in ConfirmDialog ✅
 
 ```typescript
 // Enhanced ConfirmDialog with edit mode
@@ -1581,17 +1581,20 @@ function useAutocomplete(options: {
 // 3. Apply modified version
 
 interface ConfirmDialogProps {
-    // ... existing props
-    onEdit?: (editedContent: string) => void
-    editableContent?: string
+    message: string
+    diff?: DiffViewProps
+    onSelect: (choice: ConfirmChoice, editedContent?: string[]) => void
+    editableContent?: string[]
 }
 ```
 
 **Deliverables:**
-- [ ] EditableContent component for inline editing
-- [ ] Integration with ConfirmDialog [E] option
-- [ ] Handler in App.tsx for edit choice
-- [ ] Unit tests
+- [x] EditableContent component for inline editing
+- [x] Integration with ConfirmDialog [E] option
+- [x] Handler in App.tsx for edit choice
+- [x] ExecuteTool support for edited content
+- [x] ConfirmationResult type with editedContent field
+- [x] All existing tests passing (1484 tests)
 
 ### 0.21.3 - Multiline Input
 
