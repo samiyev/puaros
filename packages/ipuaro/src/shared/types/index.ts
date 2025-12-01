@@ -26,6 +26,9 @@ export type ErrorChoice = "retry" | "skip" | "abort"
 // Re-export ErrorOption for convenience
 export type { ErrorOption } from "../errors/IpuaroError.js"
 
+// Re-export tool definition types
+export type { ToolDef, ToolParameter } from "./tool-definitions.js"
+
 /**
  * Project structure node.
  */

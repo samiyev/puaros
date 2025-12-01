@@ -1328,10 +1328,10 @@ class ErrorHandler {
 
 ---
 
-## Version 0.19.0 - XML Tool Format Refactor 🔄
+## Version 0.19.0 - XML Tool Format Refactor 🔄 ✅
 
 **Priority:** HIGH
-**Status:** Pending
+**Status:** Complete (v0.19.0 released)
 
 Рефакторинг: переход на чистый XML формат для tool calls (как в CONCEPT.md).
 
@@ -1356,10 +1356,10 @@ OllamaClient использует Ollama native tool calling (JSON Schema), а R
 ```
 
 **Изменения:**
-- [ ] Удалить `convertTools()` метод
-- [ ] Удалить `extractToolCalls()` метод
-- [ ] Убрать передачу `tools` в `client.chat()`
-- [ ] Возвращать только `content` без `toolCalls`
+- [x] Удалить `convertTools()` метод
+- [x] Удалить `extractToolCalls()` метод
+- [x] Убрать передачу `tools` в `client.chat()`
+- [x] Возвращать только `content` без `toolCalls`
 
 ### 0.19.2 - System Prompt Update
 
@@ -1398,9 +1398,9 @@ Always wait for tool results before making conclusions.
 ```
 
 **Изменения:**
-- [ ] Добавить `TOOL_FORMAT_INSTRUCTIONS` в prompts.ts
-- [ ] Включить в `SYSTEM_PROMPT`
-- [ ] Добавить примеры для всех 18 tools
+- [x] Добавить `TOOL_FORMAT_INSTRUCTIONS` в prompts.ts
+- [x] Включить в `SYSTEM_PROMPT`
+- [x] Добавить примеры для всех 18 tools
 
 ### 0.19.3 - HandleMessage Simplification
 
@@ -1417,9 +1417,9 @@ Always wait for tool results before making conclusions.
 ```
 
 **Изменения:**
-- [ ] Убрать передачу tool definitions в `llm.chat()`
-- [ ] ResponseParser — единственный источник tool calls
-- [ ] Упростить логику обработки
+- [x] Убрать передачу tool definitions в `llm.chat()`
+- [x] ResponseParser — единственный источник tool calls
+- [x] Упростить логику обработки
 
 ### 0.19.4 - ILLMClient Interface Update
 
@@ -1439,9 +1439,9 @@ interface ILLMClient {
 ```
 
 **Изменения:**
-- [ ] Убрать `tools` параметр из `chat()`
-- [ ] Убрать `toolCalls` из `LLMResponse` (парсятся из content)
-- [ ] Обновить все реализации
+- [x] Убрать `tools` параметр из `chat()`
+- [x] Убрать `toolCalls` из `LLMResponse` (парсятся из content)
+- [x] Обновить все реализации
 
 ### 0.19.5 - ResponseParser Enhancements
 
@@ -1455,15 +1455,15 @@ interface ILLMClient {
 ```
 
 **Изменения:**
-- [ ] Добавить поддержку `<![CDATA[...]]>` для content
-- [ ] Валидация: tool name должен быть из известного списка
-- [ ] Улучшить сообщения об ошибках парсинга
+- [x] Добавить поддержку `<![CDATA[...]]>` для content
+- [x] Валидация: tool name должен быть из известного списка
+- [x] Улучшить сообщения об ошибках парсинга
 
 **Tests:**
-- [ ] Обновить тесты OllamaClient
-- [ ] Обновить тесты HandleMessage
-- [ ] Добавить тесты ResponseParser для edge cases
-- [ ] E2E тест полного flow с XML
+- [x] Обновить тесты OllamaClient
+- [x] Обновить тесты HandleMessage
+- [x] Добавить тесты ResponseParser для edge cases
+- [ ] E2E тест полного flow с XML (опционально, может быть в 0.20.0)
 
 ---
 

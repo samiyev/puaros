@@ -1,4 +1,4 @@
-import type { ToolDef } from "../../domain/services/ILLMClient.js"
+import type { ToolDef } from "../../shared/types/tool-definitions.js"
 
 /**
  * Tool definitions for ipuaro LLM.

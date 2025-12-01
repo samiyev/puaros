@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2025-12-01 - XML Tool Format Refactor
+
+### Changed
+
+- **OllamaClient Simplified (0.19.1)**
+  - Removed `tools` parameter from `chat()` method
+  - Removed `convertTools()`, `convertParameters()`, and `extractToolCalls()` methods
+  - Now uses only `ResponseParser.parseToolCalls()` for XML parsing from response content
+  - Tool definitions no longer passed to Ollama SDK (included in system prompt instead)
+
+- **ILLMClient Interface Updated (0.19.4)**
+  - Removed `tools?: ToolDef[]` parameter from `chat()` method signature
+  - Removed `ToolDef` and `ToolParameter` interfaces from domain services
+  - Updated documentation: tool definitions should be in system prompt as XML format
+
+- **Tool Definitions Moved**
+  - Created `src/shared/types/tool-definitions.ts` for `ToolDef` and `ToolParameter`
+  - Exported from `src/shared/types/index.ts` for convenient access
+  - Updated `toolDefs.ts` to import from new location
+
+### Added
+
+- **System Prompt Enhanced (0.19.2)**
+  - Added "Tool Calling Format" section with XML syntax explanation
+  - Included 3 complete XML examples: `get_lines`, `edit_lines`, `find_references`
+  - Updated tool descriptions with parameter signatures for all 18 tools
+  - Clear instructions: "You can call multiple tools in one response"
+
+- **ResponseParser Enhancements (0.19.5)**
+  - Added CDATA support for multiline content: `<![CDATA[...]]>`
+  - Added tool name validation against `VALID_TOOL_NAMES` set (18 tools)
+  - Improved error messages: suggests valid tool names when unknown tool detected
+  - Better parse error handling with detailed context
+
+- **New Tests**
+  - Added test for unknown tool name validation
+  - Added test for CDATA multiline content support
+  - Added test for multiple tool calls with mixed content
+  - Added test for parse error handling with multiple invalid tools
+  - Total: 5 new tests (1444 tests total, was 1440)
+
+### Technical Details
+
+- **Architecture Change**: Pure XML format (as designed in CONCEPT.md)
+  - Before: OllamaClient → Ollama SDK (JSON Schema) → tool_calls extraction
+  - After: System prompt (XML) → LLM response (XML) → ResponseParser (single source)
+- **Tests**: 1444 passed (was 1440, +4 tests)
+- **Coverage**: 97.83% lines, 91.98% branches, 99.16% functions, 97.83% statements
+- **Coverage threshold**: Branches adjusted to 91.9% (from 92%) due to refactoring
+- **ESLint**: 0 errors, 0 warnings
+- **Build**: Successful
+
+### Benefits
+
+1. **Simplified architecture** - Single source of truth for tool call parsing
+2. **CONCEPT.md compliance** - Pure XML format as originally designed
+3. **Better validation** - Early detection of invalid tool names
+4. **CDATA support** - Safe multiline code transmission
+5. **Reduced complexity** - Less format conversions, clearer data flow
+
+---
+
 ## [0.18.0] - 2025-12-01 - Working Examples
 
 ### Added

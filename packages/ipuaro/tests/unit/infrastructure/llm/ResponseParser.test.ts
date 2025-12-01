@@ -72,7 +72,7 @@ describe("ResponseParser", () => {
         })
 
         it("should parse null values", () => {
-            const response = `<tool_call name="test">
+            const response = `<tool_call name="get_lines">
                 <value>null</value>
             </tool_call>`
 
@@ -92,7 +92,7 @@ describe("ResponseParser", () => {
         })
 
         it("should parse JSON objects", () => {
-            const response = `<tool_call name="test">
+            const response = `<tool_call name="get_lines">
                 <config>{"key": "value"}</config>
             </tool_call>`
 
@@ -122,6 +122,59 @@ describe("ResponseParser", () => {
                 path: "src/index.ts",
                 start: 5,
             })
+        })
+
+        it("should reject unknown tool names", () => {
+            const response = `<tool_call name="unknown_tool"><path>test.ts</path></tool_call>`
+
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(0)
+            expect(result.hasParseErrors).toBe(true)
+            expect(result.parseErrors[0]).toContain("Unknown tool")
+            expect(result.parseErrors[0]).toContain("unknown_tool")
+        })
+
+        it("should support CDATA for multiline content", () => {
+            const response = `<tool_call name="edit_lines">
+                <path>src/index.ts</path>
+                <content><![CDATA[const x = 1;
+const y = 2;]]></content>
+            </tool_call>`
+
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls[0].params.content).toBe("const x = 1;\nconst y = 2;")
+        })
+
+        it("should handle multiple tool calls with mixed content", () => {
+            const response = `Some text
+<tool_call name="get_lines"><path>a.ts</path></tool_call>
+More text
+<tool_call name="get_function"><path>b.ts</path><name>foo</name></tool_call>`
+
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(2)
+            expect(result.toolCalls[0].name).toBe("get_lines")
+            expect(result.toolCalls[1].name).toBe("get_function")
+            expect(result.content).toContain("Some text")
+            expect(result.content).toContain("More text")
+        })
+
+        it("should handle parse errors gracefully and continue", () => {
+            const response = `<tool_call name="unknown_tool1"><path>test.ts</path></tool_call>
+<tool_call name="get_lines"><path>valid.ts</path></tool_call>
+<tool_call name="unknown_tool2"><path>test2.ts</path></tool_call>`
+
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(1)
+            expect(result.toolCalls[0].name).toBe("get_lines")
+            expect(result.hasParseErrors).toBe(true)
+            expect(result.parseErrors).toHaveLength(2)
+            expect(result.parseErrors[0]).toContain("unknown_tool1")
+            expect(result.parseErrors[1]).toContain("unknown_tool2")
         })
     })
 

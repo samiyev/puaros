@@ -1,15 +1,10 @@
-import { type Message, Ollama, type Tool } from "ollama"
-import type {
-    ILLMClient,
-    LLMResponse,
-    ToolDef,
-    ToolParameter,
-} from "../../domain/services/ILLMClient.js"
+import { type Message, Ollama } from "ollama"
+import type { ILLMClient, LLMResponse } from "../../domain/services/ILLMClient.js"
 import type { ChatMessage } from "../../domain/value-objects/ChatMessage.js"
-import { createToolCall, type ToolCall } from "../../domain/value-objects/ToolCall.js"
 import type { LLMConfig } from "../../shared/constants/config.js"
 import { IpuaroError } from "../../shared/errors/IpuaroError.js"
 import { estimateTokens } from "../../shared/utils/tokens.js"
+import { parseToolCalls } from "./ResponseParser.js"
 
 /**
  * Ollama LLM client implementation.
@@ -35,19 +30,18 @@ export class OllamaClient implements ILLMClient {
 
     /**
      * Send messages to LLM and get response.
+     * Tool definitions should be included in the system prompt as XML format.
      */
-    async chat(messages: ChatMessage[], tools?: ToolDef[]): Promise<LLMResponse> {
+    async chat(messages: ChatMessage[]): Promise<LLMResponse> {
         const startTime = Date.now()
         this.abortController = new AbortController()
 
         try {
             const ollamaMessages = this.convertMessages(messages)
-            const ollamaTools = tools ? this.convertTools(tools) : undefined
 
             const response = await this.client.chat({
                 model: this.model,
                 messages: ollamaMessages,
-                tools: ollamaTools,
                 options: {
                     temperature: this.temperature,
                 },
@@ -55,15 +49,15 @@ export class OllamaClient implements ILLMClient {
             })
 
             const timeMs = Date.now() - startTime
-            const toolCalls = this.extractToolCalls(response.message)
+            const parsed = parseToolCalls(response.message.content)
 
             return {
-                content: response.message.content,
-                toolCalls,
+                content: parsed.content,
+                toolCalls: parsed.toolCalls,
                 tokens: response.eval_count ?? estimateTokens(response.message.content),
                 timeMs,
                 truncated: false,
-                stopReason: this.determineStopReason(response, toolCalls),
+                stopReason: this.determineStopReason(response, parsed.toolCalls),
             }
         } catch (error) {
             if (error instanceof Error && error.name === "AbortError") {
@@ -206,68 +200,11 @@ export class OllamaClient implements ILLMClient {
     }
 
     /**
-     * Convert ToolDef array to Ollama Tool format.
-     */
-    private convertTools(tools: ToolDef[]): Tool[] {
-        return tools.map(
-            (tool): Tool => ({
-                type: "function",
-                function: {
-                    name: tool.name,
-                    description: tool.description,
-                    parameters: {
-                        type: "object",
-                        properties: this.convertParameters(tool.parameters),
-                        required: tool.parameters.filter((p) => p.required).map((p) => p.name),
-                    },
-                },
-            }),
-        )
-    }
-
-    /**
-     * Convert ToolParameter array to JSON Schema properties.
-     */
-    private convertParameters(
-        params: ToolParameter[],
-    ): Record<string, { type: string; description: string; enum?: string[] }> {
-        const properties: Record<string, { type: string; description: string; enum?: string[] }> =
-            {}
-
-        for (const param of params) {
-            properties[param.name] = {
-                type: param.type,
-                description: param.description,
-                ...(param.enum && { enum: param.enum }),
-            }
-        }
-
-        return properties
-    }
-
-    /**
-     * Extract tool calls from Ollama response message.
-     */
-    private extractToolCalls(message: Message): ToolCall[] {
-        if (!message.tool_calls || message.tool_calls.length === 0) {
-            return []
-        }
-
-        return message.tool_calls.map((tc, index) =>
-            createToolCall(
-                `call_${String(Date.now())}_${String(index)}`,
-                tc.function.name,
-                tc.function.arguments,
-            ),
-        )
-    }
-
-    /**
      * Determine stop reason from response.
      */
     private determineStopReason(
         response: { done_reason?: string },
-        toolCalls: ToolCall[],
+        toolCalls: { name: string; params: Record<string, unknown> }[],
     ): "end" | "length" | "tool_use" {
         if (toolCalls.length > 0) {
             return "tool_use"

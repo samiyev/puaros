@@ -95,53 +95,37 @@ describe("OllamaClient", () => {
             )
         })
 
-        it("should pass tools when provided", async () => {
+        it("should not pass tools parameter (tools are in system prompt)", async () => {
             const client = new OllamaClient(defaultConfig)
             const messages = [createUserMessage("Read file")]
-            const tools = [
-                {
-                    name: "get_lines",
-                    description: "Get lines from file",
-                    parameters: [
-                        {
-                            name: "path",
-                            type: "string" as const,
-                            description: "File path",
-                            required: true,
-                        },
-                    ],
-                },
-            ]
 
-            await client.chat(messages, tools)
+            await client.chat(messages)
 
             expect(mockOllamaInstance.chat).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    tools: expect.arrayContaining([
+                    model: "qwen2.5-coder:7b-instruct",
+                    messages: expect.arrayContaining([
                         expect.objectContaining({
-                            type: "function",
-                            function: expect.objectContaining({
-                                name: "get_lines",
-                            }),
+                            role: "user",
+                            content: "Read file",
                         }),
                     ]),
                 }),
             )
+            expect(mockOllamaInstance.chat).toHaveBeenCalledWith(
+                expect.not.objectContaining({
+                    tools: expect.anything(),
+                }),
+            )
         })
 
-        it("should extract tool calls from response", async () => {
+        it("should extract tool calls from XML in response content", async () => {
             mockOllamaInstance.chat.mockResolvedValue({
                 message: {
                     role: "assistant",
-                    content: "",
-                    tool_calls: [
-                        {
-                            function: {
-                                name: "get_lines",
-                                arguments: { path: "src/index.ts" },
-                            },
-                        },
-                    ],
+                    content:
+                        '<tool_call name="get_lines"><path>src/index.ts</path></tool_call>',
+                    tool_calls: undefined,
                 },
                 eval_count: 30,
             })
@@ -424,47 +408,6 @@ describe("OllamaClient", () => {
         })
     })
 
-    describe("tool parameter conversion", () => {
-        it("should include enum values when present", async () => {
-            const client = new OllamaClient(defaultConfig)
-            const messages = [createUserMessage("Get status")]
-            const tools = [
-                {
-                    name: "get_status",
-                    description: "Get status",
-                    parameters: [
-                        {
-                            name: "type",
-                            type: "string" as const,
-                            description: "Status type",
-                            required: true,
-                            enum: ["active", "inactive", "pending"],
-                        },
-                    ],
-                },
-            ]
-
-            await client.chat(messages, tools)
-
-            expect(mockOllamaInstance.chat).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    tools: expect.arrayContaining([
-                        expect.objectContaining({
-                            function: expect.objectContaining({
-                                parameters: expect.objectContaining({
-                                    properties: expect.objectContaining({
-                                        type: expect.objectContaining({
-                                            enum: ["active", "inactive", "pending"],
-                                        }),
-                                    }),
-                                }),
-                            }),
-                        }),
-                    ]),
-                }),
-            )
-        })
-    })
 
     describe("error handling", () => {
         it("should handle ECONNREFUSED errors", async () => {

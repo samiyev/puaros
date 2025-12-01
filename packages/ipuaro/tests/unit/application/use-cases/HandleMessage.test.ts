@@ -198,12 +198,12 @@ describe("HandleMessage", () => {
             expect(toolMessages.length).toBeGreaterThan(0)
         })
 
-        it("should return error for unknown tools", async () => {
+        it("should return error for unregistered tools", async () => {
             vi.mocked(mockTools.get).mockReturnValue(undefined)
             vi.mocked(mockLLM.chat)
                 .mockResolvedValueOnce(
                     createMockLLMResponse(
-                        '<tool_call name="unknown_tool"><param>value</param></tool_call>',
+                        '<tool_call name="get_complexity"><path>src</path></tool_call>',
                         true,
                     ),
                 )

@@ -28,8 +28,40 @@ const PARAM_REGEX_NAMED = /<param\s+name\s*=\s*"([^"]+)">([\s\S]*?)<\/param>/gi
 const PARAM_REGEX_ELEMENT = /<([a-z_][a-z0-9_]*)>([\s\S]*?)<\/\1>/gi
 
 /**
+ * CDATA section pattern.
+ * Matches: <![CDATA[...]]>
+ */
+const CDATA_REGEX = /<!\[CDATA\[([\s\S]*?)\]\]>/g
+
+/**
+ * Valid tool names.
+ * Used for validation to catch typos or hallucinations.
+ */
+const VALID_TOOL_NAMES = new Set([
+    "get_lines",
+    "get_function",
+    "get_class",
+    "get_structure",
+    "edit_lines",
+    "create_file",
+    "delete_file",
+    "find_references",
+    "find_definition",
+    "get_dependencies",
+    "get_dependents",
+    "get_complexity",
+    "get_todos",
+    "git_status",
+    "git_diff",
+    "git_commit",
+    "run_command",
+    "run_tests",
+])
+
+/**
  * Parse tool calls from LLM response text.
  * Supports XML format: <tool_call name="get_lines"><path>src/index.ts</path></tool_call>
+ * Validates tool names and provides helpful error messages.
  */
 export function parseToolCalls(response: string): ParsedResponse {
     const toolCalls: ToolCall[] = []
@@ -40,6 +72,13 @@ export function parseToolCalls(response: string): ParsedResponse {
 
     for (const match of matches) {
         const [fullMatch, toolName, paramsXml] = match
+
+        if (!VALID_TOOL_NAMES.has(toolName)) {
+            parseErrors.push(
+                `Unknown tool "${toolName}". Valid tools: ${[...VALID_TOOL_NAMES].join(", ")}`,
+            )
+            continue
+        }
 
         try {
             const params = parseParameters(paramsXml)
@@ -91,9 +130,15 @@ function parseParameters(xml: string): Record<string, unknown> {
 
 /**
  * Parse a value string to appropriate type.
+ * Supports CDATA sections for multiline content.
  */
 function parseValue(value: string): unknown {
     const trimmed = value.trim()
+
+    const cdataMatches = [...trimmed.matchAll(CDATA_REGEX)]
+    if (cdataMatches.length > 0 && cdataMatches[0][1] !== undefined) {
+        return cdataMatches[0][1]
+    }
 
     if (trimmed === "true") {
         return true

@@ -2,26 +2,6 @@ import type { ChatMessage } from "../value-objects/ChatMessage.js"
 import type { ToolCall } from "../value-objects/ToolCall.js"
 
 /**
- * Tool parameter definition for LLM.
- */
-export interface ToolParameter {
-    name: string
-    type: "string" | "number" | "boolean" | "array" | "object"
-    description: string
-    required: boolean
-    enum?: string[]
-}
-
-/**
- * Tool definition for LLM function calling.
- */
-export interface ToolDef {
-    name: string
-    description: string
-    parameters: ToolParameter[]
-}
-
-/**
  * Response from LLM.
  */
 export interface LLMResponse {
@@ -42,12 +22,16 @@ export interface LLMResponse {
 /**
  * LLM client service interface (port).
  * Abstracts the LLM provider.
+ *
+ * Tool definitions should be included in the system prompt as XML format,
+ * not passed as a separate parameter.
  */
 export interface ILLMClient {
     /**
      * Send messages to LLM and get response.
+     * Tool calls are extracted from the response content using XML parsing.
      */
-    chat(messages: ChatMessage[], tools?: ToolDef[]): Promise<LLMResponse>
+    chat(messages: ChatMessage[]): Promise<LLMResponse>
 
     /**
      * Count tokens in text.
