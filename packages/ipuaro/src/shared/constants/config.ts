@@ -107,6 +107,16 @@ export const SessionConfigSchema = z.object({
 })
 
 /**
+ * Context configuration schema.
+ */
+export const ContextConfigSchema = z.object({
+    systemPromptTokens: z.number().int().positive().default(2000),
+    maxContextUsage: z.number().min(0).max(1).default(0.8),
+    autoCompressAt: z.number().min(0).max(1).default(0.8),
+    compressionMethod: z.enum(["llm-summary", "truncate"]).default("llm-summary"),
+})
+
+/**
  * Full configuration schema.
  */
 export const ConfigSchema = z.object({
@@ -119,6 +129,7 @@ export const ConfigSchema = z.object({
     input: InputConfigSchema.default({}),
     display: DisplayConfigSchema.default({}),
     session: SessionConfigSchema.default({}),
+    context: ContextConfigSchema.default({}),
 })
 
 /**
@@ -134,6 +145,7 @@ export type EditConfig = z.infer<typeof EditConfigSchema>
 export type InputConfig = z.infer<typeof InputConfigSchema>
 export type DisplayConfig = z.infer<typeof DisplayConfigSchema>
 export type SessionConfig = z.infer<typeof SessionConfigSchema>
+export type ContextConfig = z.infer<typeof ContextConfigSchema>
 
 /**
  * Default configuration.

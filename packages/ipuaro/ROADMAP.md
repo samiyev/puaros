@@ -1648,7 +1648,7 @@ interface DiffViewProps {
 ## Version 0.22.0 - Extended Configuration ⚙️
 
 **Priority:** MEDIUM
-**Status:** In Progress (2/5 complete)
+**Status:** In Progress (3/5 complete)
 
 ### 0.22.1 - Display Configuration ✅
 
@@ -1687,7 +1687,7 @@ export const SessionConfigSchema = z.object({
 - [x] Input history persistence toggle
 - [x] Unit tests (19 new tests)
 
-### 0.22.3 - Context Configuration
+### 0.22.3 - Context Configuration ✅
 
 ```typescript
 // src/shared/constants/config.ts additions
@@ -1700,10 +1700,10 @@ export const ContextConfigSchema = z.object({
 ```
 
 **Deliverables:**
-- [ ] ContextConfigSchema in config.ts
-- [ ] ContextManager reads from config
-- [ ] Configurable compression threshold
-- [ ] Unit tests
+- [x] ContextConfigSchema in config.ts
+- [x] ContextManager reads from config
+- [x] Configurable compression threshold
+- [x] Unit tests (40 new tests: 32 schema, 8 ContextManager integration)
 
 ### 0.22.4 - Autocomplete Configuration
 

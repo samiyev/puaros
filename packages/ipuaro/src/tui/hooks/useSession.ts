@@ -109,6 +109,7 @@ async function initializeSession(
         deps.llm,
         deps.tools,
         deps.projectRoot,
+        deps.config?.context,
     )
     if (deps.projectStructure) {
         handleMessage.setProjectStructure(deps.projectStructure)
@@ -117,6 +118,7 @@ async function initializeSession(
         autoApply: options.autoApply,
         maxHistoryMessages: deps.config?.session.maxHistoryMessages,
         saveInputHistory: deps.config?.session.saveInputHistory,
+        contextConfig: deps.config?.context,
     })
     handleMessage.setEvents(createEventHandlers(setters, options))
     refs.current.handleMessage = handleMessage

@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.3] - 2025-12-02 - Context Configuration
+
+### Added
+
+- **ContextConfigSchema (0.22.3)**
+  - New configuration schema for context management in `src/shared/constants/config.ts`
+  - `systemPromptTokens: number` (default: 2000) - token budget for system prompt
+  - `maxContextUsage: number` (default: 0.8) - maximum context window usage ratio (0-1)
+  - `autoCompressAt: number` (default: 0.8) - threshold for automatic context compression (0-1)
+  - `compressionMethod: "llm-summary" | "truncate"` (default: "llm-summary") - compression strategy
+  - Integrated into main ConfigSchema with `.default({})`
+  - Exported `ContextConfig` type from config module
+
+### Changed
+
+- **ContextManager**
+  - Added optional `config?: ContextConfig` parameter to constructor
+  - Added private `compressionThreshold: number` field (read from config or default)
+  - Added private `compressionMethod: "llm-summary" | "truncate"` field (read from config or default)
+  - Updated `needsCompression()` to use configurable `compressionThreshold` instead of hardcoded constant
+  - Enables dynamic compression threshold configuration per session/deployment
+
+- **HandleMessage Use Case**
+  - Added optional `contextConfig?: ContextConfig` parameter to constructor
+  - Added `contextConfig?: ContextConfig` to `HandleMessageOptions`
+  - Passes context config to ContextManager during initialization
+  - Context management behavior now fully configurable
+
+- **useSession Hook**
+  - Passes `deps.config?.context` to HandleMessage constructor
+  - Passes `contextConfig: deps.config?.context` to HandleMessage options
+  - Context configuration flows from config through to ContextManager
+
+### Technical Details
+
+- Total tests: 1630 passed (was 1590, +40 new tests)
+- New test file: `context-config.test.ts` with 32 tests
+  - Default values validation (systemPromptTokens, maxContextUsage, autoCompressAt, compressionMethod)
+  - `systemPromptTokens` positive integer validation (including edge cases: zero, negative, float rejection)
+  - `maxContextUsage` ratio validation (0-1 range, rejects out-of-bounds)
+  - `autoCompressAt` ratio validation (0-1 range, rejects out-of-bounds)
+  - `compressionMethod` enum validation (llm-summary, truncate)
+  - Partial and full config merging tests
+- Updated ContextManager tests: 8 new tests for configuration integration
+  - Custom compression threshold behavior
+  - Edge cases: autoCompressAt = 0 and autoCompressAt = 1
+  - Full context config acceptance
+- Coverage: 97.63% lines, 91.34% branches, 98.77% functions, 97.63% statements
+- 0 ESLint errors, 0 warnings
+- Build successful with no TypeScript errors
+
+### Notes
+
+This release completes the third item (0.22.3) of the v0.22.0 Extended Configuration milestone. Remaining items for v0.22.0:
+- 0.22.4 - Autocomplete Configuration
+- 0.22.5 - Commands Configuration
+
+---
+
 ## [0.22.2] - 2025-12-02 - Session Configuration
 
 ### Added

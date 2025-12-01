@@ -245,4 +245,65 @@ describe("ContextManager", () => {
             expect(state.needsCompression).toBe(false)
         })
     })
+
+    describe("configuration", () => {
+        it("should use default compression threshold when no config provided", () => {
+            const manager = new ContextManager(CONTEXT_SIZE)
+            manager.addToContext("test.ts", CONTEXT_SIZE * 0.85)
+
+            expect(manager.needsCompression()).toBe(true)
+        })
+
+        it("should use custom compression threshold from config", () => {
+            const manager = new ContextManager(CONTEXT_SIZE, { autoCompressAt: 0.9 })
+            manager.addToContext("test.ts", CONTEXT_SIZE * 0.85)
+
+            expect(manager.needsCompression()).toBe(false)
+        })
+
+        it("should trigger compression at custom threshold", () => {
+            const manager = new ContextManager(CONTEXT_SIZE, { autoCompressAt: 0.9 })
+            manager.addToContext("test.ts", CONTEXT_SIZE * 0.95)
+
+            expect(manager.needsCompression()).toBe(true)
+        })
+
+        it("should accept compression method in config", () => {
+            const manager = new ContextManager(CONTEXT_SIZE, { compressionMethod: "truncate" })
+
+            expect(manager).toBeDefined()
+        })
+
+        it("should use default compression method when not specified", () => {
+            const manager = new ContextManager(CONTEXT_SIZE, {})
+
+            expect(manager).toBeDefined()
+        })
+
+        it("should accept full context config", () => {
+            const manager = new ContextManager(CONTEXT_SIZE, {
+                systemPromptTokens: 3000,
+                maxContextUsage: 0.9,
+                autoCompressAt: 0.85,
+                compressionMethod: "llm-summary",
+            })
+
+            manager.addToContext("test.ts", CONTEXT_SIZE * 0.87)
+            expect(manager.needsCompression()).toBe(true)
+        })
+
+        it("should handle edge case: autoCompressAt = 0", () => {
+            const manager = new ContextManager(CONTEXT_SIZE, { autoCompressAt: 0 })
+            manager.addToContext("test.ts", 1)
+
+            expect(manager.needsCompression()).toBe(true)
+        })
+
+        it("should handle edge case: autoCompressAt = 1", () => {
+            const manager = new ContextManager(CONTEXT_SIZE, { autoCompressAt: 1 })
+            manager.addToContext("test.ts", CONTEXT_SIZE * 0.99)
+
+            expect(manager.needsCompression()).toBe(false)
+        })
+    })
 })

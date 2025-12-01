@@ -70,6 +70,7 @@ export interface HandleMessageOptions {
     maxToolCalls?: number
     maxHistoryMessages?: number
     saveInputHistory?: boolean
+    contextConfig?: import("../../shared/constants/config.js").ContextConfig
 }
 
 const DEFAULT_MAX_TOOL_CALLS = 20
@@ -98,13 +99,14 @@ export class HandleMessage {
         llm: ILLMClient,
         tools: IToolRegistry,
         projectRoot: string,
+        contextConfig?: import("../../shared/constants/config.js").ContextConfig,
     ) {
         this.storage = storage
         this.sessionStorage = sessionStorage
         this.llm = llm
         this.tools = tools
         this.projectRoot = projectRoot
-        this.contextManager = new ContextManager(llm.getContextWindowSize())
+        this.contextManager = new ContextManager(llm.getContextWindowSize(), contextConfig)
         this.executeTool = new ExecuteTool(storage, sessionStorage, tools, projectRoot)
     }
 

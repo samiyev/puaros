@@ -2,6 +2,7 @@ import type { ContextState, Session } from "../../domain/entities/Session.js"
 import type { ILLMClient } from "../../domain/services/ILLMClient.js"
 import { type ChatMessage, createSystemMessage } from "../../domain/value-objects/ChatMessage.js"
 import { CONTEXT_COMPRESSION_THRESHOLD, CONTEXT_WINDOW_SIZE } from "../../domain/constants/index.js"
+import type { ContextConfig } from "../../shared/constants/config.js"
 
 /**
  * File in context with token count.
@@ -39,9 +40,13 @@ export class ContextManager {
     private readonly filesInContext = new Map<string, FileContext>()
     private currentTokens = 0
     private readonly contextWindowSize: number
+    private readonly compressionThreshold: number
+    private readonly compressionMethod: "llm-summary" | "truncate"
 
-    constructor(contextWindowSize: number = CONTEXT_WINDOW_SIZE) {
+    constructor(contextWindowSize: number = CONTEXT_WINDOW_SIZE, config?: ContextConfig) {
         this.contextWindowSize = contextWindowSize
+        this.compressionThreshold = config?.autoCompressAt ?? CONTEXT_COMPRESSION_THRESHOLD
+        this.compressionMethod = config?.compressionMethod ?? "llm-summary"
     }
 
     /**
@@ -97,7 +102,7 @@ export class ContextManager {
      * Check if compression is needed.
      */
     needsCompression(): boolean {
-        return this.getUsage() > CONTEXT_COMPRESSION_THRESHOLD
+        return this.getUsage() > this.compressionThreshold
     }
 
     /**
