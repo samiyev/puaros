@@ -1308,6 +1308,26 @@ class ErrorHandler {
 
 ---
 
+## Version 0.18.0 - Working Examples 📦 ✅
+
+**Priority:** HIGH
+**Status:** Complete (v0.18.0 released)
+
+### Examples
+
+- [x] Demo project with TypeScript application (336 LOC)
+- [x] User management service (UserService)
+- [x] Authentication service (AuthService)
+- [x] Utilities (Logger, Validation)
+- [x] Unit tests (Vitest)
+- [x] Configuration files (package.json, tsconfig.json, .ipuaro.json)
+- [x] Comprehensive README with 35+ example queries
+- [x] Workflow scenarios (bug fix, refactoring, code review)
+- [x] Demonstrates all 18 tools
+- [x] 15 files, 977 total lines
+
+---
+
 ## Version 1.0.0 - Production Ready 🚀
 
 **Target:** Stable release
@@ -1321,7 +1341,7 @@ class ErrorHandler {
 - [x] Documentation complete ✅ (v0.17.0)
 - [x] 80%+ test coverage ✅ (~98%)
 - [x] 0 ESLint errors ✅
-- [ ] Examples working
+- [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅
 
 ---
@@ -1398,4 +1418,4 @@ sessions:list             # List<session_id>
 
 **Last Updated:** 2025-12-01
 **Target Version:** 1.0.0
-**Current Version:** 0.17.0
+**Current Version:** 0.18.0
