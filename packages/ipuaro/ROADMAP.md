@@ -1779,6 +1779,211 @@ export interface ScanResult {
 
 ---
 
+## Version 0.24.0 - Rich Initial Context 📋
+
+**Priority:** HIGH
+**Status:** Planned
+
+Улучшение initial context для LLM: добавление сигнатур функций, типов интерфейсов и значений enum. Это позволит LLM отвечать на вопросы о типах и параметрах без tool calls.
+
+### 0.24.1 - Function Signatures with Types ⭐
+
+**Проблема:** Сейчас LLM видит только имена функций: `fn: getUser, createUser`
+**Решение:** Показать полные сигнатуры: `async getUser(id: string): Promise<User>`
+
+```typescript
+// src/infrastructure/llm/prompts.ts changes
+
+// БЫЛО:
+// - src/services/user.ts [fn: getUser, createUser]
+
+// СТАНЕТ:
+// ### src/services/user.ts
+// - async getUser(id: string): Promise<User>
+// - async createUser(data: UserDTO): Promise<User>
+// - validateEmail(email: string): boolean
+```
+
+**Изменения:**
+- [ ] Расширить `FunctionInfo` в FileAST для хранения типов параметров и return type
+- [ ] Обновить `ASTParser.ts` для извлечения типов параметров и return types
+- [ ] Обновить `formatFileSummary()` в prompts.ts для вывода сигнатур
+- [ ] Добавить опцию `includeSignatures: boolean` в config
+
+**Зачем:** LLM не будет галлюцинировать параметры и return types.
+
+### 0.24.2 - Interface/Type Field Definitions ⭐
+
+**Проблема:** LLM видит только `interface: User, UserDTO`
+**Решение:** Показать поля: `User { id: string, name: string, email: string }`
+
+```typescript
+// БЫЛО:
+// - src/types/user.ts [interface: User, UserDTO]
+
+// СТАНЕТ:
+// ### src/types/user.ts
+// - interface User { id: string, name: string, email: string, createdAt: Date }
+// - interface UserDTO { name: string, email: string }
+// - type UserId = string
+```
+
+**Изменения:**
+- [ ] Расширить `InterfaceInfo` в FileAST для хранения полей с типами
+- [ ] Обновить `ASTParser.ts` для извлечения полей интерфейсов
+- [ ] Обновить `formatFileSummary()` для вывода полей
+- [ ] Обработка type aliases с их определениями
+
+**Зачем:** LLM знает структуру данных, не придумывает поля.
+
+### 0.24.3 - Enum Value Definitions
+
+**Проблема:** LLM видит только `type: Status`
+**Решение:** Показать значения: `Status { Active=1, Inactive=0, Pending=2 }`
+
+```typescript
+// БЫЛО:
+// - src/types/enums.ts [type: Status, Role]
+
+// СТАНЕТ:
+// ### src/types/enums.ts
+// - enum Status { Active=1, Inactive=0, Pending=2 }
+// - enum Role { Admin="admin", User="user" }
+```
+
+**Изменения:**
+- [ ] Добавить `EnumInfo` в FileAST с members и values
+- [ ] Обновить `ASTParser.ts` для извлечения enum members
+- [ ] Обновить `formatFileSummary()` для вывода enum values
+
+**Зачем:** LLM знает допустимые значения enum.
+
+### 0.24.4 - Decorator Extraction
+
+**Проблема:** LLM не видит декораторы (важно для NestJS, Angular)
+**Решение:** Показать декораторы в контексте
+
+```typescript
+// СТАНЕТ:
+// ### src/controllers/user.controller.ts
+// - @Controller('users') class UserController
+// - @Get(':id') async getUser(id: string): Promise<User>
+// - @Post() @Body() async createUser(data: UserDTO): Promise<User>
+```
+
+**Изменения:**
+- [ ] Добавить `decorators: string[]` в FunctionInfo и ClassInfo
+- [ ] Обновить `ASTParser.ts` для извлечения декораторов
+- [ ] Обновить контекст для отображения декораторов
+
+**Зачем:** LLM понимает роутинг, DI, guards в NestJS/Angular.
+
+**Tests:**
+- [ ] Unit tests for enhanced ASTParser
+- [ ] Unit tests for new context format
+- [ ] Integration tests for full flow
+
+---
+
+## Version 0.25.0 - Graph Metrics in Context 📊
+
+**Priority:** MEDIUM
+**Status:** Planned
+
+Добавление графовых метрик в initial context: граф зависимостей, circular dependencies, impact score.
+
+### 0.25.1 - Inline Dependency Graph
+
+**Проблема:** LLM не видит связи между файлами без tool calls
+**Решение:** Показать граф зависимостей в контексте
+
+```typescript
+// Добавить в initial context:
+
+// ## Dependency Graph
+// src/services/user.ts: → types/user, utils/validation ← controllers/user, api/routes
+// src/services/auth.ts: → services/user, utils/jwt ← controllers/auth
+// src/utils/validation.ts: ← services/user, services/auth, controllers/*
+```
+
+**Изменения:**
+- [ ] Добавить `formatDependencyGraph()` в prompts.ts
+- [ ] Использовать данные из `FileMeta.dependencies` и `FileMeta.dependents`
+- [ ] Группировать по hub files (много connections)
+- [ ] Добавить опцию `includeDepsGraph: boolean` в config
+
+**Зачем:** LLM видит архитектуру без tool call.
+
+### 0.25.2 - Circular Dependencies in Context
+
+**Проблема:** Circular deps вычисляются, но не показываются в контексте
+**Решение:** Показать циклы сразу
+
+```typescript
+// Добавить в initial context:
+
+// ## ⚠️ Circular Dependencies
+// - services/user → services/auth → services/user
+// - utils/a → utils/b → utils/c → utils/a
+```
+
+**Изменения:**
+- [ ] Добавить `formatCircularDeps()` в prompts.ts
+- [ ] Получать circular deps из IndexBuilder
+- [ ] Хранить в Redis как отдельный ключ или в meta
+
+**Зачем:** LLM сразу видит проблемы архитектуры.
+
+### 0.25.3 - Impact Score
+
+**Проблема:** LLM не знает какие файлы критичные
+**Решение:** Показать impact score (% кодовой базы, который зависит от файла)
+
+```typescript
+// Добавить в initial context:
+
+// ## High Impact Files
+// | File | Impact | Dependents |
+// |------|--------|------------|
+// | src/utils/validation.ts | 67% | 12 files |
+// | src/types/user.ts | 45% | 8 files |
+// | src/services/user.ts | 34% | 6 files |
+```
+
+**Изменения:**
+- [ ] Добавить `impactScore: number` в FileMeta (0-100)
+- [ ] Вычислять в MetaAnalyzer: (transitiveDepByCount / totalFiles) * 100
+- [ ] Добавить `formatHighImpactFiles()` в prompts.ts
+- [ ] Показывать top-10 high impact files
+
+**Зачем:** LLM понимает какие файлы критичные для изменений.
+
+### 0.25.4 - Transitive Dependencies Count
+
+**Проблема:** Сейчас считаем только прямые зависимости
+**Решение:** Добавить транзитивные зависимости в meta
+
+```typescript
+// FileMeta additions:
+interface FileMeta {
+    // existing...
+    transitiveDepCount: number;    // сколько файлов зависит от этого (транзитивно)
+    transitiveDepByCount: number;  // от скольких файлов зависит этот (транзитивно)
+}
+```
+
+**Изменения:**
+- [ ] Добавить `computeTransitiveDeps()` в MetaAnalyzer
+- [ ] Использовать DFS с memoization для эффективности
+- [ ] Сохранять в FileMeta
+
+**Tests:**
+- [ ] Unit tests for graph metrics computation
+- [ ] Unit tests for new context sections
+- [ ] Performance tests for large codebases
+
+---
+
 ## Version 1.0.0 - Production Ready 🚀
 
 **Target:** Stable release
@@ -1794,6 +1999,8 @@ export interface ScanResult {
 - [x] 0 ESLint errors ✅
 - [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅
+- [ ] Rich initial context (v0.24.0) — function signatures, interface fields, enum values
+- [ ] Graph metrics in context (v0.25.0) — dependency graph, circular deps, impact score
 
 ---
 
@@ -1862,13 +2069,17 @@ sessions:list             # List<session_id>
 | Component | Tokens | % |
 |-----------|--------|---|
 | System prompt | ~2,000 | 1.5% |
-| Structure + AST | ~10,000 | 8% |
-| **Available** | ~116,000 | 90% |
+| Structure + AST (v0.23) | ~10,000 | 8% |
+| Signatures + Types (v0.24) | ~5,000 | 4% |
+| Graph Metrics (v0.25) | ~3,000 | 2.5% |
+| **Total Initial Context** | ~20,000 | 16% |
+| **Available for Chat** | ~108,000 | 84% |
 
 ---
 
 **Last Updated:** 2025-12-04
 **Target Version:** 1.0.0
 **Current Version:** 0.23.0
+**Next Milestones:** v0.24.0 (Rich Context), v0.25.0 (Graph Metrics)
 
-> **Note:** Versions 0.20.0, 0.21.0, 0.22.0, 0.23.0 were implemented but ROADMAP was not updated. All features verified as complete.
+> **Note:** v0.24.0 and v0.25.0 are required for 1.0.0 release. They enable LLM to answer questions about types, signatures, and architecture without tool calls.
