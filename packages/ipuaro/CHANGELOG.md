@@ -5,6 +5,77 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - 2025-12-04 - Rich Initial Context: Function Signatures
+
+### Added
+
+- **Function Signatures in Context (0.24.1)**
+  - Full function signatures with parameter types and return types in initial context
+  - New format: `async getUser(id: string): Promise<User>` instead of `fn: getUser`
+  - Classes show inheritance: `class UserService extends BaseService implements IService`
+  - Interfaces show extends: `interface AdminUser extends User, Admin`
+  - Optional parameters marked with `?`: `format(value: string, options?: FormatOptions)`
+
+- **BuildContextOptions Interface**
+  - New `includeSignatures?: boolean` option for `buildInitialContext()`
+  - Controls signature vs compact format (default: `true` for signatures)
+
+- **Configuration**
+  - Added `includeSignatures: boolean` to `ContextConfigSchema` (default: `true`)
+  - Users can disable signatures to save tokens: `context.includeSignatures: false`
+
+### Changed
+
+- **ASTParser**
+  - Arrow functions now extract `returnType` in `extractLexicalDeclaration()`
+  - Return type format normalized (strips leading `: `)
+
+- **prompts.ts**
+  - New `formatFunctionSignature()` helper function
+  - `formatFileSummary()` now shows full signatures by default
+  - Added `formatFileSummaryCompact()` for legacy format
+  - `formatFileOverview()` accepts `includeSignatures` parameter
+  - Defensive handling for missing interface `extends` array
+
+### New Context Format (default)
+
+```
+### src/services/user.ts
+- async getUser(id: string): Promise<User>
+- async createUser(data: UserDTO): Promise<User>
+- validateEmail(email: string): boolean
+- class UserService extends BaseService
+- interface IUserService extends IService
+- type UserId
+```
+
+### Compact Format (includeSignatures: false)
+
+```
+- src/services/user.ts [fn: getUser, createUser | class: UserService | interface: IUserService | type: UserId]
+```
+
+### Technical Details
+
+- Total tests: 1702 passed (was 1687, +15 new tests)
+  - 8 new tests for function signature formatting
+  - 5 new tests for `includeSignatures` configuration
+  - 1 new test for compact format
+  - 1 new test for undefined AST entries
+- Coverage: 97.54% lines, 91.14% branches, 98.59% functions
+- 0 ESLint errors, 2 warnings (complexity in ASTParser and prompts)
+- Build successful
+
+### Notes
+
+This is the first part of v0.24.0 Rich Initial Context milestone:
+- ✅ 0.24.1 - Function Signatures with Types
+- ⏳ 0.24.2 - Interface/Type Field Definitions
+- ⏳ 0.24.3 - Enum Value Definitions
+- ⏳ 0.24.4 - Decorator Extraction
+
+---
+
 ## [0.23.0] - 2025-12-04 - JSON/YAML & Symlinks
 
 ### Added

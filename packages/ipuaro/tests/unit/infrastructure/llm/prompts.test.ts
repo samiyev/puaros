@@ -108,13 +108,23 @@ describe("prompts", () => {
             expect(context).toContain("tests/")
         })
 
-        it("should include file overview with AST summaries", () => {
+        it("should include file overview with AST summaries (signatures format)", () => {
             const context = buildInitialContext(structure, asts)
 
             expect(context).toContain("## Files")
-            expect(context).toContain("src/index.ts")
+            expect(context).toContain("### src/index.ts")
+            expect(context).toContain("- main()")
+            expect(context).toContain("### src/utils.ts")
+            expect(context).toContain("- class Helper")
+        })
+
+        it("should use compact format when includeSignatures is false", () => {
+            const context = buildInitialContext(structure, asts, undefined, {
+                includeSignatures: false,
+            })
+
+            expect(context).toContain("## Files")
             expect(context).toContain("fn: main")
-            expect(context).toContain("src/utils.ts")
             expect(context).toContain("class: Helper")
         })
 
@@ -506,7 +516,16 @@ describe("prompts", () => {
                         exports: [],
                         functions: [],
                         classes: [],
-                        interfaces: [{ name: "IFoo", lineStart: 1, lineEnd: 5, isExported: true }],
+                        interfaces: [
+                            {
+                                name: "IFoo",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                properties: [],
+                                extends: [],
+                                isExported: true,
+                            },
+                        ],
                         typeAliases: [],
                         parseError: false,
                     },
@@ -514,6 +533,44 @@ describe("prompts", () => {
             ])
 
             const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- interface IFoo")
+        })
+
+        it("should handle file with only interfaces (compact format)", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [
+                            {
+                                name: "IFoo",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                properties: [],
+                                extends: [],
+                                isExported: true,
+                            },
+                        ],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts, undefined, {
+                includeSignatures: false,
+            })
 
             expect(context).toContain("interface: IFoo")
         })
@@ -534,15 +591,42 @@ describe("prompts", () => {
                         functions: [],
                         classes: [],
                         interfaces: [],
-                        typeAliases: [
-                            { name: "MyType", lineStart: 1, lineEnd: 1, isExported: true },
-                        ],
+                        typeAliases: [{ name: "MyType", line: 1, isExported: true }],
                         parseError: false,
                     },
                 ],
             ])
 
             const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- type MyType")
+        })
+
+        it("should handle file with only type aliases (compact format)", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [{ name: "MyType", line: 1, isExported: true }],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts, undefined, {
+                includeSignatures: false,
+            })
 
             expect(context).toContain("type: MyType")
         })
@@ -686,6 +770,22 @@ describe("prompts", () => {
             expect(context).toContain("exists.ts")
             expect(context).not.toContain("missing.ts")
         })
+
+        it("should skip undefined AST entries", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["file.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>()
+            asts.set("file.ts", undefined as unknown as FileAST)
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("## Files")
+            expect(context).not.toContain("file.ts")
+        })
     })
 
     describe("truncateContext", () => {
@@ -712,6 +812,278 @@ describe("prompts", () => {
             const result = truncateContext(context, 50)
 
             expect(result).toContain("truncated")
+        })
+    })
+
+    describe("function signatures with types", () => {
+        it("should format function with typed parameters", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["user.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "user.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "getUser",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                params: [
+                                    {
+                                        name: "id",
+                                        type: "string",
+                                        optional: false,
+                                        hasDefault: false,
+                                    },
+                                ],
+                                isAsync: false,
+                                isExported: true,
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- getUser(id: string)")
+        })
+
+        it("should format async function with return type", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["user.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "user.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "getUser",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                params: [
+                                    {
+                                        name: "id",
+                                        type: "string",
+                                        optional: false,
+                                        hasDefault: false,
+                                    },
+                                ],
+                                isAsync: true,
+                                isExported: true,
+                                returnType: "Promise<User>",
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- async getUser(id: string): Promise<User>")
+        })
+
+        it("should format function with optional parameters", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["utils.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "utils.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "format",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                params: [
+                                    {
+                                        name: "value",
+                                        type: "string",
+                                        optional: false,
+                                        hasDefault: false,
+                                    },
+                                    {
+                                        name: "options",
+                                        type: "FormatOptions",
+                                        optional: true,
+                                        hasDefault: false,
+                                    },
+                                ],
+                                isAsync: false,
+                                isExported: true,
+                                returnType: "string",
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- format(value: string, options?: FormatOptions): string")
+        })
+
+        it("should format function with multiple typed parameters", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["api.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "api.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "createUser",
+                                lineStart: 1,
+                                lineEnd: 10,
+                                params: [
+                                    {
+                                        name: "name",
+                                        type: "string",
+                                        optional: false,
+                                        hasDefault: false,
+                                    },
+                                    {
+                                        name: "email",
+                                        type: "string",
+                                        optional: false,
+                                        hasDefault: false,
+                                    },
+                                    {
+                                        name: "age",
+                                        type: "number",
+                                        optional: true,
+                                        hasDefault: false,
+                                    },
+                                ],
+                                isAsync: true,
+                                isExported: true,
+                                returnType: "Promise<User>",
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain(
+                "- async createUser(name: string, email: string, age?: number): Promise<User>",
+            )
+        })
+
+        it("should format function without types (JavaScript style)", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["legacy.js"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "legacy.js",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "doSomething",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                params: [
+                                    { name: "x", optional: false, hasDefault: false },
+                                    { name: "y", optional: false, hasDefault: false },
+                                ],
+                                isAsync: false,
+                                isExported: true,
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- doSomething(x, y)")
+        })
+
+        it("should format interface with extends", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [
+                            {
+                                name: "AdminUser",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                properties: [],
+                                extends: ["User", "Admin"],
+                                isExported: true,
+                            },
+                        ],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- interface AdminUser extends User, Admin")
         })
     })
 })

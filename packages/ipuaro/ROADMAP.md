@@ -1782,11 +1782,11 @@ export interface ScanResult {
 ## Version 0.24.0 - Rich Initial Context 📋
 
 **Priority:** HIGH
-**Status:** Planned
+**Status:** In Progress (1/4 complete)
 
 Улучшение initial context для LLM: добавление сигнатур функций, типов интерфейсов и значений enum. Это позволит LLM отвечать на вопросы о типах и параметрах без tool calls.
 
-### 0.24.1 - Function Signatures with Types ⭐
+### 0.24.1 - Function Signatures with Types ⭐ ✅
 
 **Проблема:** Сейчас LLM видит только имена функций: `fn: getUser, createUser`
 **Решение:** Показать полные сигнатуры: `async getUser(id: string): Promise<User>`
@@ -1805,10 +1805,10 @@ export interface ScanResult {
 ```
 
 **Изменения:**
-- [ ] Расширить `FunctionInfo` в FileAST для хранения типов параметров и return type
-- [ ] Обновить `ASTParser.ts` для извлечения типов параметров и return types
-- [ ] Обновить `formatFileSummary()` в prompts.ts для вывода сигнатур
-- [ ] Добавить опцию `includeSignatures: boolean` в config
+- [x] Расширить `FunctionInfo` в FileAST для хранения типов параметров и return type (already existed)
+- [x] Обновить `ASTParser.ts` для извлечения типов параметров и return types (arrow functions fixed)
+- [x] Обновить `formatFileSummary()` в prompts.ts для вывода сигнатур
+- [x] Добавить опцию `includeSignatures: boolean` в config
 
 **Зачем:** LLM не будет галлюцинировать параметры и return types.
 
@@ -2079,7 +2079,7 @@ sessions:list             # List<session_id>
 
 **Last Updated:** 2025-12-04
 **Target Version:** 1.0.0
-**Current Version:** 0.23.0
-**Next Milestones:** v0.24.0 (Rich Context), v0.25.0 (Graph Metrics)
+**Current Version:** 0.24.0
+**Next Milestones:** v0.24.0 (Rich Context - 1/4 complete), v0.25.0 (Graph Metrics)
 
 > **Note:** v0.24.0 and v0.25.0 are required for 1.0.0 release. They enable LLM to answer questions about types, signatures, and architecture without tool calls.

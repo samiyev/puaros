@@ -332,6 +332,7 @@ export class ASTParser {
                 ) {
                     const params = this.extractParameters(valueNode)
                     const isAsync = valueNode.children.some((c) => c.type === NodeType.ASYNC)
+                    const returnTypeNode = valueNode.childForFieldName(FieldName.RETURN_TYPE)
 
                     ast.functions.push({
                         name: nameNode?.text ?? "",
@@ -340,6 +341,7 @@ export class ASTParser {
                         params,
                         isAsync,
                         isExported,
+                        returnType: returnTypeNode?.text?.replace(/^:\s*/, ""),
                     })
 
                     if (isExported) {

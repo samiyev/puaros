@@ -15,6 +15,7 @@ describe("ContextConfigSchema", () => {
                 maxContextUsage: 0.8,
                 autoCompressAt: 0.8,
                 compressionMethod: "llm-summary",
+                includeSignatures: true,
             })
         })
 
@@ -26,6 +27,7 @@ describe("ContextConfigSchema", () => {
                 maxContextUsage: 0.8,
                 autoCompressAt: 0.8,
                 compressionMethod: "llm-summary",
+                includeSignatures: true,
             })
         })
     })
@@ -162,6 +164,7 @@ describe("ContextConfigSchema", () => {
                 maxContextUsage: 0.8,
                 autoCompressAt: 0.8,
                 compressionMethod: "llm-summary",
+                includeSignatures: true,
             })
         })
 
@@ -175,6 +178,7 @@ describe("ContextConfigSchema", () => {
                 maxContextUsage: 0.8,
                 autoCompressAt: 0.9,
                 compressionMethod: "llm-summary",
+                includeSignatures: true,
             })
         })
 
@@ -189,6 +193,7 @@ describe("ContextConfigSchema", () => {
                 maxContextUsage: 0.7,
                 autoCompressAt: 0.8,
                 compressionMethod: "truncate",
+                includeSignatures: true,
             })
         })
     })
@@ -200,6 +205,7 @@ describe("ContextConfigSchema", () => {
                 maxContextUsage: 0.9,
                 autoCompressAt: 0.85,
                 compressionMethod: "truncate" as const,
+                includeSignatures: false,
             }
 
             const result = ContextConfigSchema.parse(config)
@@ -212,10 +218,36 @@ describe("ContextConfigSchema", () => {
                 maxContextUsage: 0.8,
                 autoCompressAt: 0.8,
                 compressionMethod: "llm-summary" as const,
+                includeSignatures: true,
             }
 
             const result = ContextConfigSchema.parse(config)
             expect(result).toEqual(config)
+        })
+    })
+
+    describe("includeSignatures", () => {
+        it("should accept true", () => {
+            const result = ContextConfigSchema.parse({ includeSignatures: true })
+            expect(result.includeSignatures).toBe(true)
+        })
+
+        it("should accept false", () => {
+            const result = ContextConfigSchema.parse({ includeSignatures: false })
+            expect(result.includeSignatures).toBe(false)
+        })
+
+        it("should default to true", () => {
+            const result = ContextConfigSchema.parse({})
+            expect(result.includeSignatures).toBe(true)
+        })
+
+        it("should reject non-boolean", () => {
+            expect(() => ContextConfigSchema.parse({ includeSignatures: "true" })).toThrow()
+        })
+
+        it("should reject number", () => {
+            expect(() => ContextConfigSchema.parse({ includeSignatures: 1 })).toThrow()
         })
     })
 })

@@ -12,6 +12,13 @@ export interface ProjectStructure {
 }
 
 /**
+ * Options for building initial context.
+ */
+export interface BuildContextOptions {
+    includeSignatures?: boolean
+}
+
+/**
  * System prompt for the ipuaro AI agent.
  */
 export const SYSTEM_PROMPT = `You are ipuaro, a local AI code assistant specialized in helping developers understand and modify their codebase. You operate within a single project directory and have access to powerful tools for reading, searching, analyzing, and editing code.
@@ -116,12 +123,14 @@ export function buildInitialContext(
     structure: ProjectStructure,
     asts: Map<string, FileAST>,
     metas?: Map<string, FileMeta>,
+    options?: BuildContextOptions,
 ): string {
     const sections: string[] = []
+    const includeSignatures = options?.includeSignatures ?? true
 
     sections.push(formatProjectHeader(structure))
     sections.push(formatDirectoryTree(structure))
-    sections.push(formatFileOverview(asts, metas))
+    sections.push(formatFileOverview(asts, metas, includeSignatures))
 
     return sections.join("\n\n")
 }
@@ -157,7 +166,11 @@ function formatDirectoryTree(structure: ProjectStructure): string {
 /**
  * Format file overview with AST summaries.
  */
-function formatFileOverview(asts: Map<string, FileAST>, metas?: Map<string, FileMeta>): string {
+function formatFileOverview(
+    asts: Map<string, FileAST>,
+    metas?: Map<string, FileMeta>,
+    includeSignatures = true,
+): string {
     const lines: string[] = ["## Files", ""]
 
     const sortedPaths = [...asts.keys()].sort()
@@ -168,16 +181,87 @@ function formatFileOverview(asts: Map<string, FileAST>, metas?: Map<string, File
         }
 
         const meta = metas?.get(path)
-        lines.push(formatFileSummary(path, ast, meta))
+        lines.push(formatFileSummary(path, ast, meta, includeSignatures))
     }
 
     return lines.join("\n")
 }
 
 /**
- * Format a single file's AST summary.
+ * Format a function signature.
  */
-function formatFileSummary(path: string, ast: FileAST, meta?: FileMeta): string {
+function formatFunctionSignature(fn: FileAST["functions"][0]): string {
+    const asyncPrefix = fn.isAsync ? "async " : ""
+    const params = fn.params
+        .map((p) => {
+            const optional = p.optional ? "?" : ""
+            const type = p.type ? `: ${p.type}` : ""
+            return `${p.name}${optional}${type}`
+        })
+        .join(", ")
+    const returnType = fn.returnType ? `: ${fn.returnType}` : ""
+    return `${asyncPrefix}${fn.name}(${params})${returnType}`
+}
+
+/**
+ * Format a single file's AST summary.
+ * When includeSignatures is true, shows full function signatures.
+ * When false, shows compact format with just names.
+ */
+function formatFileSummary(
+    path: string,
+    ast: FileAST,
+    meta?: FileMeta,
+    includeSignatures = true,
+): string {
+    const flags = formatFileFlags(meta)
+
+    if (!includeSignatures) {
+        return formatFileSummaryCompact(path, ast, flags)
+    }
+
+    const lines: string[] = []
+    lines.push(`### ${path}${flags}`)
+
+    if (ast.functions.length > 0) {
+        for (const fn of ast.functions) {
+            lines.push(`- ${formatFunctionSignature(fn)}`)
+        }
+    }
+
+    if (ast.classes.length > 0) {
+        for (const cls of ast.classes) {
+            const ext = cls.extends ? ` extends ${cls.extends}` : ""
+            const impl = cls.implements.length > 0 ? ` implements ${cls.implements.join(", ")}` : ""
+            lines.push(`- class ${cls.name}${ext}${impl}`)
+        }
+    }
+
+    if (ast.interfaces.length > 0) {
+        for (const iface of ast.interfaces) {
+            const extList = iface.extends ?? []
+            const ext = extList.length > 0 ? ` extends ${extList.join(", ")}` : ""
+            lines.push(`- interface ${iface.name}${ext}`)
+        }
+    }
+
+    if (ast.typeAliases.length > 0) {
+        for (const type of ast.typeAliases) {
+            lines.push(`- type ${type.name}`)
+        }
+    }
+
+    if (lines.length === 1) {
+        return `- ${path}${flags}`
+    }
+
+    return lines.join("\n")
+}
+
+/**
+ * Format file summary in compact mode (just names, no signatures).
+ */
+function formatFileSummaryCompact(path: string, ast: FileAST, flags: string): string {
     const parts: string[] = []
 
     if (ast.functions.length > 0) {
@@ -201,8 +285,6 @@ function formatFileSummary(path: string, ast: FileAST, meta?: FileMeta): string 
     }
 
     const summary = parts.length > 0 ? ` [${parts.join(" | ")}]` : ""
-    const flags = formatFileFlags(meta)
-
     return `- ${path}${summary}${flags}`
 }
 
