@@ -20,6 +20,21 @@ This document provides authoritative sources, academic papers, industry standard
 12. [Aggregate Boundary Validation (DDD Tactical Patterns)](#12-aggregate-boundary-validation-ddd-tactical-patterns)
 13. [Secret Detection & Security](#13-secret-detection--security)
 14. [Severity-Based Prioritization & Technical Debt](#14-severity-based-prioritization--technical-debt)
+15. [Domain Event Usage Validation](#15-domain-event-usage-validation)
+16. [Value Object Immutability](#16-value-object-immutability)
+17. [Command Query Separation (CQS/CQRS)](#17-command-query-separation-cqscqrs)
+18. [Factory Pattern](#18-factory-pattern)
+19. [Specification Pattern](#19-specification-pattern)
+20. [Bounded Context](#20-bounded-context)
+21. [Persistence Ignorance](#21-persistence-ignorance)
+22. [Null Object Pattern](#22-null-object-pattern)
+23. [Primitive Obsession](#23-primitive-obsession)
+24. [Service Locator Anti-pattern](#24-service-locator-anti-pattern)
+25. [Double Dispatch and Visitor Pattern](#25-double-dispatch-and-visitor-pattern)
+26. [Entity Identity](#26-entity-identity)
+27. [Saga Pattern](#27-saga-pattern)
+28. [Anti-Corruption Layer](#28-anti-corruption-layer)
+29. [Ubiquitous Language](#29-ubiquitous-language)
 
 ---
 
@@ -801,22 +816,840 @@ This document provides authoritative sources, academic papers, industry standard
 
 ---
 
+## 15. Domain Event Usage Validation
+
+### Eric Evans: Domain-Driven Design (2003)
+
+**Original Definition:**
+- Domain Events: "Something happened that domain experts care about"
+- Events capture facts about the domain that have already occurred
+- Distinct from system events - they model business-relevant occurrences
+- Reference: [Martin Fowler - Domain Event](https://martinfowler.com/eaaDev/DomainEvent.html)
+
+**Book: Domain-Driven Design** (2003)
+- Author: Eric Evans
+- Publisher: Addison-Wesley Professional
+- ISBN: 978-0321125217
+- Domain Events weren't explicitly in the original book but evolved from DDD community
+- Reference: [DDD Community - Domain Events](https://www.domainlanguage.com/)
+
+### Vaughn Vernon: Implementing Domain-Driven Design (2013)
+
+**Chapter 8: Domain Events**
+- Author: Vaughn Vernon
+- Comprehensive coverage of Domain Events implementation
+- "Model information about activity in the domain as a series of discrete events"
+- Reference: [Amazon - Implementing DDD](https://www.amazon.com/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577)
+
+**Key Principles:**
+- Events should be immutable
+- Named in past tense (OrderPlaced, UserRegistered)
+- Contain all data needed by handlers
+- Enable loose coupling between aggregates
+
+### Martin Fowler's Event Patterns
+
+**Event Sourcing:**
+- "Capture all changes to an application state as a sequence of events"
+- Events become the primary source of truth
+- Reference: [Martin Fowler - Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
+
+**Event-Driven Architecture:**
+- Promotes loose coupling between components
+- Enables asynchronous processing
+- Reference: [Martin Fowler - Event-Driven](https://martinfowler.com/articles/201701-event-driven.html)
+
+### Why Direct Infrastructure Calls Are Bad
+
+**Coupling Issues:**
+- Direct calls create tight coupling between domain and infrastructure
+- Makes testing difficult (need to mock infrastructure)
+- Violates Single Responsibility Principle
+- Reference: [Microsoft - Domain Events Design](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/domain-events-design-implementation)
+
+**Benefits of Domain Events:**
+- Decouples domain from side effects
+- Enables eventual consistency
+- Improves testability
+- Supports audit logging naturally
+- Reference: [Jimmy Bogard - Domain Events](https://lostechies.com/jimmybogard/2010/04/08/strengthening-your-domain-domain-events/)
+
+---
+
+## 16. Value Object Immutability
+
+### Eric Evans: Domain-Driven Design (2003)
+
+**Value Object Definition:**
+- "An object that describes some characteristic or attribute but carries no concept of identity"
+- "Value Objects should be immutable"
+- When you care only about the attributes of an element, classify it as a Value Object
+- Reference: [Martin Fowler - Value Object](https://martinfowler.com/bliki/ValueObject.html)
+
+**Immutability Requirement:**
+- "Treat the Value Object as immutable"
+- "Don't give it any identity and avoid the design complexities necessary to maintain Entities"
+- Reference: [DDD Reference - Value Objects](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+
+### Martin Fowler on Value Objects
+
+**Blog Post: Value Object** (2016)
+- "A small simple object, like money or a date range, whose equality isn't based on identity"
+- "I consider value objects to be one of the most important building blocks of good domain models"
+- Reference: [Martin Fowler - Value Object](https://martinfowler.com/bliki/ValueObject.html)
+
+**Key Properties:**
+- Equality based on attribute values, not identity
+- Should be immutable (once created, cannot be changed)
+- Side-effect free behavior
+- Self-validating (validate in constructor)
+
+### Vaughn Vernon: Implementing DDD
+
+**Chapter 6: Value Objects**
+- Detailed implementation guidance
+- "Measures, quantifies, or describes a thing in the domain"
+- "Can be compared with other Value Objects using value equality"
+- "Completely replaceable when the measurement changes"
+- Reference: [Vaughn Vernon - Implementing DDD](https://www.amazon.com/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577)
+
+### Why Immutability Matters
+
+**Thread Safety:**
+- Immutable objects are inherently thread-safe
+- No synchronization needed for concurrent access
+- Reference: [Effective Java - Item 17](https://www.amazon.com/Effective-Java-Joshua-Bloch/dp/0134685997)
+
+**Reasoning About Code:**
+- Easier to understand code when objects don't change
+- No defensive copying needed
+- Simplifies caching and optimization
+- Reference: [Oracle Java Tutorials - Immutable Objects](https://docs.oracle.com/javase/tutorial/essential/concurrency/immutable.html)
+
+**Functional Programming Influence:**
+- Immutability is a core principle of functional programming
+- Reduces side effects and makes code more predictable
+- Reference: [Wikipedia - Immutable Object](https://en.wikipedia.org/wiki/Immutable_object)
+
+---
+
+## 17. Command Query Separation (CQS/CQRS)
+
+### Bertrand Meyer: Original CQS Principle
+
+**Book: Object-Oriented Software Construction** (1988, 2nd Ed. 1997)
+- Author: Bertrand Meyer
+- Publisher: Prentice Hall
+- ISBN: 978-0136291558
+- Introduced Command Query Separation principle
+- Reference: [Wikipedia - CQS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation)
+
+**CQS Principle:**
+- "Every method should either be a command that performs an action, or a query that returns data to the caller, but not both"
+- Commands: change state, return nothing (void)
+- Queries: return data, change nothing (side-effect free)
+- Reference: [Martin Fowler - CommandQuerySeparation](https://martinfowler.com/bliki/CommandQuerySeparation.html)
+
+### Greg Young: CQRS Pattern
+
+**CQRS Documents** (2010)
+- Author: Greg Young
+- Extended CQS to architectural pattern
+- "CQRS is simply the creation of two objects where there was previously only one"
+- Reference: [Greg Young - CQRS Documents](https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf)
+
+**Key Concepts:**
+- Separate models for reading and writing
+- Write model (commands) optimized for business logic
+- Read model (queries) optimized for display/reporting
+- Reference: [Microsoft - CQRS Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs)
+
+### Martin Fowler on CQRS
+
+**Blog Post: CQRS** (2011)
+- "At its heart is the notion that you can use a different model to update information than the model you use to read information"
+- Warns against overuse: "CQRS is a significant mental leap for all concerned"
+- Reference: [Martin Fowler - CQRS](https://martinfowler.com/bliki/CQRS.html)
+
+### Benefits and Trade-offs
+
+**Benefits:**
+- Independent scaling of read and write workloads
+- Optimized data schemas for each side
+- Improved security (separate read/write permissions)
+- Reference: [AWS - CQRS Pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/modernization-data-persistence/cqrs-pattern.html)
+
+**Trade-offs:**
+- Increased complexity
+- Eventual consistency challenges
+- More code to maintain
+- Reference: [Microsoft - CQRS Considerations](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs#issues-and-considerations)
+
+---
+
+## 18. Factory Pattern
+
+### Gang of Four: Design Patterns (1994)
+
+**Book: Design Patterns: Elements of Reusable Object-Oriented Software**
+- Authors: Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides (Gang of Four)
+- Publisher: Addison-Wesley
+- ISBN: 978-0201633610
+- Defines Factory Method and Abstract Factory patterns
+- Reference: [Wikipedia - Design Patterns](https://en.wikipedia.org/wiki/Design_Patterns)
+
+**Factory Method Pattern:**
+- "Define an interface for creating an object, but let subclasses decide which class to instantiate"
+- Lets a class defer instantiation to subclasses
+- Reference: [Refactoring Guru - Factory Method](https://refactoring.guru/design-patterns/factory-method)
+
+**Abstract Factory Pattern:**
+- "Provide an interface for creating families of related or dependent objects without specifying their concrete classes"
+- Reference: [Refactoring Guru - Abstract Factory](https://refactoring.guru/design-patterns/abstract-factory)
+
+### Eric Evans: Factory in DDD Context
+
+**Domain-Driven Design** (2003)
+- Chapter 6: "The Life Cycle of a Domain Object"
+- Factories encapsulate complex object creation
+- "Shift the responsibility for creating instances of complex objects and Aggregates to a separate object"
+- Reference: [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+
+**DDD Factory Guidelines:**
+- Factory should create valid objects (invariants satisfied)
+- Two types: Factory for new objects, Factory for reconstitution
+- Keep creation logic out of the entity itself
+- Reference: Already in Section 10 - Domain-Driven Design
+
+### Why Factories Matter in DDD
+
+**Encapsulation of Creation Logic:**
+- Complex aggregates need coordinated creation
+- Business rules should be enforced at creation time
+- Clients shouldn't know construction details
+- Reference: [Vaughn Vernon - Implementing DDD, Chapter 11](https://www.amazon.com/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577)
+
+**Factory vs Constructor:**
+- Constructors should be simple (assign values)
+- Factories handle complex creation logic
+- Factories can return different types
+- Reference: [Effective Java - Item 1: Static Factory Methods](https://www.amazon.com/Effective-Java-Joshua-Bloch/dp/0134685997)
+
+---
+
+## 19. Specification Pattern
+
+### Eric Evans & Martin Fowler
+
+**Original Paper: Specifications** (1997)
+- Authors: Eric Evans and Martin Fowler
+- Introduced the Specification pattern
+- "A Specification states a constraint on the state of another object"
+- Reference: [Martin Fowler - Specification](https://martinfowler.com/apsupp/spec.pdf)
+
+**Domain-Driven Design** (2003)
+- Chapter 9: "Making Implicit Concepts Explicit"
+- Specifications make business rules explicit and reusable
+- "Create explicit predicate-like Value Objects for specialized purposes"
+- Reference: [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+
+### Pattern Definition
+
+**Core Concept:**
+- Specification is a predicate that determines if an object satisfies some criteria
+- Encapsulates business rules that can be reused and combined
+- Reference: [Wikipedia - Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern)
+
+**Three Main Uses:**
+1. **Selection**: Finding objects that match criteria
+2. **Validation**: Checking if object satisfies rules
+3. **Construction**: Describing what needs to be created
+- Reference: [Martin Fowler - Specification](https://martinfowler.com/apsupp/spec.pdf)
+
+### Composite Specifications
+
+**Combining Specifications:**
+- AND: Both specifications must be satisfied
+- OR: Either specification must be satisfied
+- NOT: Specification must not be satisfied
+- Reference: [Refactoring Guru - Specification Pattern](https://refactoring.guru/design-patterns/specification)
+
+**Benefits:**
+- Reusable business rules
+- Testable in isolation
+- Readable domain language
+- Composable for complex rules
+- Reference: [Enterprise Craftsmanship - Specification Pattern](https://enterprisecraftsmanship.com/posts/specification-pattern-c-implementation/)
+
+---
+
+## 20. Bounded Context
+
+### Eric Evans: Domain-Driven Design (2003)
+
+**Original Definition:**
+- "A Bounded Context delimits the applicability of a particular model"
+- "Explicitly define the context within which a model applies"
+- Chapter 14: "Maintaining Model Integrity"
+- Reference: [Martin Fowler - Bounded Context](https://martinfowler.com/bliki/BoundedContext.html)
+
+**Key Principles:**
+- Each Bounded Context has its own Ubiquitous Language
+- Same term can mean different things in different contexts
+- Models should not be shared across context boundaries
+- Reference: [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+
+### Vaughn Vernon: Strategic Design
+
+**Implementing Domain-Driven Design** (2013)
+- Chapter 2: "Domains, Subdomains, and Bounded Contexts"
+- Detailed guidance on identifying and mapping contexts
+- Reference: [Vaughn Vernon - Implementing DDD](https://www.amazon.com/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577)
+
+**Context Mapping Patterns:**
+- Shared Kernel
+- Customer/Supplier
+- Conformist
+- Anti-Corruption Layer
+- Open Host Service / Published Language
+- Reference: [Context Mapping Patterns](https://www.infoq.com/articles/ddd-contextmapping/)
+
+### Why Bounded Contexts Matter
+
+**Avoiding Big Ball of Mud:**
+- Without explicit boundaries, models become entangled
+- Different teams step on each other's models
+- Reference: [Wikipedia - Big Ball of Mud](https://en.wikipedia.org/wiki/Big_ball_of_mud)
+
+**Microservices and Bounded Contexts:**
+- "Microservices should be designed around business capabilities, aligned with bounded contexts"
+- Each microservice typically represents one bounded context
+- Reference: [Microsoft - Microservices and Bounded Contexts](https://learn.microsoft.com/en-us/azure/architecture/microservices/model/domain-analysis)
+
+### Cross-Context Communication
+
+**Integration Patterns:**
+- Never share domain models across contexts
+- Use integration events or APIs
+- Translate between context languages
+- Reference: [Microsoft - Tactical DDD](https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-ddd)
+
+---
+
+## 21. Persistence Ignorance
+
+### Definition and Principles
+
+**Core Concept:**
+- Domain objects should have no knowledge of how they are persisted
+- Business logic remains pure and testable
+- Infrastructure concerns are separated from domain
+- Reference: [Microsoft - Persistence Ignorance](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-persistence-ignorance-principle)
+
+**Wikipedia Definition:**
+- "Persistence ignorance is the ability of a class to be used without any underlying persistence mechanism"
+- Objects don't know if/how they'll be stored
+- Reference: [Wikipedia - Persistence Ignorance](https://en.wikipedia.org/wiki/Persistence_ignorance)
+
+### Eric Evans: DDD and Persistence
+
+**Domain-Driven Design** (2003)
+- Repositories abstract away persistence details
+- Domain model should not reference ORM or database concepts
+- Reference: Already covered in Section 6 - Repository Pattern
+
+**Key Quote:**
+- "The domain layer should be kept clean of all technical concerns"
+- ORM annotations violate this principle
+- Reference: [Clean Architecture and DDD](https://herbertograca.com/2017/11/16/explicit-architecture-01-ddd-hexagonal-onion-clean-cqrs-how-i-put-it-all-together/)
+
+### Clean Architecture Alignment
+
+**Robert C. Martin:**
+- "The database is a detail"
+- Domain entities should not depend on persistence frameworks
+- Use Repository interfaces to abstract persistence
+- Reference: [Clean Architecture Book](https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164)
+
+### Practical Implementation
+
+**Two-Model Approach:**
+- Domain Model: Pure business objects
+- Persistence Model: ORM-annotated entities
+- Mappers translate between them
+- Reference: [Microsoft - Infrastructure Layer](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design)
+
+**Benefits:**
+- Domain model can evolve independently of database schema
+- Easier testing (no ORM required)
+- Database can be changed without affecting domain
+- Reference: [Enterprise Craftsmanship - Persistence Ignorance](https://enterprisecraftsmanship.com/posts/persistence-ignorance/)
+
+---
+
+## 22. Null Object Pattern
+
+### Original Pattern
+
+**Pattern Languages of Program Design 3** (1997)
+- Author: Bobby Woolf
+- Chapter: "Null Object"
+- Publisher: Addison-Wesley
+- ISBN: 978-0201310115
+- Reference: [Wikipedia - Null Object Pattern](https://en.wikipedia.org/wiki/Null_object_pattern)
+
+**Definition:**
+- "A Null Object provides a 'do nothing' behavior, hiding the details from its collaborators"
+- Replaces null checks with polymorphism
+- Reference: [Refactoring Guru - Null Object](https://refactoring.guru/introduce-null-object)
+
+### Martin Fowler's Coverage
+
+**Refactoring Book** (1999, 2018)
+- "Introduce Null Object" refactoring
+- "Replace conditional logic that checks for null with a null object"
+- Reference: [Refactoring Catalog](https://refactoring.com/catalog/introduceNullObject.html)
+
+**Special Case Pattern:**
+- More general pattern that includes Null Object
+- "A subclass that provides special behavior for particular cases"
+- Reference: [Martin Fowler - Special Case](https://martinfowler.com/eaaCatalog/specialCase.html)
+
+### Benefits
+
+**Eliminates Null Checks:**
+- Reduces cyclomatic complexity
+- Cleaner, more readable code
+- Follows "Tell, Don't Ask" principle
+- Reference: [SourceMaking - Null Object](https://sourcemaking.com/design_patterns/null_object)
+
+**Polymorphism Over Conditionals:**
+- Null Object responds to same interface as real object
+- Default/neutral behavior instead of null checks
+- Reference: [C2 Wiki - Null Object](https://wiki.c2.com/?NullObject)
+
+### When to Use
+
+**Good Candidates:**
+- Objects frequently checked for null
+- Null represents "absence" with sensible default behavior
+- Reference: [Baeldung - Null Object Pattern](https://www.baeldung.com/java-null-object-pattern)
+
+**Cautions:**
+- Don't use when null has semantic meaning
+- Can hide bugs if misapplied
+- Reference: [Stack Overflow - Null Object Considerations](https://stackoverflow.com/questions/1274792/is-the-null-object-pattern-a-bad-practice)
+
+---
+
+## 23. Primitive Obsession
+
+### Code Smell Definition
+
+**Martin Fowler: Refactoring** (1999, 2018)
+- Primitive Obsession is a code smell
+- "Using primitives instead of small objects for simple tasks"
+- Reference: [Refactoring Catalog](https://refactoring.com/catalog/)
+
+**Wikipedia Definition:**
+- "Using primitive data types to represent domain ideas"
+- Example: Using string for email, int for money
+- Reference: [Wikipedia - Code Smell](https://en.wikipedia.org/wiki/Code_smell)
+
+### Why It's a Problem
+
+**Lost Type Safety:**
+- String can contain anything, Email cannot
+- Compiler can't catch domain errors
+- Reference: [Refactoring Guru - Primitive Obsession](https://refactoring.guru/smells/primitive-obsession)
+
+**Scattered Validation:**
+- Same validation repeated in multiple places
+- Violates DRY principle
+- Reference: [SourceMaking - Primitive Obsession](https://sourcemaking.com/refactoring/smells/primitive-obsession)
+
+**Missing Behavior:**
+- Primitives can't have domain-specific methods
+- Logic lives in services instead of objects
+- Reference: [Enterprise Craftsmanship - Primitive Obsession](https://enterprisecraftsmanship.com/posts/functional-c-primitive-obsession/)
+
+### Solutions
+
+**Replace with Value Objects:**
+- Money instead of decimal
+- Email instead of string
+- PhoneNumber instead of string
+- Reference: Already covered in Section 16 - Value Object Immutability
+
+**Replace Data Value with Object:**
+- Refactoring: "Replace Data Value with Object"
+- Introduce Parameter Object for related primitives
+- Reference: [Refactoring - Replace Data Value with Object](https://refactoring.com/catalog/replaceDataValueWithObject.html)
+
+### Common Primitive Obsession Examples
+
+**Frequently Misused Primitives:**
+- string for: email, phone, URL, currency code, country code
+- int/decimal for: money, percentage, age, quantity
+- DateTime for: date ranges, business dates
+- Reference: [DDD - Value Objects](https://martinfowler.com/bliki/ValueObject.html)
+
+---
+
+## 24. Service Locator Anti-pattern
+
+### Martin Fowler's Analysis
+
+**Blog Post: Inversion of Control Containers and the Dependency Injection pattern** (2004)
+- Compares Service Locator with Dependency Injection
+- "With service locator the application class asks for it explicitly by a message to the locator"
+- Reference: [Martin Fowler - Inversion of Control](https://martinfowler.com/articles/injection.html)
+
+**Service Locator Definition:**
+- "The basic idea behind a service locator is to have an object that knows how to get hold of all of the services that an application might need"
+- Acts as a registry that provides dependencies on demand
+- Reference: [Martin Fowler - Service Locator](https://martinfowler.com/articles/injection.html#UsingAServiceLocator)
+
+### Why It's Considered an Anti-pattern
+
+**Mark Seemann: Dependency Injection in .NET** (2011, 2nd Ed. 2019)
+- Author: Mark Seemann
+- Extensively covers why Service Locator is problematic
+- "Service Locator is an anti-pattern"
+- Reference: [Mark Seemann - Service Locator is an Anti-Pattern](https://blog.ploeh.dk/2010/02/03/ServiceLocatorisanAnti-Pattern/)
+
+**Hidden Dependencies:**
+- Dependencies are not visible in constructor
+- Makes code harder to understand and test
+- Violates Explicit Dependencies Principle
+- Reference: [DevIQ - Explicit Dependencies](https://deviq.com/principles/explicit-dependencies-principle)
+
+**Testing Difficulties:**
+- Need to set up global locator for tests
+- Tests become coupled to locator setup
+- Reference: [Stack Overflow - Service Locator Testing](https://stackoverflow.com/questions/1557781/is-service-locator-an-anti-pattern)
+
+### Dependency Injection Alternative
+
+**Constructor Injection:**
+- Dependencies declared in constructor
+- Compiler enforces dependency provision
+- Clear, testable code
+- Reference: Already covered in Section 6 - Repository Pattern
+
+**Benefits over Service Locator:**
+- Explicit dependencies
+- Easier testing (just pass mocks)
+- IDE support for navigation
+- Compile-time checking
+- Reference: [Martin Fowler - Constructor Injection](https://martinfowler.com/articles/injection.html#ConstructorInjectionWithPicocontainer)
+
+---
+
+## 25. Double Dispatch and Visitor Pattern
+
+### Gang of Four: Visitor Pattern
+
+**Design Patterns** (1994)
+- Authors: Gang of Four
+- Visitor Pattern chapter
+- "Represent an operation to be performed on the elements of an object structure"
+- Reference: [Wikipedia - Visitor Pattern](https://en.wikipedia.org/wiki/Visitor_pattern)
+
+**Intent:**
+- "Lets you define a new operation without changing the classes of the elements on which it operates"
+- Separates algorithms from object structure
+- Reference: [Refactoring Guru - Visitor](https://refactoring.guru/design-patterns/visitor)
+
+### Double Dispatch Mechanism
+
+**Definition:**
+- "A mechanism that dispatches a function call to different concrete functions depending on the runtime types of two objects involved in the call"
+- Visitor pattern uses double dispatch
+- Reference: [Wikipedia - Double Dispatch](https://en.wikipedia.org/wiki/Double_dispatch)
+
+**How It Works:**
+1. Client calls element.accept(visitor)
+2. Element calls visitor.visit(this) - first dispatch
+3. Correct visit() overload selected - second dispatch
+- Reference: [SourceMaking - Visitor](https://sourcemaking.com/design_patterns/visitor)
+
+### When to Use
+
+**Good Use Cases:**
+- Operations on complex object structures
+- Many distinct operations needed
+- Object structure rarely changes but operations change often
+- Reference: [Refactoring Guru - Visitor Use Cases](https://refactoring.guru/design-patterns/visitor)
+
+**Alternative to Type Checking:**
+- Replace instanceof/typeof checks with polymorphism
+- More maintainable and extensible
+- Reference: [Replace Conditional with Polymorphism](https://refactoring.guru/replace-conditional-with-polymorphism)
+
+### Trade-offs
+
+**Advantages:**
+- Open/Closed Principle for new operations
+- Related operations grouped in one class
+- Accumulate state while traversing
+- Reference: [GoF Design Patterns](https://www.amazon.com/Design-Patterns-Elements-Reusable-Object-Oriented/dp/0201633612)
+
+**Disadvantages:**
+- Adding new element types requires changing all visitors
+- May break encapsulation (visitors need access to element internals)
+- Reference: [C2 Wiki - Visitor Pattern](https://wiki.c2.com/?VisitorPattern)
+
+---
+
+## 26. Entity Identity
+
+### Eric Evans: Domain-Driven Design (2003)
+
+**Entity Definition:**
+- "An object that is not defined by its attributes, but rather by a thread of continuity and its identity"
+- "Some objects are not defined primarily by their attributes. They represent a thread of identity"
+- Reference: [Martin Fowler - Evans Classification](https://martinfowler.com/bliki/EvansClassification.html)
+
+**Identity Characteristics:**
+- Unique within the system
+- Stable over time (doesn't change)
+- Survives state changes
+- Reference: [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+
+### Vaughn Vernon: Identity Implementation
+
+**Implementing Domain-Driven Design** (2013)
+- Chapter 5: "Entities"
+- Detailed coverage of identity strategies
+- "The primary characteristic of an Entity is that it has a unique identity"
+- Reference: [Vaughn Vernon - Implementing DDD](https://www.amazon.com/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577)
+
+**Identity Types:**
+- Natural keys (SSN, email)
+- Surrogate keys (UUID, auto-increment)
+- Domain-generated IDs
+- Reference: [Microsoft - Entity Keys](https://learn.microsoft.com/en-us/ef/core/modeling/keys)
+
+### Identity Best Practices
+
+**Immutability of Identity:**
+- Identity should never change after creation
+- Use readonly/final fields
+- Reference: [StackExchange - Mutable Entity ID](https://softwareengineering.stackexchange.com/questions/375765/is-it-bad-practice-to-have-mutable-entity-ids)
+
+**Value Object for Identity:**
+- Wrap identity in Value Object (UserId, OrderId)
+- Type safety prevents mixing IDs
+- Can include validation logic
+- Reference: [Enterprise Craftsmanship - Strongly Typed IDs](https://enterprisecraftsmanship.com/posts/strongly-typed-ids/)
+
+**Equality Based on Identity:**
+- Entity equality should compare only identity
+- Not all attributes
+- Reference: [Vaughn Vernon - Entity Equality](https://www.amazon.com/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577)
+
+---
+
+## 27. Saga Pattern
+
+### Original Research
+
+**Paper: Sagas** (1987)
+- Authors: Hector Garcia-Molina and Kenneth Salem
+- Published: ACM SIGMOD Conference
+- Introduced Sagas for long-lived transactions
+- Reference: [ACM Digital Library - Sagas](https://dl.acm.org/doi/10.1145/38713.38742)
+
+**Definition:**
+- "A saga is a sequence of local transactions where each transaction updates data within a single service"
+- Alternative to distributed transactions
+- Reference: [Microsoft - Saga Pattern](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga)
+
+### Chris Richardson: Microservices Patterns
+
+**Book: Microservices Patterns** (2018)
+- Author: Chris Richardson
+- Publisher: Manning
+- ISBN: 978-1617294549
+- Chapter 4: "Managing Transactions with Sagas"
+- Reference: [Manning - Microservices Patterns](https://www.manning.com/books/microservices-patterns)
+
+**Saga Types:**
+1. **Choreography**: Each service publishes events that trigger next steps
+2. **Orchestration**: Central coordinator tells services what to do
+- Reference: [Microservices.io - Saga](https://microservices.io/patterns/data/saga.html)
+
+### Compensating Transactions
+
+**Core Concept:**
+- Each step has a compensating action to undo it
+- If step N fails, compensate steps N-1, N-2, ..., 1
+- Reference: [AWS - Saga Pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/modernization-data-persistence/saga-pattern.html)
+
+**Compensation Examples:**
+- CreateOrder → DeleteOrder
+- ReserveInventory → ReleaseInventory
+- ChargePayment → RefundPayment
+- Reference: [Microsoft - Compensating Transactions](https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction)
+
+### Trade-offs
+
+**Advantages:**
+- Works across service boundaries
+- No distributed locks
+- Services remain autonomous
+- Reference: [Chris Richardson - Saga](https://chrisrichardson.net/post/microservices/patterns/data/2019/07/22/design-sagas.html)
+
+**Challenges:**
+- Complexity of compensation logic
+- Eventual consistency
+- Debugging distributed sagas
+- Reference: [Microsoft - Saga Considerations](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga#issues-and-considerations)
+
+---
+
+## 28. Anti-Corruption Layer
+
+### Eric Evans: Domain-Driven Design (2003)
+
+**Original Definition:**
+- Chapter 14: "Maintaining Model Integrity"
+- "Create an isolating layer to provide clients with functionality in terms of their own domain model"
+- Protects your model from external/legacy models
+- Reference: [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+
+**Purpose:**
+- "The translation layer between a new system and an external system"
+- Prevents external model concepts from leaking in
+- Reference: [Martin Fowler - Anti-Corruption Layer](https://martinfowler.com/bliki/AntiCorruptionLayer.html)
+
+### Microsoft Guidance
+
+**Azure Architecture Center:**
+- "Implement a facade or adapter layer between different subsystems that don't share the same semantics"
+- Isolate subsystems by placing an anti-corruption layer between them
+- Reference: [Microsoft - ACL Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/anti-corruption-layer)
+
+**When to Use:**
+- Integrating with legacy systems
+- Migrating from monolith to microservices
+- Working with third-party APIs
+- Reference: [Microsoft - ACL When to Use](https://learn.microsoft.com/en-us/azure/architecture/patterns/anti-corruption-layer#when-to-use-this-pattern)
+
+### Components of ACL
+
+**Facade:**
+- Simplified interface to external system
+- Hides complexity from domain
+- Reference: [Refactoring Guru - Facade](https://refactoring.guru/design-patterns/facade)
+
+**Adapter:**
+- Translates between interfaces
+- Maps external model to domain model
+- Reference: [Refactoring Guru - Adapter](https://refactoring.guru/design-patterns/adapter)
+
+**Translator:**
+- Converts data structures
+- Maps field names and types
+- Handles semantic differences
+- Reference: [Evans DDD - Model Translation](https://www.domainlanguage.com/)
+
+### Benefits
+
+**Isolation:**
+- Changes to external system don't ripple through domain
+- Domain model remains pure
+- Reference: [Microsoft - ACL Benefits](https://learn.microsoft.com/en-us/azure/architecture/patterns/anti-corruption-layer)
+
+**Gradual Migration:**
+- Replace legacy components incrementally
+- Strangler Fig pattern compatibility
+- Reference: [Martin Fowler - Strangler Fig](https://martinfowler.com/bliki/StranglerFigApplication.html)
+
+---
+
+## 29. Ubiquitous Language
+
+### Eric Evans: Domain-Driven Design (2003)
+
+**Original Definition:**
+- Chapter 2: "Communication and the Use of Language"
+- "A language structured around the domain model and used by all team members"
+- "The vocabulary of that Ubiquitous Language includes the names of classes and prominent operations"
+- Reference: [Martin Fowler - Ubiquitous Language](https://martinfowler.com/bliki/UbiquitousLanguage.html)
+
+**Key Principles:**
+- Shared by developers and domain experts
+- Used in code, conversations, and documentation
+- Changes to language reflect model changes
+- Reference: [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+
+### Why It Matters
+
+**Communication Benefits:**
+- Reduces translation between business and tech
+- Catches misunderstandings early
+- Domain experts can read code names
+- Reference: [InfoQ - Ubiquitous Language](https://www.infoq.com/articles/ddd-ubiquitous-language/)
+
+**Design Benefits:**
+- Model reflects real domain concepts
+- Code becomes self-documenting
+- Easier onboarding for new team members
+- Reference: [Vaughn Vernon - Implementing DDD](https://www.amazon.com/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577)
+
+### Building Ubiquitous Language
+
+**Glossary:**
+- Document key terms and definitions
+- Keep updated as understanding evolves
+- Reference: [DDD Community - Glossary](https://thedomaindrivendesign.io/glossary/)
+
+**Event Storming:**
+- Collaborative workshop technique
+- Discover domain events and concepts
+- Build shared understanding and language
+- Reference: [Alberto Brandolini - Event Storming](https://www.eventstorming.com/)
+
+### Common Pitfalls
+
+**Inconsistent Terminology:**
+- Same concept with different names (Customer/Client/User)
+- Different concepts with same name
+- Reference: [Domain Language - Building UL](https://www.domainlanguage.com/)
+
+**Technical Terms in Domain:**
+- "DTO", "Entity", "Repository" are technical
+- Domain should use business terms
+- Reference: [Evans DDD - Model-Driven Design](https://www.domainlanguage.com/)
+
+---
+
 ## Conclusion
 
 The code quality detection rules implemented in Guardian are firmly grounded in:
 
-1. **Academic Research**: Peer-reviewed papers on software maintainability, complexity metrics, code quality, technical debt prioritization, and severity classification
+1. **Academic Research**: Peer-reviewed papers on software maintainability, complexity metrics, code quality, technical debt prioritization, severity classification, and distributed systems (Sagas)
 2. **Industry Standards**: ISO/IEC 25010, SonarQube rules, OWASP security guidelines, Google and Airbnb style guides
 3. **Authoritative Books**:
+   - Gang of Four's "Design Patterns" (1994)
+   - Bertrand Meyer's "Object-Oriented Software Construction" (1988, 1997)
    - Robert C. Martin's "Clean Architecture" (2017)
    - Vaughn Vernon's "Implementing Domain-Driven Design" (2013)
+   - Chris Richardson's "Microservices Patterns" (2018)
    - Eric Evans' "Domain-Driven Design" (2003)
    - Martin Fowler's "Patterns of Enterprise Application Architecture" (2002)
    - Martin Fowler's "Refactoring" (1999, 2018)
    - Steve McConnell's "Code Complete" (1993, 2004)
-4. **Expert Guidance**: Martin Fowler, Robert C. Martin (Uncle Bob), Eric Evans, Vaughn Vernon, Alistair Cockburn, Kent Beck
+   - Joshua Bloch's "Effective Java" (2001, 2018)
+   - Mark Seemann's "Dependency Injection in .NET" (2011, 2019)
+   - Bobby Woolf's "Null Object" in PLoPD3 (1997)
+4. **Expert Guidance**: Martin Fowler, Robert C. Martin (Uncle Bob), Eric Evans, Vaughn Vernon, Alistair Cockburn, Kent Beck, Greg Young, Bertrand Meyer, Mark Seemann, Chris Richardson, Alberto Brandolini
 5. **Security Standards**: OWASP Secrets Management, GitHub Secret Scanning, GitGuardian best practices
 6. **Open Source Tools**: ArchUnit, SonarQube, ESLint, Secretlint - widely adopted in enterprise environments
+7. **DDD Tactical & Strategic Patterns**: Domain Events, Value Objects, Entities, Aggregates, Bounded Contexts, Anti-Corruption Layer, Ubiquitous Language, Specifications, Factories
+8. **Architectural Patterns**: CQS/CQRS, Saga, Visitor/Double Dispatch, Null Object, Persistence Ignorance
 
 These rules represent decades of software engineering wisdom, empirical research, security best practices, and battle-tested practices from the world's leading software organizations and thought leaders.
 
@@ -845,9 +1678,9 @@ These rules represent decades of software engineering wisdom, empirical research
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: 2025-11-26
+**Document Version**: 2.0
+**Last Updated**: 2025-12-04
 **Questions or want to contribute research?**
 - 📧 Email: fozilbek.samiyev@gmail.com
 - 🐙 GitHub: https://github.com/samiyev/puaros/issues
-**Based on research as of**: November 2025
+**Based on research as of**: December 2025
