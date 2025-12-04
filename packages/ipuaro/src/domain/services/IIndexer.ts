@@ -21,6 +21,7 @@ export interface ScanResult {
     type: "file" | "directory" | "symlink"
     size: number
     lastModified: number
+    symlinkTarget?: string
 }
 
 /**
@@ -46,7 +47,7 @@ export interface IIndexer {
     /**
      * Parse file content into AST.
      */
-    parseFile(content: string, language: "ts" | "tsx" | "js" | "jsx"): FileAST
+    parseFile(content: string, language: "ts" | "tsx" | "js" | "jsx" | "json" | "yaml"): FileAST
 
     /**
      * Analyze file and compute metadata.

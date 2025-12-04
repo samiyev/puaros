@@ -2,6 +2,8 @@ import { builtinModules } from "node:module"
 import Parser from "tree-sitter"
 import TypeScript from "tree-sitter-typescript"
 import JavaScript from "tree-sitter-javascript"
+import JSON from "tree-sitter-json"
+import * as yamlParser from "yaml"
 import {
     createEmptyFileAST,
     type ExportInfo,
@@ -13,7 +15,7 @@ import {
 } from "../../domain/value-objects/FileAST.js"
 import { FieldName, NodeType } from "./tree-sitter-types.js"
 
-type Language = "ts" | "tsx" | "js" | "jsx"
+type Language = "ts" | "tsx" | "js" | "jsx" | "json" | "yaml"
 type SyntaxNode = Parser.SyntaxNode
 
 /**
@@ -39,12 +41,20 @@ export class ASTParser {
         jsParser.setLanguage(JavaScript)
         this.parsers.set("js", jsParser)
         this.parsers.set("jsx", jsParser)
+
+        const jsonParser = new Parser()
+        jsonParser.setLanguage(JSON)
+        this.parsers.set("json", jsonParser)
     }
 
     /**
      * Parse source code and extract AST information.
      */
     parse(content: string, language: Language): FileAST {
+        if (language === "yaml") {
+            return this.parseYAML(content)
+        }
+
         const parser = this.parsers.get(language)
         if (!parser) {
             return {
@@ -75,8 +85,77 @@ export class ASTParser {
         }
     }
 
+    /**
+     * Parse YAML content using yaml package.
+     */
+    private parseYAML(content: string): FileAST {
+        const ast = createEmptyFileAST()
+
+        try {
+            const doc = yamlParser.parseDocument(content)
+
+            if (doc.errors.length > 0) {
+                return {
+                    ...createEmptyFileAST(),
+                    parseError: true,
+                    parseErrorMessage: doc.errors[0].message,
+                }
+            }
+
+            const contents = doc.contents
+
+            if (yamlParser.isSeq(contents)) {
+                ast.exports.push({
+                    name: "(array)",
+                    line: 1,
+                    isDefault: false,
+                    kind: "variable",
+                })
+            } else if (yamlParser.isMap(contents)) {
+                for (const item of contents.items) {
+                    if (yamlParser.isPair(item) && yamlParser.isScalar(item.key)) {
+                        const keyRange = item.key.range
+                        const line = keyRange ? this.getLineFromOffset(content, keyRange[0]) : 1
+                        ast.exports.push({
+                            name: String(item.key.value),
+                            line,
+                            isDefault: false,
+                            kind: "variable",
+                        })
+                    }
+                }
+            }
+
+            return ast
+        } catch (error) {
+            return {
+                ...createEmptyFileAST(),
+                parseError: true,
+                parseErrorMessage: error instanceof Error ? error.message : "YAML parse error",
+            }
+        }
+    }
+
+    /**
+     * Get line number from character offset.
+     */
+    private getLineFromOffset(content: string, offset: number): number {
+        let line = 1
+        for (let i = 0; i < offset && i < content.length; i++) {
+            if (content[i] === "\n") {
+                line++
+            }
+        }
+        return line
+    }
+
     private extractAST(root: SyntaxNode, language: Language): FileAST {
         const ast = createEmptyFileAST()
+
+        if (language === "json") {
+            return this.extractJSONStructure(root, ast)
+        }
+
         const isTypeScript = language === "ts" || language === "tsx"
 
         for (const child of root.children) {
@@ -547,5 +626,38 @@ export class ASTParser {
             return text.slice(1, -1)
         }
         return text
+    }
+
+    /**
+     * Extract structure from JSON file.
+     * For JSON files, we extract top-level keys from objects.
+     */
+    private extractJSONStructure(root: SyntaxNode, ast: FileAST): FileAST {
+        for (const child of root.children) {
+            if (child.type === "object") {
+                this.extractJSONKeys(child, ast)
+            }
+        }
+        return ast
+    }
+
+    /**
+     * Extract keys from JSON object.
+     */
+    private extractJSONKeys(node: SyntaxNode, ast: FileAST): void {
+        for (const child of node.children) {
+            if (child.type === "pair") {
+                const keyNode = child.childForFieldName("key")
+                if (keyNode) {
+                    const keyName = this.getStringValue(keyNode)
+                    ast.exports.push({
+                        name: keyName,
+                        line: keyNode.startPosition.row + 1,
+                        isDefault: false,
+                        kind: "variable",
+                    })
+                }
+            }
+        }
     }
 }

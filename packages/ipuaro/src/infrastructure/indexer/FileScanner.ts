@@ -96,12 +96,27 @@ export class FileScanner {
             const stats = await this.safeStats(fullPath)
 
             if (stats) {
-                yield {
+                const type = stats.isSymbolicLink()
+                    ? "symlink"
+                    : stats.isDirectory()
+                      ? "directory"
+                      : "file"
+
+                const result: ScanResult = {
                     path: relativePath,
-                    type: "file",
+                    type,
                     size: stats.size,
                     lastModified: stats.mtimeMs,
                 }
+
+                if (type === "symlink") {
+                    const target = await this.safeReadlink(fullPath)
+                    if (target) {
+                        result.symlinkTarget = target
+                    }
+                }
+
+                yield result
             }
         }
     }
@@ -127,10 +142,22 @@ export class FileScanner {
 
     /**
      * Safely get file stats without throwing.
+     * Uses lstat to get information about symlinks themselves.
      */
     private async safeStats(filePath: string): Promise<Stats | null> {
         try {
-            return await fs.stat(filePath)
+            return await fs.lstat(filePath)
+        } catch {
+            return null
+        }
+    }
+
+    /**
+     * Safely read symlink target without throwing.
+     */
+    private async safeReadlink(filePath: string): Promise<string | null> {
+        try {
+            return await fs.readlink(filePath)
         } catch {
             return null
         }

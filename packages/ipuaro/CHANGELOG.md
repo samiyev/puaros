@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2025-12-04 - JSON/YAML & Symlinks
+
+### Added
+
+- **JSON AST Parsing**
+  - Parse JSON files using `tree-sitter-json`
+  - Extract top-level keys as exports for indexing
+  - 2 unit tests for JSON parsing
+
+- **YAML AST Parsing**
+  - Parse YAML files using `yaml` npm package (chosen over `tree-sitter-yaml` due to native binding compatibility issues)
+  - Extract top-level keys from mappings
+  - Detect root-level arrays
+  - Handle parse errors gracefully
+  - 6 unit tests for YAML parsing (empty, null, errors, line tracking)
+
+- **Symlinks Metadata**
+  - Added `symlinkTarget?: string` to `ScanResult` interface
+  - `FileScanner.safeReadlink()` extracts symlink targets
+  - Symlinks detected during file scanning
+
+### Changed
+
+- **ASTParser**
+  - Added `parseYAML()` method using `yaml` package
+  - Added `getLineFromOffset()` helper for accurate line numbers
+  - Checks `doc.errors` for YAML parse errors
+  - Language type now includes `"json" | "yaml"`
+
+### Technical Details
+
+- Total tests: 1687 passed (was 1679, +8 new tests)
+- Coverage: 97.5% lines, 91.21% branches, 98.58% functions
+- 0 ESLint errors, 5 warnings (acceptable TUI complexity warnings)
+- Dependencies: Added `yaml@^2.8.2`, removed `tree-sitter-yaml`
+
+### ROADMAP Update
+
+Verified that v0.20.0, v0.21.0 were already implemented but not documented:
+- v0.20.0: IndexProject (184 LOC, 318 LOC tests) and ExecuteTool (225 LOC) were complete
+- v0.21.0: Multiline Input, Syntax Highlighting (167 LOC, 24 tests) were complete
+- Updated ROADMAP.md to reflect actual implementation status
+
+---
+
 ## [0.22.5] - 2025-12-02 - Commands Configuration
 
 ### Added

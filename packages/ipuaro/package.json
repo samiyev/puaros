@@ -1,6 +1,6 @@
 {
     "name": "@samiyev/ipuaro",
-    "version": "0.22.4",
+    "version": "0.22.5",
     "description": "Local AI agent for codebase operations with infinite context feeling",
     "author": "Fozilbek Samiyev <fozilbek.samiyev@gmail.com>",
     "license": "MIT",
@@ -44,7 +44,9 @@
         "simple-git": "^3.27.0",
         "tree-sitter": "^0.21.1",
         "tree-sitter-javascript": "^0.21.0",
+        "tree-sitter-json": "^0.24.8",
         "tree-sitter-typescript": "^0.21.2",
+        "yaml": "^2.8.2",
         "zod": "^3.23.8"
     },
     "devDependencies": {

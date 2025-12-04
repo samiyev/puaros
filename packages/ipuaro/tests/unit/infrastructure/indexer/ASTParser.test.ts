@@ -404,4 +404,106 @@ function mix(
             expect(ast.exports.length).toBeGreaterThanOrEqual(4)
         })
     })
+
+    describe("JSON parsing", () => {
+        it("should extract top-level keys from JSON object", () => {
+            const json = `{
+    "name": "test",
+    "version": "1.0.0",
+    "dependencies": {},
+    "scripts": {}
+}`
+            const ast = parser.parse(json, "json")
+
+            expect(ast.parseError).toBe(false)
+            expect(ast.exports).toHaveLength(4)
+            expect(ast.exports.map((e) => e.name)).toEqual([
+                "name",
+                "version",
+                "dependencies",
+                "scripts",
+            ])
+            expect(ast.exports.every((e) => e.kind === "variable")).toBe(true)
+        })
+
+        it("should handle empty JSON object", () => {
+            const json = `{}`
+            const ast = parser.parse(json, "json")
+
+            expect(ast.parseError).toBe(false)
+            expect(ast.exports).toHaveLength(0)
+        })
+    })
+
+    describe("YAML parsing", () => {
+        it("should extract top-level keys from YAML", () => {
+            const yaml = `name: test
+version: 1.0.0
+dependencies:
+  foo: ^1.0.0
+scripts:
+  test: vitest`
+
+            const ast = parser.parse(yaml, "yaml")
+
+            expect(ast.parseError).toBe(false)
+            expect(ast.exports.length).toBeGreaterThanOrEqual(4)
+            expect(ast.exports.map((e) => e.name)).toContain("name")
+            expect(ast.exports.map((e) => e.name)).toContain("version")
+            expect(ast.exports.every((e) => e.kind === "variable")).toBe(true)
+        })
+
+        it("should handle YAML array at root", () => {
+            const yaml = `- item1
+- item2
+- item3`
+
+            const ast = parser.parse(yaml, "yaml")
+
+            expect(ast.parseError).toBe(false)
+            expect(ast.exports).toHaveLength(1)
+            expect(ast.exports[0].name).toBe("(array)")
+        })
+
+        it("should handle empty YAML", () => {
+            const yaml = ``
+
+            const ast = parser.parse(yaml, "yaml")
+
+            expect(ast.parseError).toBe(false)
+            expect(ast.exports).toHaveLength(0)
+        })
+
+        it("should handle YAML with null content", () => {
+            const yaml = `null`
+
+            const ast = parser.parse(yaml, "yaml")
+
+            expect(ast.parseError).toBe(false)
+            expect(ast.exports).toHaveLength(0)
+        })
+
+        it("should handle invalid YAML with parse error", () => {
+            const yaml = `{invalid: yaml: syntax: [}`
+
+            const ast = parser.parse(yaml, "yaml")
+
+            expect(ast.parseError).toBe(true)
+            expect(ast.parseErrorMessage).toBeDefined()
+        })
+
+        it("should track correct line numbers for YAML keys", () => {
+            const yaml = `first: value1
+second: value2
+third: value3`
+
+            const ast = parser.parse(yaml, "yaml")
+
+            expect(ast.parseError).toBe(false)
+            expect(ast.exports).toHaveLength(3)
+            expect(ast.exports[0].line).toBe(1)
+            expect(ast.exports[1].line).toBe(2)
+            expect(ast.exports[2].line).toBe(3)
+        })
+    })
 })
