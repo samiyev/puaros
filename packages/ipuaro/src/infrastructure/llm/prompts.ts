@@ -204,6 +204,54 @@ function formatFunctionSignature(fn: FileAST["functions"][0]): string {
 }
 
 /**
+ * Format an interface signature with fields.
+ * Example: "interface User extends Base { id: string, name: string, email?: string }"
+ */
+function formatInterfaceSignature(iface: FileAST["interfaces"][0]): string {
+    const extList = iface.extends ?? []
+    const ext = extList.length > 0 ? ` extends ${extList.join(", ")}` : ""
+
+    if (iface.properties.length === 0) {
+        return `interface ${iface.name}${ext}`
+    }
+
+    const fields = iface.properties
+        .map((p) => {
+            const readonly = p.isReadonly ? "readonly " : ""
+            const optional = p.name.endsWith("?") ? "" : ""
+            const type = p.type ? `: ${p.type}` : ""
+            return `${readonly}${p.name}${optional}${type}`
+        })
+        .join(", ")
+
+    return `interface ${iface.name}${ext} { ${fields} }`
+}
+
+/**
+ * Format a type alias signature with definition.
+ * Example: "type UserId = string" or "type Handler = (event: Event) => void"
+ */
+function formatTypeAliasSignature(type: FileAST["typeAliases"][0]): string {
+    if (!type.definition) {
+        return `type ${type.name}`
+    }
+
+    const definition = truncateDefinition(type.definition, 80)
+    return `type ${type.name} = ${definition}`
+}
+
+/**
+ * Truncate long type definitions for display.
+ */
+function truncateDefinition(definition: string, maxLength: number): string {
+    const normalized = definition.replace(/\s+/g, " ").trim()
+    if (normalized.length <= maxLength) {
+        return normalized
+    }
+    return `${normalized.slice(0, maxLength - 3)}...`
+}
+
+/**
  * Format a single file's AST summary.
  * When includeSignatures is true, shows full function signatures.
  * When false, shows compact format with just names.
@@ -239,15 +287,13 @@ function formatFileSummary(
 
     if (ast.interfaces.length > 0) {
         for (const iface of ast.interfaces) {
-            const extList = iface.extends ?? []
-            const ext = extList.length > 0 ? ` extends ${extList.join(", ")}` : ""
-            lines.push(`- interface ${iface.name}${ext}`)
+            lines.push(`- ${formatInterfaceSignature(iface)}`)
         }
     }
 
     if (ast.typeAliases.length > 0) {
         for (const type of ast.typeAliases) {
-            lines.push(`- type ${type.name}`)
+            lines.push(`- ${formatTypeAliasSignature(type)}`)
         }
     }
 

@@ -224,6 +224,62 @@ describe("ASTParser", () => {
             const ast = parser.parse(code, "ts")
             expect(ast.typeAliases[0].isExported).toBe(true)
         })
+
+        it("should extract type alias definition (simple)", () => {
+            const code = `type UserId = string`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe("string")
+        })
+
+        it("should extract type alias definition (union)", () => {
+            const code = `type Status = "pending" | "active" | "done"`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe('"pending" | "active" | "done"')
+        })
+
+        it("should extract type alias definition (intersection)", () => {
+            const code = `type AdminUser = User & Admin`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe("User & Admin")
+        })
+
+        it("should extract type alias definition (object type)", () => {
+            const code = `type Point = { x: number; y: number }`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe("{ x: number; y: number }")
+        })
+
+        it("should extract type alias definition (function type)", () => {
+            const code = `type Handler = (event: Event) => void`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe("(event: Event) => void")
+        })
+
+        it("should extract type alias definition (generic)", () => {
+            const code = `type Result<T> = { success: boolean; data: T }`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe("{ success: boolean; data: T }")
+        })
+
+        it("should extract type alias definition (array)", () => {
+            const code = `type UserIds = string[]`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe("string[]")
+        })
+
+        it("should extract type alias definition (tuple)", () => {
+            const code = `type Pair = [string, number]`
+            const ast = parser.parse(code, "ts")
+            expect(ast.typeAliases).toHaveLength(1)
+            expect(ast.typeAliases[0].definition).toBe("[string, number]")
+        })
     })
 
     describe("exports", () => {

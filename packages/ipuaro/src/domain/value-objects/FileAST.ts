@@ -129,6 +129,8 @@ export interface TypeAliasInfo {
     line: number
     /** Whether it's exported */
     isExported: boolean
+    /** Type definition (e.g., "string", "User & Admin", "{ id: string }") */
+    definition?: string
 }
 
 export interface FileAST {

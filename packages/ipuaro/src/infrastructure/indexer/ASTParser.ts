@@ -554,10 +554,14 @@ export class ASTParser {
             return
         }
 
+        const valueNode = node.childForFieldName(FieldName.VALUE)
+        const definition = valueNode?.text
+
         ast.typeAliases.push({
             name: nameNode.text,
             line: node.startPosition.row + 1,
             isExported,
+            definition,
         })
     }
 

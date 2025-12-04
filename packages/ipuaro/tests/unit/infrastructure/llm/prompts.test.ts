@@ -1086,4 +1086,412 @@ describe("prompts", () => {
             expect(context).toContain("- interface AdminUser extends User, Admin")
         })
     })
+
+    describe("interface fields (0.24.2)", () => {
+        it("should format interface with fields", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["user.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "user.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [
+                            {
+                                name: "User",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                properties: [
+                                    {
+                                        name: "id",
+                                        line: 2,
+                                        type: "string",
+                                        visibility: "public",
+                                        isStatic: false,
+                                        isReadonly: false,
+                                    },
+                                    {
+                                        name: "name",
+                                        line: 3,
+                                        type: "string",
+                                        visibility: "public",
+                                        isStatic: false,
+                                        isReadonly: false,
+                                    },
+                                    {
+                                        name: "email",
+                                        line: 4,
+                                        type: "string",
+                                        visibility: "public",
+                                        isStatic: false,
+                                        isReadonly: false,
+                                    },
+                                ],
+                                extends: [],
+                                isExported: true,
+                            },
+                        ],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("interface User { id: string, name: string, email: string }")
+        })
+
+        it("should format interface with extends and fields", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [
+                            {
+                                name: "AdminUser",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                properties: [
+                                    {
+                                        name: "role",
+                                        line: 2,
+                                        type: "string",
+                                        visibility: "public",
+                                        isStatic: false,
+                                        isReadonly: false,
+                                    },
+                                ],
+                                extends: ["User"],
+                                isExported: true,
+                            },
+                        ],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain(
+                "interface AdminUser extends User { role: string }",
+            )
+        })
+
+        it("should format interface with readonly fields", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [
+                            {
+                                name: "Config",
+                                lineStart: 1,
+                                lineEnd: 3,
+                                properties: [
+                                    {
+                                        name: "version",
+                                        line: 2,
+                                        type: "string",
+                                        visibility: "public",
+                                        isStatic: false,
+                                        isReadonly: true,
+                                    },
+                                ],
+                                extends: [],
+                                isExported: true,
+                            },
+                        ],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("interface Config { readonly version: string }")
+        })
+
+        it("should format interface with no type annotation", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [
+                            {
+                                name: "Loose",
+                                lineStart: 1,
+                                lineEnd: 3,
+                                properties: [
+                                    {
+                                        name: "data",
+                                        line: 2,
+                                        visibility: "public",
+                                        isStatic: false,
+                                        isReadonly: false,
+                                    },
+                                ],
+                                extends: [],
+                                isExported: true,
+                            },
+                        ],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("interface Loose { data }")
+        })
+    })
+
+    describe("type alias definitions (0.24.2)", () => {
+        it("should format type alias with definition", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [
+                            {
+                                name: "UserId",
+                                line: 1,
+                                isExported: true,
+                                definition: "string",
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- type UserId = string")
+        })
+
+        it("should format union type alias", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [
+                            {
+                                name: "Status",
+                                line: 1,
+                                isExported: true,
+                                definition: '"pending" | "active" | "done"',
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain('- type Status = "pending" | "active" | "done"')
+        })
+
+        it("should format intersection type alias", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [
+                            {
+                                name: "AdminUser",
+                                line: 1,
+                                isExported: true,
+                                definition: "User & Admin",
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- type AdminUser = User & Admin")
+        })
+
+        it("should truncate long type definitions", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const longDefinition =
+                "{ id: string, name: string, email: string, phone: string, address: string, city: string, country: string, zip: string }"
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [
+                            {
+                                name: "BigType",
+                                line: 1,
+                                isExported: true,
+                                definition: longDefinition,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- type BigType = { id: string")
+            expect(context).toContain("...")
+        })
+
+        it("should format type alias without definition (fallback)", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [
+                            {
+                                name: "Unknown",
+                                line: 1,
+                                isExported: true,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- type Unknown")
+            expect(context).not.toContain("- type Unknown =")
+        })
+
+        it("should format function type alias", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["types.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "types.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [
+                            {
+                                name: "Handler",
+                                line: 1,
+                                isExported: true,
+                                definition: "(event: Event) => void",
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- type Handler = (event: Event) => void")
+        })
+    })
 })

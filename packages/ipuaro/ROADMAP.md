@@ -1333,40 +1333,40 @@ class ErrorHandler {
 **Priority:** HIGH
 **Status:** Complete (v0.19.0 released)
 
-Рефакторинг: переход на чистый XML формат для tool calls (как в CONCEPT.md).
+Refactoring: transition to pure XML format for tool calls (as in CONCEPT.md).
 
-### Текущая проблема
+### Current Problem
 
-OllamaClient использует Ollama native tool calling (JSON Schema), а ResponseParser реализует XML парсинг. Это создаёт путаницу и не соответствует CONCEPT.md.
+OllamaClient uses Ollama native tool calling (JSON Schema), while ResponseParser implements XML parsing. This creates confusion and doesn't match CONCEPT.md.
 
 ### 0.19.1 - OllamaClient Refactor
 
 ```typescript
 // src/infrastructure/llm/OllamaClient.ts
 
-// БЫЛО:
-// - Передаём tools в Ollama SDK format
-// - Извлекаем tool_calls из response.message.tool_calls
+// BEFORE:
+// - Pass tools in Ollama SDK format
+// - Extract tool_calls from response.message.tool_calls
 
-// СТАНЕТ:
-// - НЕ передаём tools в SDK
-// - Tools описаны в system prompt как XML
-// - LLM возвращает XML в content
-// - Парсим через ResponseParser
+// AFTER:
+// - DON'T pass tools to SDK
+// - Tools described in system prompt as XML
+// - LLM returns XML in content
+// - Parse via ResponseParser
 ```
 
-**Изменения:**
-- [x] Удалить `convertTools()` метод
-- [x] Удалить `extractToolCalls()` метод
-- [x] Убрать передачу `tools` в `client.chat()`
-- [x] Возвращать только `content` без `toolCalls`
+**Changes:**
+- [x] Remove `convertTools()` method
+- [x] Remove `extractToolCalls()` method
+- [x] Remove `tools` from `client.chat()` call
+- [x] Return only `content` without `toolCalls`
 
 ### 0.19.2 - System Prompt Update
 
 ```typescript
 // src/infrastructure/llm/prompts.ts
 
-// Добавить в SYSTEM_PROMPT полное описание XML формата:
+// Add full XML format description to SYSTEM_PROMPT:
 
 const TOOL_FORMAT_INSTRUCTIONS = `
 ## Tool Calling Format
@@ -1397,73 +1397,73 @@ Always wait for tool results before making conclusions.
 `
 ```
 
-**Изменения:**
-- [x] Добавить `TOOL_FORMAT_INSTRUCTIONS` в prompts.ts
-- [x] Включить в `SYSTEM_PROMPT`
-- [x] Добавить примеры для всех 18 tools
+**Changes:**
+- [x] Add `TOOL_FORMAT_INSTRUCTIONS` to prompts.ts
+- [x] Include in `SYSTEM_PROMPT`
+- [x] Add examples for all 18 tools
 
 ### 0.19.3 - HandleMessage Simplification
 
 ```typescript
 // src/application/use-cases/HandleMessage.ts
 
-// БЫЛО:
+// BEFORE:
 // const response = await this.llm.chat(messages)
 // const parsed = parseToolCalls(response.content)
 
-// СТАНЕТ:
-// const response = await this.llm.chat(messages)  // без tools
-// const parsed = parseToolCalls(response.content) // единственный источник
+// AFTER:
+// const response = await this.llm.chat(messages)  // without tools
+// const parsed = parseToolCalls(response.content) // single source
 ```
 
-**Изменения:**
-- [x] Убрать передачу tool definitions в `llm.chat()`
-- [x] ResponseParser — единственный источник tool calls
-- [x] Упростить логику обработки
+**Changes:**
+- [x] Remove tool definitions from `llm.chat()`
+- [x] ResponseParser — single source of tool calls
+- [x] Simplify processing logic
 
 ### 0.19.4 - ILLMClient Interface Update
 
 ```typescript
 // src/domain/services/ILLMClient.ts
 
-// БЫЛО:
+// BEFORE:
 interface ILLMClient {
     chat(messages: ChatMessage[], tools?: ToolDef[]): Promise<LLMResponse>
 }
 
-// СТАНЕТ:
+// AFTER:
 interface ILLMClient {
     chat(messages: ChatMessage[]): Promise<LLMResponse>
-    // tools больше не передаются - они в system prompt
+    // tools no longer passed - they're in system prompt
 }
 ```
 
-**Изменения:**
-- [x] Убрать `tools` параметр из `chat()`
-- [x] Убрать `toolCalls` из `LLMResponse` (парсятся из content)
-- [x] Обновить все реализации
+**Changes:**
+- [x] Remove `tools` parameter from `chat()`
+- [x] Remove `toolCalls` from `LLMResponse` (parsed from content)
+- [x] Update all implementations
 
 ### 0.19.5 - ResponseParser Enhancements
 
 ```typescript
 // src/infrastructure/llm/ResponseParser.ts
 
-// Улучшения:
-// - Лучшая обработка ошибок парсинга
-// - Поддержка CDATA для многострочного content
-// - Валидация имён tools
+// Improvements:
+// - Better error handling for parsing
+// - CDATA support for multiline content
+// - Tool name validation
 ```
 
-**Изменения:**
-- [x] Добавить поддержку `<![CDATA[...]]>` для content
-- [x] Валидация: tool name должен быть из известного списка
-- [x] Улучшить сообщения об ошибках парсинга
+**Changes:**
+- [x] Add `<![CDATA[...]]>` support for content
+- [x] Validation: tool name must be from known list
+- [x] Improve parsing error messages
 
 **Tests:**
-- [x] Обновить тесты OllamaClient
-- [x] Обновить тесты HandleMessage
-- [x] Добавить тесты ResponseParser для edge cases
-- [ ] E2E тест полного flow с XML (опционально, может быть в 0.20.0)
+- [x] Update OllamaClient tests
+- [x] Update HandleMessage tests
+- [x] Add ResponseParser tests for edge cases
+- [ ] E2E test for full XML flow (optional, may be in 0.20.0)
 
 ---
 
@@ -1782,101 +1782,101 @@ export interface ScanResult {
 ## Version 0.24.0 - Rich Initial Context 📋
 
 **Priority:** HIGH
-**Status:** In Progress (1/4 complete)
+**Status:** In Progress (2/4 complete)
 
-Улучшение initial context для LLM: добавление сигнатур функций, типов интерфейсов и значений enum. Это позволит LLM отвечать на вопросы о типах и параметрах без tool calls.
+Enhance initial context for LLM: add function signatures, interface field types, and enum values. This allows LLM to answer questions about types and parameters without tool calls.
 
 ### 0.24.1 - Function Signatures with Types ⭐ ✅
 
-**Проблема:** Сейчас LLM видит только имена функций: `fn: getUser, createUser`
-**Решение:** Показать полные сигнатуры: `async getUser(id: string): Promise<User>`
+**Problem:** Currently LLM only sees function names: `fn: getUser, createUser`
+**Solution:** Show full signatures: `async getUser(id: string): Promise<User>`
 
 ```typescript
 // src/infrastructure/llm/prompts.ts changes
 
-// БЫЛО:
+// BEFORE:
 // - src/services/user.ts [fn: getUser, createUser]
 
-// СТАНЕТ:
+// AFTER:
 // ### src/services/user.ts
 // - async getUser(id: string): Promise<User>
 // - async createUser(data: UserDTO): Promise<User>
 // - validateEmail(email: string): boolean
 ```
 
-**Изменения:**
-- [x] Расширить `FunctionInfo` в FileAST для хранения типов параметров и return type (already existed)
-- [x] Обновить `ASTParser.ts` для извлечения типов параметров и return types (arrow functions fixed)
-- [x] Обновить `formatFileSummary()` в prompts.ts для вывода сигнатур
-- [x] Добавить опцию `includeSignatures: boolean` в config
+**Changes:**
+- [x] Extend `FunctionInfo` in FileAST for parameter types and return type (already existed)
+- [x] Update `ASTParser.ts` to extract parameter types and return types (arrow functions fixed)
+- [x] Update `formatFileSummary()` in prompts.ts to output signatures
+- [x] Add `includeSignatures: boolean` option to config
 
-**Зачем:** LLM не будет галлюцинировать параметры и return types.
+**Why:** LLM won't hallucinate parameters and return types.
 
-### 0.24.2 - Interface/Type Field Definitions ⭐
+### 0.24.2 - Interface/Type Field Definitions ⭐ ✅
 
-**Проблема:** LLM видит только `interface: User, UserDTO`
-**Решение:** Показать поля: `User { id: string, name: string, email: string }`
+**Problem:** LLM only sees `interface: User, UserDTO`
+**Solution:** Show fields: `User { id: string, name: string, email: string }`
 
 ```typescript
-// БЫЛО:
+// BEFORE:
 // - src/types/user.ts [interface: User, UserDTO]
 
-// СТАНЕТ:
+// AFTER:
 // ### src/types/user.ts
 // - interface User { id: string, name: string, email: string, createdAt: Date }
 // - interface UserDTO { name: string, email: string }
 // - type UserId = string
 ```
 
-**Изменения:**
-- [ ] Расширить `InterfaceInfo` в FileAST для хранения полей с типами
-- [ ] Обновить `ASTParser.ts` для извлечения полей интерфейсов
-- [ ] Обновить `formatFileSummary()` для вывода полей
-- [ ] Обработка type aliases с их определениями
+**Changes:**
+- [x] Extend `InterfaceInfo` in FileAST for field types (already existed)
+- [x] Update `ASTParser.ts` to extract interface fields (already existed)
+- [x] Update `formatFileSummary()` to output fields
+- [x] Handle type aliases with their definitions
 
-**Зачем:** LLM знает структуру данных, не придумывает поля.
+**Why:** LLM knows data structure, won't invent fields.
 
 ### 0.24.3 - Enum Value Definitions
 
-**Проблема:** LLM видит только `type: Status`
-**Решение:** Показать значения: `Status { Active=1, Inactive=0, Pending=2 }`
+**Problem:** LLM only sees `type: Status`
+**Solution:** Show values: `Status { Active=1, Inactive=0, Pending=2 }`
 
 ```typescript
-// БЫЛО:
+// BEFORE:
 // - src/types/enums.ts [type: Status, Role]
 
-// СТАНЕТ:
+// AFTER:
 // ### src/types/enums.ts
 // - enum Status { Active=1, Inactive=0, Pending=2 }
 // - enum Role { Admin="admin", User="user" }
 ```
 
-**Изменения:**
-- [ ] Добавить `EnumInfo` в FileAST с members и values
-- [ ] Обновить `ASTParser.ts` для извлечения enum members
-- [ ] Обновить `formatFileSummary()` для вывода enum values
+**Changes:**
+- [ ] Add `EnumInfo` to FileAST with members and values
+- [ ] Update `ASTParser.ts` to extract enum members
+- [ ] Update `formatFileSummary()` to output enum values
 
-**Зачем:** LLM знает допустимые значения enum.
+**Why:** LLM knows valid enum values.
 
 ### 0.24.4 - Decorator Extraction
 
-**Проблема:** LLM не видит декораторы (важно для NestJS, Angular)
-**Решение:** Показать декораторы в контексте
+**Problem:** LLM doesn't see decorators (important for NestJS, Angular)
+**Solution:** Show decorators in context
 
 ```typescript
-// СТАНЕТ:
+// AFTER:
 // ### src/controllers/user.controller.ts
 // - @Controller('users') class UserController
 // - @Get(':id') async getUser(id: string): Promise<User>
 // - @Post() @Body() async createUser(data: UserDTO): Promise<User>
 ```
 
-**Изменения:**
-- [ ] Добавить `decorators: string[]` в FunctionInfo и ClassInfo
-- [ ] Обновить `ASTParser.ts` для извлечения декораторов
-- [ ] Обновить контекст для отображения декораторов
+**Changes:**
+- [ ] Add `decorators: string[]` to FunctionInfo and ClassInfo
+- [ ] Update `ASTParser.ts` to extract decorators
+- [ ] Update context to display decorators
 
-**Зачем:** LLM понимает роутинг, DI, guards в NestJS/Angular.
+**Why:** LLM understands routing, DI, guards in NestJS/Angular.
 
 **Tests:**
 - [ ] Unit tests for enhanced ASTParser
@@ -1890,15 +1890,15 @@ export interface ScanResult {
 **Priority:** MEDIUM
 **Status:** Planned
 
-Добавление графовых метрик в initial context: граф зависимостей, circular dependencies, impact score.
+Add graph metrics to initial context: dependency graph, circular dependencies, impact score.
 
 ### 0.25.1 - Inline Dependency Graph
 
-**Проблема:** LLM не видит связи между файлами без tool calls
-**Решение:** Показать граф зависимостей в контексте
+**Problem:** LLM doesn't see file relationships without tool calls
+**Solution:** Show dependency graph in context
 
 ```typescript
-// Добавить в initial context:
+// Add to initial context:
 
 // ## Dependency Graph
 // src/services/user.ts: → types/user, utils/validation ← controllers/user, api/routes
@@ -1906,41 +1906,41 @@ export interface ScanResult {
 // src/utils/validation.ts: ← services/user, services/auth, controllers/*
 ```
 
-**Изменения:**
-- [ ] Добавить `formatDependencyGraph()` в prompts.ts
-- [ ] Использовать данные из `FileMeta.dependencies` и `FileMeta.dependents`
-- [ ] Группировать по hub files (много connections)
-- [ ] Добавить опцию `includeDepsGraph: boolean` в config
+**Changes:**
+- [ ] Add `formatDependencyGraph()` to prompts.ts
+- [ ] Use data from `FileMeta.dependencies` and `FileMeta.dependents`
+- [ ] Group by hub files (many connections)
+- [ ] Add `includeDepsGraph: boolean` option to config
 
-**Зачем:** LLM видит архитектуру без tool call.
+**Why:** LLM sees architecture without tool call.
 
 ### 0.25.2 - Circular Dependencies in Context
 
-**Проблема:** Circular deps вычисляются, но не показываются в контексте
-**Решение:** Показать циклы сразу
+**Problem:** Circular deps are computed but not shown in context
+**Solution:** Show cycles immediately
 
 ```typescript
-// Добавить в initial context:
+// Add to initial context:
 
 // ## ⚠️ Circular Dependencies
 // - services/user → services/auth → services/user
 // - utils/a → utils/b → utils/c → utils/a
 ```
 
-**Изменения:**
-- [ ] Добавить `formatCircularDeps()` в prompts.ts
-- [ ] Получать circular deps из IndexBuilder
-- [ ] Хранить в Redis как отдельный ключ или в meta
+**Changes:**
+- [ ] Add `formatCircularDeps()` to prompts.ts
+- [ ] Get circular deps from IndexBuilder
+- [ ] Store in Redis as separate key or in meta
 
-**Зачем:** LLM сразу видит проблемы архитектуры.
+**Why:** LLM immediately sees architecture problems.
 
 ### 0.25.3 - Impact Score
 
-**Проблема:** LLM не знает какие файлы критичные
-**Решение:** Показать impact score (% кодовой базы, который зависит от файла)
+**Problem:** LLM doesn't know which files are critical
+**Solution:** Show impact score (% of codebase that depends on file)
 
 ```typescript
-// Добавить в initial context:
+// Add to initial context:
 
 // ## High Impact Files
 // | File | Impact | Dependents |
@@ -1950,32 +1950,32 @@ export interface ScanResult {
 // | src/services/user.ts | 34% | 6 files |
 ```
 
-**Изменения:**
-- [ ] Добавить `impactScore: number` в FileMeta (0-100)
-- [ ] Вычислять в MetaAnalyzer: (transitiveDepByCount / totalFiles) * 100
-- [ ] Добавить `formatHighImpactFiles()` в prompts.ts
-- [ ] Показывать top-10 high impact files
+**Changes:**
+- [ ] Add `impactScore: number` to FileMeta (0-100)
+- [ ] Compute in MetaAnalyzer: (transitiveDepByCount / totalFiles) * 100
+- [ ] Add `formatHighImpactFiles()` to prompts.ts
+- [ ] Show top-10 high impact files
 
-**Зачем:** LLM понимает какие файлы критичные для изменений.
+**Why:** LLM understands which files are critical for changes.
 
 ### 0.25.4 - Transitive Dependencies Count
 
-**Проблема:** Сейчас считаем только прямые зависимости
-**Решение:** Добавить транзитивные зависимости в meta
+**Problem:** Currently only counting direct dependencies
+**Solution:** Add transitive dependencies to meta
 
 ```typescript
 // FileMeta additions:
 interface FileMeta {
     // existing...
-    transitiveDepCount: number;    // сколько файлов зависит от этого (транзитивно)
-    transitiveDepByCount: number;  // от скольких файлов зависит этот (транзитивно)
+    transitiveDepCount: number;    // how many files depend on this (transitively)
+    transitiveDepByCount: number;  // how many files this depends on (transitively)
 }
 ```
 
-**Изменения:**
-- [ ] Добавить `computeTransitiveDeps()` в MetaAnalyzer
-- [ ] Использовать DFS с memoization для эффективности
-- [ ] Сохранять в FileMeta
+**Changes:**
+- [ ] Add `computeTransitiveDeps()` to MetaAnalyzer
+- [ ] Use DFS with memoization for efficiency
+- [ ] Store in FileMeta
 
 **Tests:**
 - [ ] Unit tests for graph metrics computation
@@ -2079,7 +2079,7 @@ sessions:list             # List<session_id>
 
 **Last Updated:** 2025-12-04
 **Target Version:** 1.0.0
-**Current Version:** 0.24.0
-**Next Milestones:** v0.24.0 (Rich Context - 1/4 complete), v0.25.0 (Graph Metrics)
+**Current Version:** 0.25.0
+**Next Milestones:** v0.24.0 (Rich Context - 2/4 complete), v0.25.0 (Graph Metrics)
 
 > **Note:** v0.24.0 and v0.25.0 are required for 1.0.0 release. They enable LLM to answer questions about types, signatures, and architecture without tool calls.

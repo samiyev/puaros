@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.0] - 2025-12-04 - Rich Initial Context: Interface Fields & Type Definitions
+
+### Added
+
+- **Interface Field Definitions (0.24.2)**
+  - Interfaces now show their fields in initial context
+  - New format: `interface User { id: string, name: string, email: string }`
+  - Readonly fields marked: `interface Config { readonly version: string }`
+  - Extends still supported: `interface AdminUser extends User { role: string }`
+
+- **Type Alias Definitions (0.24.2)**
+  - Type aliases now show their definitions in initial context
+  - Simple types: `type UserId = string`
+  - Union types: `type Status = "pending" | "active" | "done"`
+  - Intersection types: `type AdminUser = User & Admin`
+  - Function types: `type Handler = (event: Event) => void`
+  - Long definitions truncated at 80 characters with `...`
+
+- **New Helper Functions in prompts.ts**
+  - `formatInterfaceSignature()` - formats interface with fields
+  - `formatTypeAliasSignature()` - formats type alias with definition
+  - `truncateDefinition()` - truncates long type definitions
+
+### Changed
+
+- **FileAST.ts**
+  - Added `definition?: string` field to `TypeAliasInfo` interface
+
+- **ASTParser.ts**
+  - `extractTypeAlias()` now extracts the type definition via `childForFieldName(VALUE)`
+  - Supports all type kinds: simple, union, intersection, object, function, generic, array, tuple
+
+- **prompts.ts**
+  - `formatFileSummary()` now uses `formatInterfaceSignature()` for interfaces
+  - `formatFileSummary()` now uses `formatTypeAliasSignature()` for type aliases
+
+### New Context Format
+
+```
+### src/types/user.ts
+- interface User { id: string, name: string, email: string }
+- interface UserDTO { name: string, email?: string }
+- type UserId = string
+- type Status = "pending" | "active" | "done"
+- type AdminUser = User & Admin
+```
+
+### Technical Details
+
+- Total tests: 1720 passed (was 1702, +18 new tests)
+  - 10 new tests for interface field formatting
+  - 8 new tests for type alias definition extraction
+- Coverage: 97.5% lines, 91.04% branches, 98.6% functions
+- 0 ESLint errors, 1 warning (pre-existing complexity in ASTParser)
+- Build successful
+
+### Notes
+
+This completes the second part of Rich Initial Context milestone:
+- ✅ 0.24.1 - Function Signatures with Types
+- ✅ 0.24.2 - Interface/Type Field Definitions
+- ⏳ 0.24.3 - Enum Value Definitions
+- ⏳ 0.24.4 - Decorator Extraction
+
+---
+
 ## [0.24.0] - 2025-12-04 - Rich Initial Context: Function Signatures
 
 ### Added
