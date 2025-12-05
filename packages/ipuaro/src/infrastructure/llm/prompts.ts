@@ -16,6 +16,7 @@ export interface ProjectStructure {
  */
 export interface BuildContextOptions {
     includeSignatures?: boolean
+    includeDepsGraph?: boolean
 }
 
 /**
@@ -127,10 +128,18 @@ export function buildInitialContext(
 ): string {
     const sections: string[] = []
     const includeSignatures = options?.includeSignatures ?? true
+    const includeDepsGraph = options?.includeDepsGraph ?? true
 
     sections.push(formatProjectHeader(structure))
     sections.push(formatDirectoryTree(structure))
     sections.push(formatFileOverview(asts, metas, includeSignatures))
+
+    if (includeDepsGraph && metas && metas.size > 0) {
+        const depsGraph = formatDependencyGraph(metas)
+        if (depsGraph) {
+            sections.push(depsGraph)
+        }
+    }
 
     return sections.join("\n\n")
 }
@@ -412,6 +421,109 @@ function formatFileFlags(meta?: FileMeta): string {
     }
 
     return flags.length > 0 ? ` (${flags.join(", ")})` : ""
+}
+
+/**
+ * Shorten a file path for display in dependency graph.
+ * Removes common prefixes like "src/" and file extensions.
+ */
+function shortenPath(path: string): string {
+    let short = path
+    if (short.startsWith("src/")) {
+        short = short.slice(4)
+    }
+    // Remove common extensions
+    short = short.replace(/\.(ts|tsx|js|jsx)$/, "")
+    // Remove /index suffix
+    short = short.replace(/\/index$/, "")
+    return short
+}
+
+/**
+ * Format a single dependency graph entry.
+ * Format: "path: → dep1, dep2 ← dependent1, dependent2"
+ */
+function formatDepsEntry(path: string, dependencies: string[], dependents: string[]): string {
+    const parts: string[] = []
+    const shortPath = shortenPath(path)
+
+    if (dependencies.length > 0) {
+        const deps = dependencies.map(shortenPath).join(", ")
+        parts.push(`→ ${deps}`)
+    }
+
+    if (dependents.length > 0) {
+        const deps = dependents.map(shortenPath).join(", ")
+        parts.push(`← ${deps}`)
+    }
+
+    if (parts.length === 0) {
+        return ""
+    }
+
+    return `${shortPath}: ${parts.join(" ")}`
+}
+
+/**
+ * Format dependency graph for all files.
+ * Shows hub files first, then files with dependencies/dependents.
+ *
+ * Format:
+ * ## Dependency Graph
+ * services/user: → types/user, utils/validation ← controllers/user
+ * services/auth: → services/user, utils/jwt ← controllers/auth
+ */
+export function formatDependencyGraph(metas: Map<string, FileMeta>): string | null {
+    if (metas.size === 0) {
+        return null
+    }
+
+    const entries: { path: string; deps: string[]; dependents: string[]; isHub: boolean }[] = []
+
+    for (const [path, meta] of metas) {
+        // Only include files that have connections
+        if (meta.dependencies.length > 0 || meta.dependents.length > 0) {
+            entries.push({
+                path,
+                deps: meta.dependencies,
+                dependents: meta.dependents,
+                isHub: meta.isHub,
+            })
+        }
+    }
+
+    if (entries.length === 0) {
+        return null
+    }
+
+    // Sort: hubs first, then by total connections (desc), then by path
+    entries.sort((a, b) => {
+        if (a.isHub !== b.isHub) {
+            return a.isHub ? -1 : 1
+        }
+        const aTotal = a.deps.length + a.dependents.length
+        const bTotal = b.deps.length + b.dependents.length
+        if (aTotal !== bTotal) {
+            return bTotal - aTotal
+        }
+        return a.path.localeCompare(b.path)
+    })
+
+    const lines: string[] = ["## Dependency Graph", ""]
+
+    for (const entry of entries) {
+        const line = formatDepsEntry(entry.path, entry.deps, entry.dependents)
+        if (line) {
+            lines.push(line)
+        }
+    }
+
+    // Return null if only header (no actual entries)
+    if (lines.length <= 2) {
+        return null
+    }
+
+    return lines.join("\n")
 }
 
 /**

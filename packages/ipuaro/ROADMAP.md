@@ -1884,10 +1884,10 @@ Enhance initial context for LLM: add function signatures, interface field types,
 
 ---
 
-## Version 0.27.0 - Inline Dependency Graph 📊
+## Version 0.27.0 - Inline Dependency Graph 📊 ✅
 
 **Priority:** MEDIUM
-**Status:** Planned
+**Status:** Complete (v0.27.0 released)
 
 ### Description
 
@@ -1904,10 +1904,14 @@ Enhance initial context for LLM: add function signatures, interface field types,
 ```
 
 **Changes:**
-- [ ] Add `formatDependencyGraph()` to prompts.ts
-- [ ] Use data from `FileMeta.dependencies` and `FileMeta.dependents`
-- [ ] Group by hub files (many connections)
-- [ ] Add `includeDepsGraph: boolean` option to config
+- [x] Add `formatDependencyGraph()` to prompts.ts
+- [x] Use data from `FileMeta.dependencies` and `FileMeta.dependents`
+- [x] Group by hub files (many connections)
+- [x] Add `includeDepsGraph: boolean` option to config
+
+**Tests:**
+- [x] Unit tests for formatDependencyGraph() (16 tests)
+- [x] Unit tests for includeDepsGraph config option (5 tests)
 
 **Why:** LLM sees architecture without tool call.
 
@@ -2017,7 +2021,7 @@ interface FileMeta {
 - [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅
 - [x] Rich initial context (v0.24.0-v0.26.0) — function signatures, interface fields, enum values, decorators ✅
-- [ ] Graph metrics in context (v0.27.0-v0.30.0) — dependency graph, circular deps, impact score, transitive deps
+- [ ] Graph metrics in context (v0.27.0-v0.30.0) — dependency graph ✅, circular deps, impact score, transitive deps
 
 ---
 
@@ -2096,7 +2100,7 @@ sessions:list             # List<session_id>
 
 **Last Updated:** 2025-12-05
 **Target Version:** 1.0.0
-**Current Version:** 0.26.0
-**Next Milestones:** v0.27.0 (Dependency Graph), v0.28.0 (Circular Deps), v0.29.0 (Impact Score), v0.30.0 (Transitive Deps)
+**Current Version:** 0.27.0
+**Next Milestones:** v0.28.0 (Circular Deps), v0.29.0 (Impact Score), v0.30.0 (Transitive Deps)
 
-> **Note:** Rich Initial Context complete ✅ (v0.24.0-v0.26.0). Graph Metrics (v0.27.0-v0.30.0) required for 1.0.0 release.
+> **Note:** Rich Initial Context complete ✅ (v0.24.0-v0.26.0). Graph Metrics in progress (v0.27.0 ✅, v0.28.0-v0.30.0 pending) for 1.0.0 release.

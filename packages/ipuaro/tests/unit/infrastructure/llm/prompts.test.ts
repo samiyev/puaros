@@ -4,6 +4,7 @@ import {
     buildInitialContext,
     buildFileContext,
     truncateContext,
+    formatDependencyGraph,
     type ProjectStructure,
 } from "../../../../src/infrastructure/llm/prompts.js"
 import type { FileAST } from "../../../../src/domain/value-objects/FileAST.js"
@@ -2011,6 +2012,388 @@ describe("prompts", () => {
 
             expect(context).toContain("- class SimpleClass")
             expect(context).not.toContain("@")
+        })
+    })
+
+    describe("dependency graph (0.27.0)", () => {
+        describe("formatDependencyGraph", () => {
+            it("should return null for empty metas", () => {
+                const metas = new Map<string, FileMeta>()
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toBeNull()
+            })
+
+            it("should return null when no files have dependencies or dependents", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/isolated.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toBeNull()
+            })
+
+            it("should format file with only dependencies", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/services/user.ts",
+                        {
+                            complexity: { loc: 50, nesting: 2, cyclomaticComplexity: 5, score: 30 },
+                            dependencies: ["src/types/user.ts", "src/utils/validation.ts"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toContain("## Dependency Graph")
+                expect(result).toContain("services/user: → types/user, utils/validation")
+            })
+
+            it("should format file with only dependents", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/types/user.ts",
+                        {
+                            complexity: { loc: 20, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["src/services/user.ts", "src/controllers/user.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "types",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toContain("## Dependency Graph")
+                expect(result).toContain("types/user: ← services/user, controllers/user")
+            })
+
+            it("should format file with both dependencies and dependents", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/services/user.ts",
+                        {
+                            complexity: { loc: 80, nesting: 3, cyclomaticComplexity: 10, score: 50 },
+                            dependencies: ["src/types/user.ts", "src/utils/validation.ts"],
+                            dependents: ["src/controllers/user.ts", "src/api/routes.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toContain("## Dependency Graph")
+                expect(result).toContain(
+                    "services/user: → types/user, utils/validation ← controllers/user, api/routes",
+                )
+            })
+
+            it("should sort hub files first", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/utils/helpers.ts",
+                        {
+                            complexity: { loc: 30, nesting: 1, cyclomaticComplexity: 3, score: 20 },
+                            dependencies: [],
+                            dependents: [
+                                "a.ts",
+                                "b.ts",
+                                "c.ts",
+                                "d.ts",
+                                "e.ts",
+                                "f.ts",
+                                "g.ts",
+                            ],
+                            isHub: true,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                    [
+                        "src/services/user.ts",
+                        {
+                            complexity: { loc: 50, nesting: 2, cyclomaticComplexity: 5, score: 30 },
+                            dependencies: ["src/types/user.ts"],
+                            dependents: ["src/controllers/user.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).not.toBeNull()
+                const lines = result!.split("\n")
+                const hubIndex = lines.findIndex((l) => l.includes("utils/helpers"))
+                const serviceIndex = lines.findIndex((l) => l.includes("services/user"))
+                expect(hubIndex).toBeLessThan(serviceIndex)
+            })
+
+            it("should sort by total connections (descending) for non-hubs", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/a.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["x.ts"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                    [
+                        "src/b.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["x.ts", "y.ts"],
+                            dependents: ["z.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).not.toBeNull()
+                const lines = result!.split("\n")
+                const aIndex = lines.findIndex((l) => l.startsWith("a:"))
+                const bIndex = lines.findIndex((l) => l.startsWith("b:"))
+                expect(bIndex).toBeLessThan(aIndex)
+            })
+
+            it("should shorten src/ prefix", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["src/utils/helpers.ts"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toContain("index: → utils/helpers")
+                expect(result).not.toContain("src/")
+            })
+
+            it("should remove file extensions", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "lib/utils.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["lib/helpers.tsx", "lib/types.js"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toContain("lib/utils: → lib/helpers, lib/types")
+                expect(result).not.toContain(".ts")
+                expect(result).not.toContain(".tsx")
+                expect(result).not.toContain(".js")
+            })
+
+            it("should remove /index suffix", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/components/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["src/utils/index.ts"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toContain("components: → utils")
+                expect(result).not.toContain("/index")
+            })
+
+            it("should handle multiple files in graph", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/services/user.ts",
+                        {
+                            complexity: { loc: 50, nesting: 2, cyclomaticComplexity: 5, score: 30 },
+                            dependencies: ["src/types/user.ts"],
+                            dependents: ["src/controllers/user.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                    [
+                        "src/services/auth.ts",
+                        {
+                            complexity: { loc: 40, nesting: 2, cyclomaticComplexity: 4, score: 25 },
+                            dependencies: ["src/services/user.ts", "src/utils/jwt.ts"],
+                            dependents: ["src/controllers/auth.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const result = formatDependencyGraph(metas)
+
+                expect(result).toContain("## Dependency Graph")
+                expect(result).toContain("services/user: → types/user ← controllers/user")
+                expect(result).toContain(
+                    "services/auth: → services/user, utils/jwt ← controllers/auth",
+                )
+            })
+        })
+
+        describe("buildInitialContext with includeDepsGraph", () => {
+            const structure: ProjectStructure = {
+                name: "test-project",
+                rootPath: "/test",
+                files: ["src/index.ts"],
+                directories: ["src"],
+            }
+
+            const asts = new Map<string, FileAST>([
+                [
+                    "src/index.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            it("should include dependency graph by default", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["src/utils.ts"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const context = buildInitialContext(structure, asts, metas)
+
+                expect(context).toContain("## Dependency Graph")
+                expect(context).toContain("index: → utils")
+            })
+
+            it("should exclude dependency graph when includeDepsGraph is false", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["src/utils.ts"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const context = buildInitialContext(structure, asts, metas, {
+                    includeDepsGraph: false,
+                })
+
+                expect(context).not.toContain("## Dependency Graph")
+            })
+
+            it("should not include dependency graph when metas is undefined", () => {
+                const context = buildInitialContext(structure, asts, undefined, {
+                    includeDepsGraph: true,
+                })
+
+                expect(context).not.toContain("## Dependency Graph")
+            })
+
+            it("should not include dependency graph when metas is empty", () => {
+                const emptyMetas = new Map<string, FileMeta>()
+
+                const context = buildInitialContext(structure, asts, emptyMetas, {
+                    includeDepsGraph: true,
+                })
+
+                expect(context).not.toContain("## Dependency Graph")
+            })
+
+            it("should not include dependency graph when no files have connections", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+
+                const context = buildInitialContext(structure, asts, metas, {
+                    includeDepsGraph: true,
+                })
+
+                expect(context).not.toContain("## Dependency Graph")
+            })
         })
     })
 })

@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0] - 2025-12-05 - Inline Dependency Graph
+
+### Added
+
+- **Dependency Graph in Initial Context (v0.27.0)**
+  - New `## Dependency Graph` section in initial context
+  - Shows file relationships without requiring tool calls
+  - Format: `services/user: → types/user, utils/validation ← controllers/user`
+  - `→` indicates files this file imports (dependencies)
+  - `←` indicates files that import this file (dependents)
+  - Hub files (>5 dependents) shown first
+  - Files sorted by total connections (descending)
+
+- **Configuration Option**
+  - `includeDepsGraph: boolean` in ContextConfigSchema (default: `true`)
+  - `includeDepsGraph` option in `BuildContextOptions`
+  - Users can disable to save tokens: `context.includeDepsGraph: false`
+
+- **New Helper Functions in prompts.ts**
+  - `formatDependencyGraph()` - formats entire dependency graph from metas
+  - `formatDepsEntry()` - formats single file's dependencies/dependents
+  - `shortenPath()` - shortens paths (removes `src/`, extensions, `/index`)
+
+### New Context Format
+
+```
+## Dependency Graph
+
+utils/validation: ← services/user, services/auth, controllers/api
+services/user: → types/user, utils/validation ← controllers/user, api/routes
+services/auth: → services/user, utils/jwt ← controllers/auth
+types/user: ← services/user, services/auth
+```
+
+### Technical Details
+
+- Total tests: 1775 passed (was 1754, +21 new tests)
+  - 16 new tests for formatDependencyGraph()
+  - 5 new tests for includeDepsGraph config option
+- Coverage: 97.48% lines, 91.07% branches, 98.62% functions
+- 0 ESLint errors, 2 warnings (pre-existing complexity in ASTParser and prompts)
+- Build successful
+
+### Notes
+
+This completes v0.27.0 of the Graph Metrics milestone:
+- ✅ 0.27.0 - Inline Dependency Graph
+
+Next milestone: v0.28.0 - Circular Dependencies in Context
+
+---
+
 ## [0.26.0] - 2025-12-05 - Rich Initial Context: Decorator Extraction
 
 ### Added
