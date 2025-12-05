@@ -1884,14 +1884,12 @@ Enhance initial context for LLM: add function signatures, interface field types,
 
 ---
 
-## Version 0.25.0 - Graph Metrics in Context 📊
+## Version 0.27.0 - Inline Dependency Graph 📊
 
 **Priority:** MEDIUM
 **Status:** Planned
 
-Add graph metrics to initial context: dependency graph, circular dependencies, impact score.
-
-### 0.25.1 - Inline Dependency Graph
+### Description
 
 **Problem:** LLM doesn't see file relationships without tool calls
 **Solution:** Show dependency graph in context
@@ -1913,7 +1911,14 @@ Add graph metrics to initial context: dependency graph, circular dependencies, i
 
 **Why:** LLM sees architecture without tool call.
 
-### 0.25.2 - Circular Dependencies in Context
+---
+
+## Version 0.28.0 - Circular Dependencies in Context 🔄
+
+**Priority:** MEDIUM
+**Status:** Planned
+
+### Description
 
 **Problem:** Circular deps are computed but not shown in context
 **Solution:** Show cycles immediately
@@ -1933,7 +1938,14 @@ Add graph metrics to initial context: dependency graph, circular dependencies, i
 
 **Why:** LLM immediately sees architecture problems.
 
-### 0.25.3 - Impact Score
+---
+
+## Version 0.29.0 - Impact Score 📈
+
+**Priority:** MEDIUM
+**Status:** Planned
+
+### Description
 
 **Problem:** LLM doesn't know which files are critical
 **Solution:** Show impact score (% of codebase that depends on file)
@@ -1957,7 +1969,14 @@ Add graph metrics to initial context: dependency graph, circular dependencies, i
 
 **Why:** LLM understands which files are critical for changes.
 
-### 0.25.4 - Transitive Dependencies Count
+---
+
+## Version 0.30.0 - Transitive Dependencies Count 🔢
+
+**Priority:** MEDIUM
+**Status:** Planned
+
+### Description
 
 **Problem:** Currently only counting direct dependencies
 **Solution:** Add transitive dependencies to meta
@@ -1977,8 +1996,7 @@ interface FileMeta {
 - [ ] Store in FileMeta
 
 **Tests:**
-- [ ] Unit tests for graph metrics computation
-- [ ] Unit tests for new context sections
+- [ ] Unit tests for transitive dependencies computation
 - [ ] Performance tests for large codebases
 
 ---
@@ -1998,8 +2016,8 @@ interface FileMeta {
 - [x] 0 ESLint errors ✅
 - [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅
-- [x] Rich initial context (v0.24.0) — function signatures, interface fields, enum values, decorators ✅
-- [ ] Graph metrics in context (v0.25.0) — dependency graph, circular deps, impact score
+- [x] Rich initial context (v0.24.0-v0.26.0) — function signatures, interface fields, enum values, decorators ✅
+- [ ] Graph metrics in context (v0.27.0-v0.30.0) — dependency graph, circular deps, impact score, transitive deps
 
 ---
 
@@ -2079,6 +2097,6 @@ sessions:list             # List<session_id>
 **Last Updated:** 2025-12-05
 **Target Version:** 1.0.0
 **Current Version:** 0.26.0
-**Next Milestones:** v0.25.0 (Graph Metrics - 0/4 complete)
+**Next Milestones:** v0.27.0 (Dependency Graph), v0.28.0 (Circular Deps), v0.29.0 (Impact Score), v0.30.0 (Transitive Deps)
 
-> **Note:** v0.24.0 complete ✅. v0.25.0 (Graph Metrics) is required for 1.0.0 release. It enables LLM to see architecture without tool calls.
+> **Note:** Rich Initial Context complete ✅ (v0.24.0-v0.26.0). Graph Metrics (v0.27.0-v0.30.0) required for 1.0.0 release.
