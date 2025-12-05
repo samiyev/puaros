@@ -5,6 +5,7 @@ import {
     buildFileContext,
     truncateContext,
     formatDependencyGraph,
+    formatCircularDeps,
     type ProjectStructure,
 } from "../../../../src/infrastructure/llm/prompts.js"
 import type { FileAST } from "../../../../src/domain/value-objects/FileAST.js"
@@ -2092,7 +2093,12 @@ describe("prompts", () => {
                     [
                         "src/services/user.ts",
                         {
-                            complexity: { loc: 80, nesting: 3, cyclomaticComplexity: 10, score: 50 },
+                            complexity: {
+                                loc: 80,
+                                nesting: 3,
+                                cyclomaticComplexity: 10,
+                                score: 50,
+                            },
                             dependencies: ["src/types/user.ts", "src/utils/validation.ts"],
                             dependents: ["src/controllers/user.ts", "src/api/routes.ts"],
                             isHub: false,
@@ -2117,15 +2123,7 @@ describe("prompts", () => {
                         {
                             complexity: { loc: 30, nesting: 1, cyclomaticComplexity: 3, score: 20 },
                             dependencies: [],
-                            dependents: [
-                                "a.ts",
-                                "b.ts",
-                                "c.ts",
-                                "d.ts",
-                                "e.ts",
-                                "f.ts",
-                                "g.ts",
-                            ],
+                            dependents: ["a.ts", "b.ts", "c.ts", "d.ts", "e.ts", "f.ts", "g.ts"],
                             isHub: true,
                             isEntryPoint: false,
                             fileType: "source",
@@ -2393,6 +2391,232 @@ describe("prompts", () => {
                 })
 
                 expect(context).not.toContain("## Dependency Graph")
+            })
+        })
+    })
+
+    describe("circular dependencies (0.28.0)", () => {
+        describe("formatCircularDeps", () => {
+            it("should return null for empty array", () => {
+                const result = formatCircularDeps([])
+
+                expect(result).toBeNull()
+            })
+
+            it("should return null for undefined", () => {
+                const result = formatCircularDeps(undefined as unknown as string[][])
+
+                expect(result).toBeNull()
+            })
+
+            it("should format a simple two-node cycle", () => {
+                const cycles = [["src/a.ts", "src/b.ts", "src/a.ts"]]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).toContain("## ⚠️ Circular Dependencies")
+                expect(result).toContain("- a → b → a")
+            })
+
+            it("should format a three-node cycle", () => {
+                const cycles = [
+                    ["src/services/user.ts", "src/services/auth.ts", "src/services/user.ts"],
+                ]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).toContain("## ⚠️ Circular Dependencies")
+                expect(result).toContain("- services/user → services/auth → services/user")
+            })
+
+            it("should format multiple cycles", () => {
+                const cycles = [
+                    ["src/a.ts", "src/b.ts", "src/a.ts"],
+                    ["src/utils/x.ts", "src/utils/y.ts", "src/utils/z.ts", "src/utils/x.ts"],
+                ]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).toContain("## ⚠️ Circular Dependencies")
+                expect(result).toContain("- a → b → a")
+                expect(result).toContain("- utils/x → utils/y → utils/z → utils/x")
+            })
+
+            it("should shorten paths (remove src/ prefix)", () => {
+                const cycles = [
+                    ["src/services/user.ts", "src/types/user.ts", "src/services/user.ts"],
+                ]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).not.toContain("src/")
+                expect(result).toContain("services/user → types/user → services/user")
+            })
+
+            it("should remove file extensions", () => {
+                const cycles = [["lib/a.ts", "lib/b.tsx", "lib/c.js", "lib/a.ts"]]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).not.toContain(".ts")
+                expect(result).not.toContain(".tsx")
+                expect(result).not.toContain(".js")
+                expect(result).toContain("lib/a → lib/b → lib/c → lib/a")
+            })
+
+            it("should remove /index suffix", () => {
+                const cycles = [
+                    ["src/components/index.ts", "src/utils/index.ts", "src/components/index.ts"],
+                ]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).not.toContain("/index")
+                expect(result).toContain("components → utils → components")
+            })
+
+            it("should skip empty cycles", () => {
+                const cycles = [[], ["src/a.ts", "src/b.ts", "src/a.ts"], []]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).toContain("- a → b → a")
+                const lines = result!.split("\n").filter((l) => l.startsWith("- "))
+                expect(lines).toHaveLength(1)
+            })
+
+            it("should return null if all cycles are empty", () => {
+                const cycles = [[], [], []]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).toBeNull()
+            })
+
+            it("should format self-referencing cycle", () => {
+                const cycles = [["src/self.ts", "src/self.ts"]]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).toContain("- self → self")
+            })
+
+            it("should handle long cycles", () => {
+                const cycles = [
+                    [
+                        "src/a.ts",
+                        "src/b.ts",
+                        "src/c.ts",
+                        "src/d.ts",
+                        "src/e.ts",
+                        "src/f.ts",
+                        "src/a.ts",
+                    ],
+                ]
+
+                const result = formatCircularDeps(cycles)
+
+                expect(result).toContain("- a → b → c → d → e → f → a")
+            })
+        })
+
+        describe("buildInitialContext with includeCircularDeps", () => {
+            const structure: ProjectStructure = {
+                name: "test-project",
+                rootPath: "/test",
+                files: ["src/index.ts"],
+                directories: ["src"],
+            }
+
+            const asts = new Map<string, FileAST>([
+                [
+                    "src/index.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            it("should include circular deps when circularDeps provided", () => {
+                const circularDeps = [["src/a.ts", "src/b.ts", "src/a.ts"]]
+
+                const context = buildInitialContext(structure, asts, undefined, {
+                    circularDeps,
+                })
+
+                expect(context).toContain("## ⚠️ Circular Dependencies")
+                expect(context).toContain("- a → b → a")
+            })
+
+            it("should not include circular deps when includeCircularDeps is false", () => {
+                const circularDeps = [["src/a.ts", "src/b.ts", "src/a.ts"]]
+
+                const context = buildInitialContext(structure, asts, undefined, {
+                    circularDeps,
+                    includeCircularDeps: false,
+                })
+
+                expect(context).not.toContain("## ⚠️ Circular Dependencies")
+            })
+
+            it("should not include circular deps when circularDeps is empty", () => {
+                const context = buildInitialContext(structure, asts, undefined, {
+                    circularDeps: [],
+                    includeCircularDeps: true,
+                })
+
+                expect(context).not.toContain("## ⚠️ Circular Dependencies")
+            })
+
+            it("should not include circular deps when circularDeps is undefined", () => {
+                const context = buildInitialContext(structure, asts, undefined, {
+                    includeCircularDeps: true,
+                })
+
+                expect(context).not.toContain("## ⚠️ Circular Dependencies")
+            })
+
+            it("should include circular deps by default when circularDeps provided", () => {
+                const circularDeps = [["src/x.ts", "src/y.ts", "src/x.ts"]]
+
+                const context = buildInitialContext(structure, asts, undefined, {
+                    circularDeps,
+                })
+
+                expect(context).toContain("## ⚠️ Circular Dependencies")
+                expect(context).toContain("- x → y → x")
+            })
+
+            it("should include both dependency graph and circular deps", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: ["src/utils.ts"],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                        },
+                    ],
+                ])
+                const circularDeps = [["src/a.ts", "src/b.ts", "src/a.ts"]]
+
+                const context = buildInitialContext(structure, asts, metas, {
+                    circularDeps,
+                    includeDepsGraph: true,
+                    includeCircularDeps: true,
+                })
+
+                expect(context).toContain("## Dependency Graph")
+                expect(context).toContain("## ⚠️ Circular Dependencies")
             })
         })
     })

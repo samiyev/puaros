@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.28.0] - 2025-12-05 - Circular Dependencies in Context
+
+### Added
+
+- **Circular Dependencies in Initial Context (v0.28.0)**
+  - New `## ⚠️ Circular Dependencies` section in initial context
+  - Shows cycle chains immediately without requiring tool calls
+  - Format: `- services/user → services/auth → services/user`
+  - Uses same path shortening as dependency graph (removes `src/`, extensions, `/index`)
+
+- **Configuration Option**
+  - `includeCircularDeps: boolean` in ContextConfigSchema (default: `true`)
+  - `includeCircularDeps` option in `BuildContextOptions`
+  - `circularDeps: string[][]` parameter to pass pre-computed cycles
+  - Users can disable to save tokens: `context.includeCircularDeps: false`
+
+- **New Helper Function in prompts.ts**
+  - `formatCircularDeps()` - formats circular dependency cycles for display
+
+### New Context Format
+
+```
+## ⚠️ Circular Dependencies
+
+- services/user → services/auth → services/user
+- utils/a → utils/b → utils/c → utils/a
+```
+
+### Technical Details
+
+- Total tests: 1798 passed (was 1775, +23 new tests)
+  - 12 new tests for formatCircularDeps()
+  - 6 new tests for buildInitialContext with includeCircularDeps
+  - 5 new tests for includeCircularDeps config option
+- Coverage: 97.48% lines, 91.13% branches, 98.63% functions
+- 0 ESLint errors, 3 warnings (pre-existing complexity in ASTParser and prompts)
+- Build successful
+
 ## [0.27.0] - 2025-12-05 - Inline Dependency Graph
 
 ### Added

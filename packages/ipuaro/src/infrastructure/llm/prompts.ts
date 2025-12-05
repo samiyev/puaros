@@ -17,6 +17,8 @@ export interface ProjectStructure {
 export interface BuildContextOptions {
     includeSignatures?: boolean
     includeDepsGraph?: boolean
+    includeCircularDeps?: boolean
+    circularDeps?: string[][]
 }
 
 /**
@@ -129,6 +131,7 @@ export function buildInitialContext(
     const sections: string[] = []
     const includeSignatures = options?.includeSignatures ?? true
     const includeDepsGraph = options?.includeDepsGraph ?? true
+    const includeCircularDeps = options?.includeCircularDeps ?? true
 
     sections.push(formatProjectHeader(structure))
     sections.push(formatDirectoryTree(structure))
@@ -138,6 +141,13 @@ export function buildInitialContext(
         const depsGraph = formatDependencyGraph(metas)
         if (depsGraph) {
             sections.push(depsGraph)
+        }
+    }
+
+    if (includeCircularDeps && options?.circularDeps && options.circularDeps.length > 0) {
+        const circularDepsSection = formatCircularDeps(options.circularDeps)
+        if (circularDepsSection) {
+            sections.push(circularDepsSection)
         }
     }
 
@@ -519,6 +529,38 @@ export function formatDependencyGraph(metas: Map<string, FileMeta>): string | nu
     }
 
     // Return null if only header (no actual entries)
+    if (lines.length <= 2) {
+        return null
+    }
+
+    return lines.join("\n")
+}
+
+/**
+ * Format circular dependencies for display in context.
+ * Shows warning section with cycle chains.
+ *
+ * Format:
+ * ## ⚠️ Circular Dependencies
+ * - services/user → services/auth → services/user
+ * - utils/a → utils/b → utils/c → utils/a
+ */
+export function formatCircularDeps(cycles: string[][]): string | null {
+    if (!cycles || cycles.length === 0) {
+        return null
+    }
+
+    const lines: string[] = ["## ⚠️ Circular Dependencies", ""]
+
+    for (const cycle of cycles) {
+        if (cycle.length === 0) {
+            continue
+        }
+        const formattedCycle = cycle.map(shortenPath).join(" → ")
+        lines.push(`- ${formattedCycle}`)
+    }
+
+    // Return null if only header (no actual cycles)
     if (lines.length <= 2) {
         return null
     }

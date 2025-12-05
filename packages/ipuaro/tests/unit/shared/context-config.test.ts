@@ -17,6 +17,7 @@ describe("ContextConfigSchema", () => {
                 compressionMethod: "llm-summary",
                 includeSignatures: true,
                 includeDepsGraph: true,
+                includeCircularDeps: true,
             })
         })
 
@@ -30,6 +31,7 @@ describe("ContextConfigSchema", () => {
                 compressionMethod: "llm-summary",
                 includeSignatures: true,
                 includeDepsGraph: true,
+                includeCircularDeps: true,
             })
         })
     })
@@ -168,6 +170,7 @@ describe("ContextConfigSchema", () => {
                 compressionMethod: "llm-summary",
                 includeSignatures: true,
                 includeDepsGraph: true,
+                includeCircularDeps: true,
             })
         })
 
@@ -183,6 +186,7 @@ describe("ContextConfigSchema", () => {
                 compressionMethod: "llm-summary",
                 includeSignatures: true,
                 includeDepsGraph: true,
+                includeCircularDeps: true,
             })
         })
 
@@ -199,6 +203,7 @@ describe("ContextConfigSchema", () => {
                 compressionMethod: "truncate",
                 includeSignatures: true,
                 includeDepsGraph: true,
+                includeCircularDeps: true,
             })
         })
     })
@@ -212,6 +217,7 @@ describe("ContextConfigSchema", () => {
                 compressionMethod: "truncate" as const,
                 includeSignatures: false,
                 includeDepsGraph: false,
+                includeCircularDeps: false,
             }
 
             const result = ContextConfigSchema.parse(config)
@@ -226,6 +232,7 @@ describe("ContextConfigSchema", () => {
                 compressionMethod: "llm-summary" as const,
                 includeSignatures: true,
                 includeDepsGraph: true,
+                includeCircularDeps: true,
             }
 
             const result = ContextConfigSchema.parse(config)
@@ -280,6 +287,31 @@ describe("ContextConfigSchema", () => {
 
         it("should reject number", () => {
             expect(() => ContextConfigSchema.parse({ includeDepsGraph: 1 })).toThrow()
+        })
+    })
+
+    describe("includeCircularDeps", () => {
+        it("should accept true", () => {
+            const result = ContextConfigSchema.parse({ includeCircularDeps: true })
+            expect(result.includeCircularDeps).toBe(true)
+        })
+
+        it("should accept false", () => {
+            const result = ContextConfigSchema.parse({ includeCircularDeps: false })
+            expect(result.includeCircularDeps).toBe(false)
+        })
+
+        it("should default to true", () => {
+            const result = ContextConfigSchema.parse({})
+            expect(result.includeCircularDeps).toBe(true)
+        })
+
+        it("should reject non-boolean", () => {
+            expect(() => ContextConfigSchema.parse({ includeCircularDeps: "true" })).toThrow()
+        })
+
+        it("should reject number", () => {
+            expect(() => ContextConfigSchema.parse({ includeCircularDeps: 1 })).toThrow()
         })
     })
 })

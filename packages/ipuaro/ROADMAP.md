@@ -1917,10 +1917,10 @@ Enhance initial context for LLM: add function signatures, interface field types,
 
 ---
 
-## Version 0.28.0 - Circular Dependencies in Context 🔄
+## Version 0.28.0 - Circular Dependencies in Context 🔄 ✅
 
 **Priority:** MEDIUM
-**Status:** Planned
+**Status:** Complete (v0.28.0 released)
 
 ### Description
 
@@ -1936,9 +1936,15 @@ Enhance initial context for LLM: add function signatures, interface field types,
 ```
 
 **Changes:**
-- [ ] Add `formatCircularDeps()` to prompts.ts
-- [ ] Get circular deps from IndexBuilder
-- [ ] Store in Redis as separate key or in meta
+- [x] Add `formatCircularDeps()` to prompts.ts
+- [x] Add `includeCircularDeps: boolean` config option (default: true)
+- [x] Add `circularDeps: string[][]` parameter to `BuildContextOptions`
+- [x] Integrate into `buildInitialContext()`
+
+**Tests:**
+- [x] Unit tests for formatCircularDeps() (12 tests)
+- [x] Unit tests for buildInitialContext with includeCircularDeps (6 tests)
+- [x] Unit tests for includeCircularDeps config option (5 tests)
 
 **Why:** LLM immediately sees architecture problems.
 
@@ -2016,12 +2022,12 @@ interface FileMeta {
 - [x] Error handling complete ✅ (v0.16.0)
 - [ ] Performance optimized
 - [x] Documentation complete ✅ (v0.17.0)
-- [x] Test coverage ≥91% branches, ≥95% lines/functions/statements ✅ (91.21% branches, 97.5% lines, 98.58% functions, 97.5% statements - 1687 tests)
+- [x] Test coverage ≥91% branches, ≥95% lines/functions/statements ✅ (91.13% branches, 97.48% lines, 98.63% functions, 97.48% statements - 1798 tests)
 - [x] 0 ESLint errors ✅
 - [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅
 - [x] Rich initial context (v0.24.0-v0.26.0) — function signatures, interface fields, enum values, decorators ✅
-- [ ] Graph metrics in context (v0.27.0-v0.30.0) — dependency graph ✅, circular deps, impact score, transitive deps
+- [ ] Graph metrics in context (v0.27.0-v0.30.0) — dependency graph ✅, circular deps ✅, impact score, transitive deps
 
 ---
 
@@ -2100,7 +2106,7 @@ sessions:list             # List<session_id>
 
 **Last Updated:** 2025-12-05
 **Target Version:** 1.0.0
-**Current Version:** 0.27.0
-**Next Milestones:** v0.28.0 (Circular Deps), v0.29.0 (Impact Score), v0.30.0 (Transitive Deps)
+**Current Version:** 0.28.0
+**Next Milestones:** v0.29.0 (Impact Score), v0.30.0 (Transitive Deps)
 
-> **Note:** Rich Initial Context complete ✅ (v0.24.0-v0.26.0). Graph Metrics in progress (v0.27.0 ✅, v0.28.0-v0.30.0 pending) for 1.0.0 release.
+> **Note:** Rich Initial Context complete ✅ (v0.24.0-v0.26.0). Graph Metrics in progress (v0.27.0 ✅, v0.28.0 ✅, v0.29.0-v0.30.0 pending) for 1.0.0 release.

@@ -116,6 +116,7 @@ export const ContextConfigSchema = z.object({
     compressionMethod: z.enum(["llm-summary", "truncate"]).default("llm-summary"),
     includeSignatures: z.boolean().default(true),
     includeDepsGraph: z.boolean().default(true),
+    includeCircularDeps: z.boolean().default(true),
 })
 
 /**
