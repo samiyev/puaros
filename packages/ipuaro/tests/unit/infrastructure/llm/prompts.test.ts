@@ -2418,6 +2418,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 2,
+                            transitiveDepCount: 0,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])
@@ -2427,7 +2429,7 @@ describe("prompts", () => {
                 expect(result).toBeNull()
             })
 
-            it("should format file with high impact score", () => {
+            it("should format file with high impact score and transitive counts", () => {
                 const metas = new Map<string, FileMeta>([
                     [
                         "src/utils/validation.ts",
@@ -2452,6 +2454,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 67,
+                            transitiveDepCount: 24,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])
@@ -2459,11 +2463,11 @@ describe("prompts", () => {
                 const result = formatHighImpactFiles(metas)
 
                 expect(result).toContain("## High Impact Files")
-                expect(result).toContain("| File | Impact | Dependents |")
-                expect(result).toContain("| utils/validation | 67% | 12 files |")
+                expect(result).toContain("| File | Impact | Direct | Transitive |")
+                expect(result).toContain("| utils/validation | 67% | 12 | 24 |")
             })
 
-            it("should sort by impact score descending", () => {
+            it("should sort by transitive count descending, then by impact", () => {
                 const metas = new Map<string, FileMeta>([
                     [
                         "src/low.ts",
@@ -2475,6 +2479,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 10,
+                            transitiveDepCount: 5,
+                            transitiveDepByCount: 0,
                         },
                     ],
                     [
@@ -2487,6 +2493,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 50,
+                            transitiveDepCount: 15,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])
@@ -2511,6 +2519,8 @@ describe("prompts", () => {
                         isEntryPoint: false,
                         fileType: "source",
                         impactScore: 10 + i,
+                        transitiveDepCount: i,
+                        transitiveDepByCount: 0,
                     })
                 }
 
@@ -2535,6 +2545,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 30,
+                            transitiveDepCount: 5,
+                            transitiveDepByCount: 0,
                         },
                     ],
                     [
@@ -2547,6 +2559,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 5,
+                            transitiveDepCount: 1,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])
@@ -2556,28 +2570,6 @@ describe("prompts", () => {
                 expect(result).not.toBeNull()
                 expect(result).toContain("high")
                 expect(result).not.toContain("low")
-            })
-
-            it("should show singular 'file' for 1 dependent", () => {
-                const metas = new Map<string, FileMeta>([
-                    [
-                        "src/single.ts",
-                        {
-                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
-                            dependencies: [],
-                            dependents: ["a.ts"],
-                            isHub: false,
-                            isEntryPoint: false,
-                            fileType: "source",
-                            impactScore: 10,
-                        },
-                    ],
-                ])
-
-                const result = formatHighImpactFiles(metas)
-
-                expect(result).toContain("1 file")
-                expect(result).not.toContain("1 files")
             })
 
             it("should shorten src/ prefix", () => {
@@ -2592,6 +2584,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 20,
+                            transitiveDepCount: 5,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])
@@ -2614,6 +2608,8 @@ describe("prompts", () => {
                             isEntryPoint: false,
                             fileType: "source",
                             impactScore: 20,
+                            transitiveDepCount: 3,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])
@@ -2660,6 +2656,8 @@ describe("prompts", () => {
                             isEntryPoint: true,
                             fileType: "source",
                             impactScore: 20,
+                            transitiveDepCount: 5,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])
@@ -2681,6 +2679,8 @@ describe("prompts", () => {
                             isEntryPoint: true,
                             fileType: "source",
                             impactScore: 20,
+                            transitiveDepCount: 5,
+                            transitiveDepByCount: 0,
                         },
                     ],
                 ])

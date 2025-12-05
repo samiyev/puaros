@@ -580,12 +580,13 @@ export function formatCircularDeps(cycles: string[][]): string | null {
 /**
  * Format high impact files table for display in context.
  * Shows files with highest impact scores (most dependents).
+ * Includes both direct and transitive dependent counts.
  *
  * Format:
  * ## High Impact Files
- * | File | Impact | Dependents |
- * |------|--------|------------|
- * | src/utils/validation.ts | 67% | 12 files |
+ * | File | Impact | Direct | Transitive |
+ * |------|--------|--------|------------|
+ * | src/utils/validation.ts | 67% | 12 | 24 |
  *
  * @param metas - Map of file paths to their metadata
  * @param limit - Maximum number of files to show (default: 10)
@@ -601,7 +602,12 @@ export function formatHighImpactFiles(
     }
 
     // Collect files with impact score >= minImpact
-    const impactFiles: { path: string; impact: number; dependents: number }[] = []
+    const impactFiles: {
+        path: string
+        impact: number
+        dependents: number
+        transitive: number
+    }[] = []
 
     for (const [path, meta] of metas) {
         if (meta.impactScore >= minImpact) {
@@ -609,6 +615,7 @@ export function formatHighImpactFiles(
                 path,
                 impact: meta.impactScore,
                 dependents: meta.dependents.length,
+                transitive: meta.transitiveDepCount,
             })
         }
     }
@@ -617,8 +624,11 @@ export function formatHighImpactFiles(
         return null
     }
 
-    // Sort by impact score descending, then by path
+    // Sort by transitive count descending, then by impact, then by path
     impactFiles.sort((a, b) => {
+        if (a.transitive !== b.transitive) {
+            return b.transitive - a.transitive
+        }
         if (a.impact !== b.impact) {
             return b.impact - a.impact
         }
@@ -631,15 +641,16 @@ export function formatHighImpactFiles(
     const lines: string[] = [
         "## High Impact Files",
         "",
-        "| File | Impact | Dependents |",
-        "|------|--------|------------|",
+        "| File | Impact | Direct | Transitive |",
+        "|------|--------|--------|------------|",
     ]
 
     for (const file of topFiles) {
         const shortPath = shortenPath(file.path)
         const impact = `${String(file.impact)}%`
-        const dependents = file.dependents === 1 ? "1 file" : `${String(file.dependents)} files`
-        lines.push(`| ${shortPath} | ${impact} | ${dependents} |`)
+        const direct = String(file.dependents)
+        const transitive = String(file.transitive)
+        lines.push(`| ${shortPath} | ${impact} | ${direct} | ${transitive} |`)
     }
 
     return lines.join("\n")
