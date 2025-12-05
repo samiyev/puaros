@@ -6,6 +6,7 @@ import JSON from "tree-sitter-json"
 import * as yamlParser from "yaml"
 import {
     createEmptyFileAST,
+    type EnumMemberInfo,
     type ExportInfo,
     type FileAST,
     type ImportInfo,
@@ -192,6 +193,11 @@ export class ASTParser {
                     this.extractTypeAlias(node, ast, false)
                 }
                 break
+            case NodeType.ENUM_DECLARATION:
+                if (isTypeScript) {
+                    this.extractEnum(node, ast, false)
+                }
+                break
         }
     }
 
@@ -273,6 +279,10 @@ export class ASTParser {
                     break
                 case NodeType.TYPE_ALIAS_DECLARATION:
                     this.extractTypeAlias(declaration, ast, true)
+                    this.addExportInfo(ast, declaration, "type", isDefault)
+                    break
+                case NodeType.ENUM_DECLARATION:
+                    this.extractEnum(declaration, ast, true)
                     this.addExportInfo(ast, declaration, "type", isDefault)
                     break
                 case NodeType.LEXICAL_DECLARATION:
@@ -563,6 +573,75 @@ export class ASTParser {
             isExported,
             definition,
         })
+    }
+
+    private extractEnum(node: SyntaxNode, ast: FileAST, isExported: boolean): void {
+        const nameNode = node.childForFieldName(FieldName.NAME)
+        if (!nameNode) {
+            return
+        }
+
+        const body = node.childForFieldName(FieldName.BODY)
+        const members: EnumMemberInfo[] = []
+
+        if (body) {
+            for (const child of body.children) {
+                if (child.type === NodeType.ENUM_ASSIGNMENT) {
+                    const memberName = child.childForFieldName(FieldName.NAME)
+                    const memberValue = child.childForFieldName(FieldName.VALUE)
+                    if (memberName) {
+                        members.push({
+                            name: memberName.text,
+                            value: this.parseEnumValue(memberValue),
+                        })
+                    }
+                } else if (
+                    child.type === NodeType.IDENTIFIER ||
+                    child.type === NodeType.PROPERTY_IDENTIFIER
+                ) {
+                    members.push({
+                        name: child.text,
+                        value: undefined,
+                    })
+                }
+            }
+        }
+
+        const isConst = node.children.some((c) => c.text === "const")
+
+        ast.enums.push({
+            name: nameNode.text,
+            lineStart: node.startPosition.row + 1,
+            lineEnd: node.endPosition.row + 1,
+            members,
+            isExported,
+            isConst,
+        })
+    }
+
+    private parseEnumValue(valueNode: SyntaxNode | null): string | number | undefined {
+        if (!valueNode) {
+            return undefined
+        }
+
+        const text = valueNode.text
+
+        if (valueNode.type === "number") {
+            return Number(text)
+        }
+
+        if (valueNode.type === "string") {
+            return this.getStringValue(valueNode)
+        }
+
+        if (valueNode.type === "unary_expression" && text.startsWith("-")) {
+            const num = Number(text)
+            if (!isNaN(num)) {
+                return num
+            }
+        }
+
+        return text
     }
 
     private extractParameters(node: SyntaxNode): ParameterInfo[] {

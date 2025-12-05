@@ -1782,7 +1782,7 @@ export interface ScanResult {
 ## Version 0.24.0 - Rich Initial Context 📋
 
 **Priority:** HIGH
-**Status:** In Progress (2/4 complete)
+**Status:** In Progress (3/4 complete)
 
 Enhance initial context for LLM: add function signatures, interface field types, and enum values. This allows LLM to answer questions about types and parameters without tool calls.
 
@@ -1836,7 +1836,7 @@ Enhance initial context for LLM: add function signatures, interface field types,
 
 **Why:** LLM knows data structure, won't invent fields.
 
-### 0.24.3 - Enum Value Definitions
+### 0.24.3 - Enum Value Definitions ⭐ ✅
 
 **Problem:** LLM only sees `type: Status`
 **Solution:** Show values: `Status { Active=1, Inactive=0, Pending=2 }`
@@ -1852,9 +1852,9 @@ Enhance initial context for LLM: add function signatures, interface field types,
 ```
 
 **Changes:**
-- [ ] Add `EnumInfo` to FileAST with members and values
-- [ ] Update `ASTParser.ts` to extract enum members
-- [ ] Update `formatFileSummary()` to output enum values
+- [x] Add `EnumInfo` to FileAST with members and values
+- [x] Update `ASTParser.ts` to extract enum members
+- [x] Update `formatFileSummary()` to output enum values
 
 **Why:** LLM knows valid enum values.
 
@@ -2077,9 +2077,9 @@ sessions:list             # List<session_id>
 
 ---
 
-**Last Updated:** 2025-12-04
+**Last Updated:** 2025-12-05
 **Target Version:** 1.0.0
 **Current Version:** 0.25.0
-**Next Milestones:** v0.24.0 (Rich Context - 2/4 complete), v0.25.0 (Graph Metrics)
+**Next Milestones:** v0.24.0 (Rich Context - 3/4 complete), v0.25.0 (Graph Metrics)
 
 > **Note:** v0.24.0 and v0.25.0 are required for 1.0.0 release. They enable LLM to answer questions about types, signatures, and architecture without tool calls.

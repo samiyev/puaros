@@ -562,4 +562,138 @@ third: value3`
             expect(ast.exports[2].line).toBe(3)
         })
     })
+
+    describe("enums (0.24.3)", () => {
+        it("should extract enum with numeric values", () => {
+            const code = `enum Status {
+                Active = 1,
+                Inactive = 0,
+                Pending = 2
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0]).toMatchObject({
+                name: "Status",
+                isExported: false,
+                isConst: false,
+            })
+            expect(ast.enums[0].members).toHaveLength(3)
+            expect(ast.enums[0].members[0]).toMatchObject({ name: "Active", value: 1 })
+            expect(ast.enums[0].members[1]).toMatchObject({ name: "Inactive", value: 0 })
+            expect(ast.enums[0].members[2]).toMatchObject({ name: "Pending", value: 2 })
+        })
+
+        it("should extract enum with string values", () => {
+            const code = `enum Role {
+                Admin = "admin",
+                User = "user",
+                Guest = "guest"
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0].members).toHaveLength(3)
+            expect(ast.enums[0].members[0]).toMatchObject({ name: "Admin", value: "admin" })
+            expect(ast.enums[0].members[1]).toMatchObject({ name: "User", value: "user" })
+            expect(ast.enums[0].members[2]).toMatchObject({ name: "Guest", value: "guest" })
+        })
+
+        it("should extract enum without explicit values", () => {
+            const code = `enum Direction {
+                Up,
+                Down,
+                Left,
+                Right
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0].members).toHaveLength(4)
+            expect(ast.enums[0].members[0]).toMatchObject({ name: "Up", value: undefined })
+            expect(ast.enums[0].members[1]).toMatchObject({ name: "Down", value: undefined })
+        })
+
+        it("should extract exported enum", () => {
+            const code = `export enum Color {
+                Red = "#FF0000",
+                Green = "#00FF00",
+                Blue = "#0000FF"
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0].isExported).toBe(true)
+            expect(ast.exports).toHaveLength(1)
+            expect(ast.exports[0].kind).toBe("type")
+        })
+
+        it("should extract const enum", () => {
+            const code = `const enum HttpStatus {
+                OK = 200,
+                NotFound = 404,
+                InternalError = 500
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0].isConst).toBe(true)
+            expect(ast.enums[0].members[0]).toMatchObject({ name: "OK", value: 200 })
+        })
+
+        it("should extract exported const enum", () => {
+            const code = `export const enum LogLevel {
+                Debug = 0,
+                Info = 1,
+                Warn = 2,
+                Error = 3
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0].isExported).toBe(true)
+            expect(ast.enums[0].isConst).toBe(true)
+        })
+
+        it("should extract line range for enum", () => {
+            const code = `enum Test {
+                A = 1,
+                B = 2
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums[0].lineStart).toBe(1)
+            expect(ast.enums[0].lineEnd).toBe(4)
+        })
+
+        it("should handle enum with negative values", () => {
+            const code = `enum Temperature {
+                Cold = -10,
+                Freezing = -20,
+                Hot = 40
+            }`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0].members[0]).toMatchObject({ name: "Cold", value: -10 })
+            expect(ast.enums[0].members[1]).toMatchObject({ name: "Freezing", value: -20 })
+            expect(ast.enums[0].members[2]).toMatchObject({ name: "Hot", value: 40 })
+        })
+
+        it("should handle empty enum", () => {
+            const code = `enum Empty {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.enums).toHaveLength(1)
+            expect(ast.enums[0].name).toBe("Empty")
+            expect(ast.enums[0].members).toHaveLength(0)
+        })
+
+        it("should not extract enum from JavaScript", () => {
+            const code = `enum Status { Active = 1 }`
+            const ast = parser.parse(code, "js")
+
+            expect(ast.enums).toHaveLength(0)
+        })
+    })
 })

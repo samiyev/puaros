@@ -133,6 +133,28 @@ export interface TypeAliasInfo {
     definition?: string
 }
 
+export interface EnumMemberInfo {
+    /** Member name */
+    name: string
+    /** Member value (string or number, if specified) */
+    value?: string | number
+}
+
+export interface EnumInfo {
+    /** Enum name */
+    name: string
+    /** Start line number */
+    lineStart: number
+    /** End line number */
+    lineEnd: number
+    /** Enum members with values */
+    members: EnumMemberInfo[]
+    /** Whether it's exported */
+    isExported: boolean
+    /** Whether it's a const enum */
+    isConst: boolean
+}
+
 export interface FileAST {
     /** Import statements */
     imports: ImportInfo[]
@@ -146,6 +168,8 @@ export interface FileAST {
     interfaces: InterfaceInfo[]
     /** Type alias declarations */
     typeAliases: TypeAliasInfo[]
+    /** Enum declarations */
+    enums: EnumInfo[]
     /** Whether parsing encountered errors */
     parseError: boolean
     /** Parse error message if any */
@@ -160,6 +184,7 @@ export function createEmptyFileAST(): FileAST {
         classes: [],
         interfaces: [],
         typeAliases: [],
+        enums: [],
         parseError: false,
     }
 }

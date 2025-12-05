@@ -1191,9 +1191,7 @@ describe("prompts", () => {
 
             const context = buildInitialContext(structure, asts)
 
-            expect(context).toContain(
-                "interface AdminUser extends User { role: string }",
-            )
+            expect(context).toContain("interface AdminUser extends User { role: string }")
         })
 
         it("should format interface with readonly fields", () => {
@@ -1492,6 +1490,287 @@ describe("prompts", () => {
             const context = buildInitialContext(structure, asts)
 
             expect(context).toContain("- type Handler = (event: Event) => void")
+        })
+    })
+
+    describe("enum definitions (0.24.3)", () => {
+        it("should format enum with numeric values", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["enums.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "enums.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        enums: [
+                            {
+                                name: "Status",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                members: [
+                                    { name: "Active", value: 1 },
+                                    { name: "Inactive", value: 0 },
+                                    { name: "Pending", value: 2 },
+                                ],
+                                isExported: true,
+                                isConst: false,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- enum Status { Active=1, Inactive=0, Pending=2 }")
+        })
+
+        it("should format enum with string values", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["enums.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "enums.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        enums: [
+                            {
+                                name: "Role",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                members: [
+                                    { name: "Admin", value: "admin" },
+                                    { name: "User", value: "user" },
+                                ],
+                                isExported: true,
+                                isConst: false,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain('- enum Role { Admin="admin", User="user" }')
+        })
+
+        it("should format const enum", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["enums.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "enums.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        enums: [
+                            {
+                                name: "HttpStatus",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                members: [
+                                    { name: "OK", value: 200 },
+                                    { name: "NotFound", value: 404 },
+                                ],
+                                isExported: true,
+                                isConst: true,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- const enum HttpStatus { OK=200, NotFound=404 }")
+        })
+
+        it("should format enum without explicit values", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["enums.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "enums.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        enums: [
+                            {
+                                name: "Direction",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                members: [
+                                    { name: "Up", value: undefined },
+                                    { name: "Down", value: undefined },
+                                ],
+                                isExported: true,
+                                isConst: false,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- enum Direction { Up, Down }")
+        })
+
+        it("should format empty enum", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["enums.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "enums.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        enums: [
+                            {
+                                name: "Empty",
+                                lineStart: 1,
+                                lineEnd: 1,
+                                members: [],
+                                isExported: true,
+                                isConst: false,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- enum Empty")
+        })
+
+        it("should include enum in compact format", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["enums.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "enums.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        enums: [
+                            {
+                                name: "Status",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                members: [{ name: "Active", value: 1 }],
+                                isExported: true,
+                                isConst: false,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts, undefined, {
+                includeSignatures: false,
+            })
+
+            expect(context).toContain("enum: Status")
+        })
+
+        it("should truncate long enum definitions", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["enums.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "enums.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        enums: [
+                            {
+                                name: "VeryLongEnumName",
+                                lineStart: 1,
+                                lineEnd: 20,
+                                members: [
+                                    { name: "FirstVeryLongMemberName", value: "first_value" },
+                                    { name: "SecondVeryLongMemberName", value: "second_value" },
+                                    { name: "ThirdVeryLongMemberName", value: "third_value" },
+                                ],
+                                isExported: true,
+                                isConst: false,
+                            },
+                        ],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("...")
+            expect(context).toContain("- enum VeryLongEnumName")
         })
     })
 })

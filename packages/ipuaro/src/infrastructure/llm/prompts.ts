@@ -241,6 +241,37 @@ function formatTypeAliasSignature(type: FileAST["typeAliases"][0]): string {
 }
 
 /**
+ * Format an enum signature with members and values.
+ * Example: "enum Status { Active=1, Inactive=0, Pending=2 }"
+ * Example: "const enum Role { Admin="admin", User="user" }"
+ */
+function formatEnumSignature(enumInfo: FileAST["enums"][0]): string {
+    const constPrefix = enumInfo.isConst ? "const " : ""
+
+    if (enumInfo.members.length === 0) {
+        return `${constPrefix}enum ${enumInfo.name}`
+    }
+
+    const membersStr = enumInfo.members
+        .map((m) => {
+            if (m.value === undefined) {
+                return m.name
+            }
+            const valueStr = typeof m.value === "string" ? `"${m.value}"` : String(m.value)
+            return `${m.name}=${valueStr}`
+        })
+        .join(", ")
+
+    const result = `${constPrefix}enum ${enumInfo.name} { ${membersStr} }`
+
+    if (result.length > 100) {
+        return truncateDefinition(result, 100)
+    }
+
+    return result
+}
+
+/**
  * Truncate long type definitions for display.
  */
 function truncateDefinition(definition: string, maxLength: number): string {
@@ -297,6 +328,12 @@ function formatFileSummary(
         }
     }
 
+    if (ast.enums && ast.enums.length > 0) {
+        for (const enumInfo of ast.enums) {
+            lines.push(`- ${formatEnumSignature(enumInfo)}`)
+        }
+    }
+
     if (lines.length === 1) {
         return `- ${path}${flags}`
     }
@@ -328,6 +365,11 @@ function formatFileSummaryCompact(path: string, ast: FileAST, flags: string): st
     if (ast.typeAliases.length > 0) {
         const names = ast.typeAliases.map((t) => t.name).join(", ")
         parts.push(`type: ${names}`)
+    }
+
+    if (ast.enums && ast.enums.length > 0) {
+        const names = ast.enums.map((e) => e.name).join(", ")
+        parts.push(`enum: ${names}`)
     }
 
     const summary = parts.length > 0 ? ` [${parts.join(" | ")}]` : ""

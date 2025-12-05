@@ -16,6 +16,7 @@ export const NodeType = {
     CLASS_DECLARATION: "class_declaration",
     INTERFACE_DECLARATION: "interface_declaration",
     TYPE_ALIAS_DECLARATION: "type_alias_declaration",
+    ENUM_DECLARATION: "enum_declaration",
 
     // Clauses
     IMPORT_CLAUSE: "import_clause",
@@ -36,6 +37,11 @@ export const NodeType = {
     PUBLIC_FIELD_DEFINITION: "public_field_definition",
     FIELD_DEFINITION: "field_definition",
     PROPERTY_SIGNATURE: "property_signature",
+
+    // Enum members
+    ENUM_BODY: "enum_body",
+    ENUM_ASSIGNMENT: "enum_assignment",
+    PROPERTY_IDENTIFIER: "property_identifier",
 
     // Parameters
     REQUIRED_PARAMETER: "required_parameter",
