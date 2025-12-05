@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.0] - 2025-12-05 - Impact Score
+
+### Added
+
+- **High Impact Files in Initial Context (v0.29.0)**
+  - New `## High Impact Files` section in initial context
+  - Shows files with highest impact scores (percentage of codebase depending on them)
+  - Table format with File, Impact %, and Dependents count
+  - Files sorted by impact score descending
+  - Default: shows top 10 files with impact score >= 5%
+
+- **Impact Score Computation**
+  - New `impactScore: number` field in `FileMeta` (0-100)
+  - Formula: `(dependents.length / (totalFiles - 1)) * 100`
+  - Computed in `MetaAnalyzer.analyzeAll()` after all files analyzed
+  - New `calculateImpactScore()` helper function in FileMeta.ts
+
+- **Configuration Option**
+  - `includeHighImpactFiles: boolean` in ContextConfigSchema (default: `true`)
+  - `includeHighImpactFiles` option in `BuildContextOptions`
+  - Users can disable to save tokens: `context.includeHighImpactFiles: false`
+
+- **New Helper Function in prompts.ts**
+  - `formatHighImpactFiles()` - formats high impact files table for display
+
+### New Context Format
+
+```
+## High Impact Files
+
+| File | Impact | Dependents |
+|------|--------|------------|
+| utils/validation | 67% | 12 files |
+| types/user | 45% | 8 files |
+| services/user | 34% | 6 files |
+```
+
+### Technical Details
+
+- Total tests: 1826 passed (was 1798, +28 new tests)
+  - 9 new tests for calculateImpactScore()
+  - 14 new tests for formatHighImpactFiles() and buildInitialContext
+  - 5 new tests for includeHighImpactFiles config option
+- Coverage: 97.52% lines, 91.3% branches, 98.63% functions
+- 0 ESLint errors, 3 warnings (pre-existing complexity)
+- Build successful
+
+### Notes
+
+This completes v0.29.0 of the Graph Metrics milestone:
+- ✅ 0.27.0 - Inline Dependency Graph
+- ✅ 0.28.0 - Circular Dependencies in Context
+- ✅ 0.29.0 - Impact Score
+
+Next milestone: v0.30.0 - Transitive Dependencies Count
+
+---
+
 ## [0.28.0] - 2025-12-05 - Circular Dependencies in Context
 
 ### Added

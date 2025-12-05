@@ -1,5 +1,6 @@
 import * as path from "node:path"
 import {
+    calculateImpactScore,
     type ComplexityMetrics,
     createFileMeta,
     type FileMeta,
@@ -430,6 +431,7 @@ export class MetaAnalyzer {
 
     /**
      * Batch analyze multiple files.
+     * Computes impact scores after all files are analyzed.
      */
     analyzeAll(files: Map<string, { ast: FileAST; content: string }>): Map<string, FileMeta> {
         const allASTs = new Map<string, FileAST>()
@@ -441,6 +443,12 @@ export class MetaAnalyzer {
         for (const [filePath, { ast, content }] of files) {
             const meta = this.analyze(filePath, ast, content, allASTs)
             results.set(filePath, meta)
+        }
+
+        // Compute impact scores now that we know total file count
+        const totalFiles = results.size
+        for (const [, meta] of results) {
+            meta.impactScore = calculateImpactScore(meta.dependents.length, totalFiles)
         }
 
         return results

@@ -18,6 +18,7 @@ export interface BuildContextOptions {
     includeSignatures?: boolean
     includeDepsGraph?: boolean
     includeCircularDeps?: boolean
+    includeHighImpactFiles?: boolean
     circularDeps?: string[][]
 }
 
@@ -132,6 +133,7 @@ export function buildInitialContext(
     const includeSignatures = options?.includeSignatures ?? true
     const includeDepsGraph = options?.includeDepsGraph ?? true
     const includeCircularDeps = options?.includeCircularDeps ?? true
+    const includeHighImpactFiles = options?.includeHighImpactFiles ?? true
 
     sections.push(formatProjectHeader(structure))
     sections.push(formatDirectoryTree(structure))
@@ -141,6 +143,13 @@ export function buildInitialContext(
         const depsGraph = formatDependencyGraph(metas)
         if (depsGraph) {
             sections.push(depsGraph)
+        }
+    }
+
+    if (includeHighImpactFiles && metas && metas.size > 0) {
+        const highImpactSection = formatHighImpactFiles(metas)
+        if (highImpactSection) {
+            sections.push(highImpactSection)
         }
     }
 
@@ -563,6 +572,74 @@ export function formatCircularDeps(cycles: string[][]): string | null {
     // Return null if only header (no actual cycles)
     if (lines.length <= 2) {
         return null
+    }
+
+    return lines.join("\n")
+}
+
+/**
+ * Format high impact files table for display in context.
+ * Shows files with highest impact scores (most dependents).
+ *
+ * Format:
+ * ## High Impact Files
+ * | File | Impact | Dependents |
+ * |------|--------|------------|
+ * | src/utils/validation.ts | 67% | 12 files |
+ *
+ * @param metas - Map of file paths to their metadata
+ * @param limit - Maximum number of files to show (default: 10)
+ * @param minImpact - Minimum impact score to include (default: 5)
+ */
+export function formatHighImpactFiles(
+    metas: Map<string, FileMeta>,
+    limit = 10,
+    minImpact = 5,
+): string | null {
+    if (metas.size === 0) {
+        return null
+    }
+
+    // Collect files with impact score >= minImpact
+    const impactFiles: { path: string; impact: number; dependents: number }[] = []
+
+    for (const [path, meta] of metas) {
+        if (meta.impactScore >= minImpact) {
+            impactFiles.push({
+                path,
+                impact: meta.impactScore,
+                dependents: meta.dependents.length,
+            })
+        }
+    }
+
+    if (impactFiles.length === 0) {
+        return null
+    }
+
+    // Sort by impact score descending, then by path
+    impactFiles.sort((a, b) => {
+        if (a.impact !== b.impact) {
+            return b.impact - a.impact
+        }
+        return a.path.localeCompare(b.path)
+    })
+
+    // Take top N files
+    const topFiles = impactFiles.slice(0, limit)
+
+    const lines: string[] = [
+        "## High Impact Files",
+        "",
+        "| File | Impact | Dependents |",
+        "|------|--------|------------|",
+    ]
+
+    for (const file of topFiles) {
+        const shortPath = shortenPath(file.path)
+        const impact = `${String(file.impact)}%`
+        const dependents = file.dependents === 1 ? "1 file" : `${String(file.dependents)} files`
+        lines.push(`| ${shortPath} | ${impact} | ${dependents} |`)
     }
 
     return lines.join("\n")

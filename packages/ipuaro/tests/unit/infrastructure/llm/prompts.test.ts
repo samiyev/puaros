@@ -6,6 +6,7 @@ import {
     truncateContext,
     formatDependencyGraph,
     formatCircularDeps,
+    formatHighImpactFiles,
     type ProjectStructure,
 } from "../../../../src/infrastructure/llm/prompts.js"
 import type { FileAST } from "../../../../src/domain/value-objects/FileAST.js"
@@ -2391,6 +2392,345 @@ describe("prompts", () => {
                 })
 
                 expect(context).not.toContain("## Dependency Graph")
+            })
+        })
+    })
+
+    describe("high impact files (0.29.0)", () => {
+        describe("formatHighImpactFiles", () => {
+            it("should return null for empty metas", () => {
+                const metas = new Map<string, FileMeta>()
+
+                const result = formatHighImpactFiles(metas)
+
+                expect(result).toBeNull()
+            })
+
+            it("should return null when no files have impact score >= minImpact", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/low.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 2,
+                        },
+                    ],
+                ])
+
+                const result = formatHighImpactFiles(metas)
+
+                expect(result).toBeNull()
+            })
+
+            it("should format file with high impact score", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/utils/validation.ts",
+                        {
+                            complexity: { loc: 50, nesting: 2, cyclomaticComplexity: 5, score: 30 },
+                            dependencies: [],
+                            dependents: [
+                                "a.ts",
+                                "b.ts",
+                                "c.ts",
+                                "d.ts",
+                                "e.ts",
+                                "f.ts",
+                                "g.ts",
+                                "h.ts",
+                                "i.ts",
+                                "j.ts",
+                                "k.ts",
+                                "l.ts",
+                            ],
+                            isHub: true,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 67,
+                        },
+                    ],
+                ])
+
+                const result = formatHighImpactFiles(metas)
+
+                expect(result).toContain("## High Impact Files")
+                expect(result).toContain("| File | Impact | Dependents |")
+                expect(result).toContain("| utils/validation | 67% | 12 files |")
+            })
+
+            it("should sort by impact score descending", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/low.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 10,
+                        },
+                    ],
+                    [
+                        "src/high.ts",
+                        {
+                            complexity: { loc: 20, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts", "b.ts", "c.ts", "d.ts", "e.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 50,
+                        },
+                    ],
+                ])
+
+                const result = formatHighImpactFiles(metas)
+
+                expect(result).not.toBeNull()
+                const lines = result!.split("\n")
+                const highIndex = lines.findIndex((l) => l.includes("high"))
+                const lowIndex = lines.findIndex((l) => l.includes("low"))
+                expect(highIndex).toBeLessThan(lowIndex)
+            })
+
+            it("should limit to top N files", () => {
+                const metas = new Map<string, FileMeta>()
+                for (let i = 0; i < 20; i++) {
+                    metas.set(`src/file${String(i)}.ts`, {
+                        complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                        dependencies: [],
+                        dependents: ["a.ts"],
+                        isHub: false,
+                        isEntryPoint: false,
+                        fileType: "source",
+                        impactScore: 10 + i,
+                    })
+                }
+
+                const result = formatHighImpactFiles(metas, 5)
+
+                expect(result).not.toBeNull()
+                const dataLines = result!
+                    .split("\n")
+                    .filter((l) => l.startsWith("| ") && l.includes("%"))
+                expect(dataLines).toHaveLength(5)
+            })
+
+            it("should filter by minImpact", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/high.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts", "b.ts", "c.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 30,
+                        },
+                    ],
+                    [
+                        "src/low.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 5,
+                        },
+                    ],
+                ])
+
+                const result = formatHighImpactFiles(metas, 10, 20)
+
+                expect(result).not.toBeNull()
+                expect(result).toContain("high")
+                expect(result).not.toContain("low")
+            })
+
+            it("should show singular 'file' for 1 dependent", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/single.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 10,
+                        },
+                    ],
+                ])
+
+                const result = formatHighImpactFiles(metas)
+
+                expect(result).toContain("1 file")
+                expect(result).not.toContain("1 files")
+            })
+
+            it("should shorten src/ prefix", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/services/user.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts", "b.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 20,
+                        },
+                    ],
+                ])
+
+                const result = formatHighImpactFiles(metas)
+
+                expect(result).toContain("services/user")
+                expect(result).not.toContain("src/")
+            })
+
+            it("should remove file extensions", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "lib/utils.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts", "b.ts"],
+                            isHub: false,
+                            isEntryPoint: false,
+                            fileType: "source",
+                            impactScore: 20,
+                        },
+                    ],
+                ])
+
+                const result = formatHighImpactFiles(metas)
+
+                expect(result).toContain("lib/utils")
+                expect(result).not.toContain(".ts")
+            })
+        })
+
+        describe("buildInitialContext with includeHighImpactFiles", () => {
+            const structure: ProjectStructure = {
+                name: "test-project",
+                rootPath: "/test",
+                files: ["src/index.ts"],
+                directories: ["src"],
+            }
+
+            const asts = new Map<string, FileAST>([
+                [
+                    "src/index.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            it("should include high impact files by default", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts", "b.ts"],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                            impactScore: 20,
+                        },
+                    ],
+                ])
+
+                const context = buildInitialContext(structure, asts, metas)
+
+                expect(context).toContain("## High Impact Files")
+            })
+
+            it("should exclude high impact files when includeHighImpactFiles is false", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: ["a.ts", "b.ts"],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                            impactScore: 20,
+                        },
+                    ],
+                ])
+
+                const context = buildInitialContext(structure, asts, metas, {
+                    includeHighImpactFiles: false,
+                })
+
+                expect(context).not.toContain("## High Impact Files")
+            })
+
+            it("should not include high impact files when metas is undefined", () => {
+                const context = buildInitialContext(structure, asts, undefined, {
+                    includeHighImpactFiles: true,
+                })
+
+                expect(context).not.toContain("## High Impact Files")
+            })
+
+            it("should not include high impact files when metas is empty", () => {
+                const emptyMetas = new Map<string, FileMeta>()
+
+                const context = buildInitialContext(structure, asts, emptyMetas, {
+                    includeHighImpactFiles: true,
+                })
+
+                expect(context).not.toContain("## High Impact Files")
+            })
+
+            it("should not include high impact files when no files have high impact", () => {
+                const metas = new Map<string, FileMeta>([
+                    [
+                        "src/index.ts",
+                        {
+                            complexity: { loc: 10, nesting: 1, cyclomaticComplexity: 1, score: 10 },
+                            dependencies: [],
+                            dependents: [],
+                            isHub: false,
+                            isEntryPoint: true,
+                            fileType: "source",
+                            impactScore: 0,
+                        },
+                    ],
+                ])
+
+                const context = buildInitialContext(structure, asts, metas, {
+                    includeHighImpactFiles: true,
+                })
+
+                expect(context).not.toContain("## High Impact Files")
             })
         })
     })

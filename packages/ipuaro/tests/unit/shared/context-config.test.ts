@@ -18,6 +18,7 @@ describe("ContextConfigSchema", () => {
                 includeSignatures: true,
                 includeDepsGraph: true,
                 includeCircularDeps: true,
+                includeHighImpactFiles: true,
             })
         })
 
@@ -32,6 +33,7 @@ describe("ContextConfigSchema", () => {
                 includeSignatures: true,
                 includeDepsGraph: true,
                 includeCircularDeps: true,
+                includeHighImpactFiles: true,
             })
         })
     })
@@ -171,6 +173,7 @@ describe("ContextConfigSchema", () => {
                 includeSignatures: true,
                 includeDepsGraph: true,
                 includeCircularDeps: true,
+                includeHighImpactFiles: true,
             })
         })
 
@@ -187,6 +190,7 @@ describe("ContextConfigSchema", () => {
                 includeSignatures: true,
                 includeDepsGraph: true,
                 includeCircularDeps: true,
+                includeHighImpactFiles: true,
             })
         })
 
@@ -204,6 +208,7 @@ describe("ContextConfigSchema", () => {
                 includeSignatures: true,
                 includeDepsGraph: true,
                 includeCircularDeps: true,
+                includeHighImpactFiles: true,
             })
         })
     })
@@ -218,6 +223,7 @@ describe("ContextConfigSchema", () => {
                 includeSignatures: false,
                 includeDepsGraph: false,
                 includeCircularDeps: false,
+                includeHighImpactFiles: false,
             }
 
             const result = ContextConfigSchema.parse(config)
@@ -233,6 +239,7 @@ describe("ContextConfigSchema", () => {
                 includeSignatures: true,
                 includeDepsGraph: true,
                 includeCircularDeps: true,
+                includeHighImpactFiles: true,
             }
 
             const result = ContextConfigSchema.parse(config)
@@ -312,6 +319,31 @@ describe("ContextConfigSchema", () => {
 
         it("should reject number", () => {
             expect(() => ContextConfigSchema.parse({ includeCircularDeps: 1 })).toThrow()
+        })
+    })
+
+    describe("includeHighImpactFiles", () => {
+        it("should accept true", () => {
+            const result = ContextConfigSchema.parse({ includeHighImpactFiles: true })
+            expect(result.includeHighImpactFiles).toBe(true)
+        })
+
+        it("should accept false", () => {
+            const result = ContextConfigSchema.parse({ includeHighImpactFiles: false })
+            expect(result.includeHighImpactFiles).toBe(false)
+        })
+
+        it("should default to true", () => {
+            const result = ContextConfigSchema.parse({})
+            expect(result.includeHighImpactFiles).toBe(true)
+        })
+
+        it("should reject non-boolean", () => {
+            expect(() => ContextConfigSchema.parse({ includeHighImpactFiles: "true" })).toThrow()
+        })
+
+        it("should reject number", () => {
+            expect(() => ContextConfigSchema.parse({ includeHighImpactFiles: 1 })).toThrow()
         })
     })
 })

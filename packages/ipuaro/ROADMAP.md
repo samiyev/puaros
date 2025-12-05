@@ -1950,10 +1950,10 @@ Enhance initial context for LLM: add function signatures, interface field types,
 
 ---
 
-## Version 0.29.0 - Impact Score 📈
+## Version 0.29.0 - Impact Score 📈 ✅
 
 **Priority:** MEDIUM
-**Status:** Planned
+**Status:** Complete (v0.29.0 released)
 
 ### Description
 
@@ -1972,10 +1972,16 @@ Enhance initial context for LLM: add function signatures, interface field types,
 ```
 
 **Changes:**
-- [ ] Add `impactScore: number` to FileMeta (0-100)
-- [ ] Compute in MetaAnalyzer: (transitiveDepByCount / totalFiles) * 100
-- [ ] Add `formatHighImpactFiles()` to prompts.ts
-- [ ] Show top-10 high impact files
+- [x] Add `impactScore: number` to FileMeta (0-100)
+- [x] Compute in MetaAnalyzer: (dependents.length / (totalFiles - 1)) * 100
+- [x] Add `formatHighImpactFiles()` to prompts.ts
+- [x] Show top-10 high impact files
+- [x] Add `includeHighImpactFiles` config option (default: true)
+
+**Tests:**
+- [x] Unit tests for calculateImpactScore (9 tests)
+- [x] Unit tests for formatHighImpactFiles (14 tests)
+- [x] Unit tests for includeHighImpactFiles config (5 tests)
 
 **Why:** LLM understands which files are critical for changes.
 
@@ -2022,12 +2028,12 @@ interface FileMeta {
 - [x] Error handling complete ✅ (v0.16.0)
 - [ ] Performance optimized
 - [x] Documentation complete ✅ (v0.17.0)
-- [x] Test coverage ≥91% branches, ≥95% lines/functions/statements ✅ (91.13% branches, 97.48% lines, 98.63% functions, 97.48% statements - 1798 tests)
+- [x] Test coverage ≥91% branches, ≥95% lines/functions/statements ✅ (91.3% branches, 97.52% lines, 98.63% functions, 97.52% statements - 1826 tests)
 - [x] 0 ESLint errors ✅
 - [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅
 - [x] Rich initial context (v0.24.0-v0.26.0) — function signatures, interface fields, enum values, decorators ✅
-- [ ] Graph metrics in context (v0.27.0-v0.30.0) — dependency graph ✅, circular deps ✅, impact score, transitive deps
+- [ ] Graph metrics in context (v0.27.0-v0.30.0) — dependency graph ✅, circular deps ✅, impact score ✅, transitive deps
 
 ---
 
@@ -2106,7 +2112,7 @@ sessions:list             # List<session_id>
 
 **Last Updated:** 2025-12-05
 **Target Version:** 1.0.0
-**Current Version:** 0.28.0
-**Next Milestones:** v0.29.0 (Impact Score), v0.30.0 (Transitive Deps)
+**Current Version:** 0.29.0
+**Next Milestones:** v0.30.0 (Transitive Deps), v1.0.0 (Production Ready)
 
-> **Note:** Rich Initial Context complete ✅ (v0.24.0-v0.26.0). Graph Metrics in progress (v0.27.0 ✅, v0.28.0 ✅, v0.29.0-v0.30.0 pending) for 1.0.0 release.
+> **Note:** Rich Initial Context complete ✅ (v0.24.0-v0.26.0). Graph Metrics in progress (v0.27.0 ✅, v0.28.0 ✅, v0.29.0 ✅, v0.30.0 pending) for 1.0.0 release.

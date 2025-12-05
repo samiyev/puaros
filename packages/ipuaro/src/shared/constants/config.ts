@@ -117,6 +117,7 @@ export const ContextConfigSchema = z.object({
     includeSignatures: z.boolean().default(true),
     includeDepsGraph: z.boolean().default(true),
     includeCircularDeps: z.boolean().default(true),
+    includeHighImpactFiles: z.boolean().default(true),
 })
 
 /**

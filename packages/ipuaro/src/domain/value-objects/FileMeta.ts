@@ -26,6 +26,8 @@ export interface FileMeta {
     isEntryPoint: boolean
     /** File type classification */
     fileType: "source" | "test" | "config" | "types" | "unknown"
+    /** Impact score (0-100): percentage of codebase that depends on this file */
+    impactScore: number
 }
 
 export function createFileMeta(partial: Partial<FileMeta> = {}): FileMeta {
@@ -41,10 +43,28 @@ export function createFileMeta(partial: Partial<FileMeta> = {}): FileMeta {
         isHub: false,
         isEntryPoint: false,
         fileType: "unknown",
+        impactScore: 0,
         ...partial,
     }
 }
 
 export function isHubFile(dependentCount: number): boolean {
     return dependentCount > 5
+}
+
+/**
+ * Calculate impact score based on number of dependents and total files.
+ * Impact score represents what percentage of the codebase depends on this file.
+ * @param dependentCount - Number of files that depend on this file
+ * @param totalFiles - Total number of files in the project
+ * @returns Impact score from 0 to 100
+ */
+export function calculateImpactScore(dependentCount: number, totalFiles: number): number {
+    if (totalFiles <= 1) {
+        return 0
+    }
+    // Exclude the file itself from the total
+    const maxPossibleDependents = totalFiles - 1
+    const score = (dependentCount / maxPossibleDependents) * 100
+    return Math.round(Math.min(100, score))
 }
