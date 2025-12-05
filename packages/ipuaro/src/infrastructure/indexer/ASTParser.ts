@@ -264,13 +264,15 @@ export class ASTParser {
         const declaration = node.childForFieldName(FieldName.DECLARATION)
 
         if (declaration) {
+            const decorators = this.extractDecoratorsFromSiblings(declaration)
+
             switch (declaration.type) {
                 case NodeType.FUNCTION_DECLARATION:
-                    this.extractFunction(declaration, ast, true)
+                    this.extractFunction(declaration, ast, true, decorators)
                     this.addExportInfo(ast, declaration, "function", isDefault)
                     break
                 case NodeType.CLASS_DECLARATION:
-                    this.extractClass(declaration, ast, true)
+                    this.extractClass(declaration, ast, true, decorators)
                     this.addExportInfo(ast, declaration, "class", isDefault)
                     break
                 case NodeType.INTERFACE_DECLARATION:
@@ -309,7 +311,12 @@ export class ASTParser {
         }
     }
 
-    private extractFunction(node: SyntaxNode, ast: FileAST, isExported: boolean): void {
+    private extractFunction(
+        node: SyntaxNode,
+        ast: FileAST,
+        isExported: boolean,
+        externalDecorators: string[] = [],
+    ): void {
         const nameNode = node.childForFieldName(FieldName.NAME)
         if (!nameNode) {
             return
@@ -319,6 +326,9 @@ export class ASTParser {
         const isAsync = node.children.some((c) => c.type === NodeType.ASYNC)
         const returnTypeNode = node.childForFieldName(FieldName.RETURN_TYPE)
 
+        const nodeDecorators = this.extractNodeDecorators(node)
+        const decorators = [...externalDecorators, ...nodeDecorators]
+
         ast.functions.push({
             name: nameNode.text,
             lineStart: node.startPosition.row + 1,
@@ -327,6 +337,7 @@ export class ASTParser {
             isAsync,
             isExported,
             returnType: returnTypeNode?.text?.replace(/^:\s*/, ""),
+            decorators,
         })
     }
 
@@ -352,6 +363,7 @@ export class ASTParser {
                         isAsync,
                         isExported,
                         returnType: returnTypeNode?.text?.replace(/^:\s*/, ""),
+                        decorators: [],
                     })
 
                     if (isExported) {
@@ -374,7 +386,12 @@ export class ASTParser {
         }
     }
 
-    private extractClass(node: SyntaxNode, ast: FileAST, isExported: boolean): void {
+    private extractClass(
+        node: SyntaxNode,
+        ast: FileAST,
+        isExported: boolean,
+        externalDecorators: string[] = [],
+    ): void {
         const nameNode = node.childForFieldName(FieldName.NAME)
         if (!nameNode) {
             return
@@ -385,20 +402,28 @@ export class ASTParser {
         const properties: PropertyInfo[] = []
 
         if (body) {
+            let pendingDecorators: string[] = []
             for (const member of body.children) {
-                if (member.type === NodeType.METHOD_DEFINITION) {
-                    methods.push(this.extractMethod(member))
+                if (member.type === NodeType.DECORATOR) {
+                    pendingDecorators.push(this.formatDecorator(member))
+                } else if (member.type === NodeType.METHOD_DEFINITION) {
+                    methods.push(this.extractMethod(member, pendingDecorators))
+                    pendingDecorators = []
                 } else if (
                     member.type === NodeType.PUBLIC_FIELD_DEFINITION ||
                     member.type === NodeType.FIELD_DEFINITION
                 ) {
                     properties.push(this.extractProperty(member))
+                    pendingDecorators = []
                 }
             }
         }
 
         const { extendsName, implementsList } = this.extractClassHeritage(node)
         const isAbstract = node.children.some((c) => c.type === NodeType.ABSTRACT)
+
+        const nodeDecorators = this.extractNodeDecorators(node)
+        const decorators = [...externalDecorators, ...nodeDecorators]
 
         ast.classes.push({
             name: nameNode.text,
@@ -410,6 +435,7 @@ export class ASTParser {
             implements: implementsList,
             isExported,
             isAbstract,
+            decorators,
         })
     }
 
@@ -463,7 +489,7 @@ export class ASTParser {
         }
     }
 
-    private extractMethod(node: SyntaxNode): MethodInfo {
+    private extractMethod(node: SyntaxNode, decorators: string[] = []): MethodInfo {
         const nameNode = node.childForFieldName(FieldName.NAME)
         const params = this.extractParameters(node)
         const isAsync = node.children.some((c) => c.type === NodeType.ASYNC)
@@ -485,6 +511,7 @@ export class ASTParser {
             isAsync,
             visibility,
             isStatic,
+            decorators,
         }
     }
 
@@ -690,6 +717,49 @@ export class ASTParser {
                 kind,
             })
         }
+    }
+
+    /**
+     * Format a decorator node to a string like "@Get(':id')" or "@Injectable()".
+     */
+    private formatDecorator(node: SyntaxNode): string {
+        return node.text.replace(/\s+/g, " ").trim()
+    }
+
+    /**
+     * Extract decorators that are direct children of a node.
+     * In tree-sitter, decorators are children of the class/function declaration.
+     */
+    private extractNodeDecorators(node: SyntaxNode): string[] {
+        const decorators: string[] = []
+        for (const child of node.children) {
+            if (child.type === NodeType.DECORATOR) {
+                decorators.push(this.formatDecorator(child))
+            }
+        }
+        return decorators
+    }
+
+    /**
+     * Extract decorators from sibling nodes before the current node.
+     * Decorators appear as children before the declaration in export statements.
+     */
+    private extractDecoratorsFromSiblings(node: SyntaxNode): string[] {
+        const decorators: string[] = []
+        const parent = node.parent
+        if (!parent) {
+            return decorators
+        }
+
+        for (const sibling of parent.children) {
+            if (sibling.type === NodeType.DECORATOR) {
+                decorators.push(this.formatDecorator(sibling))
+            } else if (sibling === node) {
+                break
+            }
+        }
+
+        return decorators
     }
 
     private classifyImport(from: string): ImportInfo["type"] {

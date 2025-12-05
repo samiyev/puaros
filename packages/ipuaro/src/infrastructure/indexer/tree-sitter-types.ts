@@ -63,6 +63,9 @@ export const NodeType = {
     DEFAULT: "default",
     ACCESSIBILITY_MODIFIER: "accessibility_modifier",
     READONLY: "readonly",
+
+    // Decorators
+    DECORATOR: "decorator",
 } as const
 
 export type NodeTypeValue = (typeof NodeType)[keyof typeof NodeType]

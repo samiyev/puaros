@@ -1773,4 +1773,244 @@ describe("prompts", () => {
             expect(context).toContain("- enum VeryLongEnumName")
         })
     })
+
+    describe("decorators (0.24.4)", () => {
+        it("should format function with decorators", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["controller.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "controller.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "getUser",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                params: [
+                                    {
+                                        name: "id",
+                                        type: "string",
+                                        optional: false,
+                                        hasDefault: false,
+                                    },
+                                ],
+                                isAsync: true,
+                                isExported: true,
+                                returnType: "Promise<User>",
+                                decorators: ["@Get(':id')"],
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- @Get(':id') async getUser(id: string): Promise<User>")
+        })
+
+        it("should format class with decorators", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["controller.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "controller.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [
+                            {
+                                name: "UserController",
+                                lineStart: 1,
+                                lineEnd: 20,
+                                methods: [],
+                                properties: [],
+                                implements: [],
+                                isExported: true,
+                                isAbstract: false,
+                                decorators: ["@Controller('users')"],
+                            },
+                        ],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- @Controller('users') class UserController")
+        })
+
+        it("should format class with multiple decorators", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["service.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "service.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [
+                            {
+                                name: "UserService",
+                                lineStart: 1,
+                                lineEnd: 30,
+                                methods: [],
+                                properties: [],
+                                implements: ["IUserService"],
+                                isExported: true,
+                                isAbstract: false,
+                                decorators: ["@Injectable()", "@Singleton()"],
+                            },
+                        ],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain(
+                "- @Injectable() @Singleton() class UserService implements IUserService",
+            )
+        })
+
+        it("should format function with multiple decorators", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["controller.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "controller.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "createUser",
+                                lineStart: 1,
+                                lineEnd: 10,
+                                params: [],
+                                isAsync: true,
+                                isExported: true,
+                                decorators: ["@Post()", "@Auth()", "@ValidateBody()"],
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- @Post() @Auth() @ValidateBody() async createUser()")
+        })
+
+        it("should handle function without decorators", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["utils.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "utils.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [
+                            {
+                                name: "helper",
+                                lineStart: 1,
+                                lineEnd: 5,
+                                params: [],
+                                isAsync: false,
+                                isExported: true,
+                            },
+                        ],
+                        classes: [],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- helper()")
+            expect(context).not.toContain("@")
+        })
+
+        it("should handle class without decorators", () => {
+            const structure: ProjectStructure = {
+                name: "test",
+                rootPath: "/test",
+                files: ["simple.ts"],
+                directories: [],
+            }
+            const asts = new Map<string, FileAST>([
+                [
+                    "simple.ts",
+                    {
+                        imports: [],
+                        exports: [],
+                        functions: [],
+                        classes: [
+                            {
+                                name: "SimpleClass",
+                                lineStart: 1,
+                                lineEnd: 10,
+                                methods: [],
+                                properties: [],
+                                implements: [],
+                                isExported: true,
+                                isAbstract: false,
+                            },
+                        ],
+                        interfaces: [],
+                        typeAliases: [],
+                        parseError: false,
+                    },
+                ],
+            ])
+
+            const context = buildInitialContext(structure, asts)
+
+            expect(context).toContain("- class SimpleClass")
+            expect(context).not.toContain("@")
+        })
+    })
 })

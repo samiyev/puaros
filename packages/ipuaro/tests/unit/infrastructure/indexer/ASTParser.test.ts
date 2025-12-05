@@ -696,4 +696,140 @@ third: value3`
             expect(ast.enums).toHaveLength(0)
         })
     })
+
+    describe("decorators (0.24.4)", () => {
+        it("should extract class decorator", () => {
+            const code = `@Controller('users')
+class UserController {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].decorators).toHaveLength(1)
+            expect(ast.classes[0].decorators[0]).toBe("@Controller('users')")
+        })
+
+        it("should extract multiple class decorators", () => {
+            const code = `@Controller('api')
+@Injectable()
+@UseGuards(AuthGuard)
+class ApiController {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].decorators).toHaveLength(3)
+            expect(ast.classes[0].decorators[0]).toBe("@Controller('api')")
+            expect(ast.classes[0].decorators[1]).toBe("@Injectable()")
+            expect(ast.classes[0].decorators[2]).toBe("@UseGuards(AuthGuard)")
+        })
+
+        it("should extract method decorators", () => {
+            const code = `class UserController {
+    @Get(':id')
+    @Auth()
+    async getUser() {}
+}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].methods).toHaveLength(1)
+            expect(ast.classes[0].methods[0].decorators).toHaveLength(2)
+            expect(ast.classes[0].methods[0].decorators[0]).toBe("@Get(':id')")
+            expect(ast.classes[0].methods[0].decorators[1]).toBe("@Auth()")
+        })
+
+        it("should extract exported decorated class", () => {
+            const code = `@Injectable()
+export class UserService {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].isExported).toBe(true)
+            expect(ast.classes[0].decorators).toHaveLength(1)
+            expect(ast.classes[0].decorators[0]).toBe("@Injectable()")
+        })
+
+        it("should extract decorator with complex arguments", () => {
+            const code = `@Module({
+    imports: [UserModule],
+    controllers: [AppController],
+    providers: [AppService]
+})
+class AppModule {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].decorators).toHaveLength(1)
+            expect(ast.classes[0].decorators[0]).toContain("@Module")
+            expect(ast.classes[0].decorators[0]).toContain("imports")
+        })
+
+        it("should extract decorated class with extends", () => {
+            const code = `@Entity()
+class User extends BaseEntity {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].extends).toBe("BaseEntity")
+            expect(ast.classes[0].decorators).toHaveLength(1)
+            expect(ast.classes[0].decorators![0]).toBe("@Entity()")
+        })
+
+        it("should handle class without decorators", () => {
+            const code = `class SimpleClass {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].decorators).toHaveLength(0)
+        })
+
+        it("should handle method without decorators", () => {
+            const code = `class SimpleClass {
+    simpleMethod() {}
+}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].methods).toHaveLength(1)
+            expect(ast.classes[0].methods[0].decorators).toHaveLength(0)
+        })
+
+        it("should handle function without decorators", () => {
+            const code = `function simpleFunc() {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.functions).toHaveLength(1)
+            expect(ast.functions[0].decorators).toHaveLength(0)
+        })
+
+        it("should handle arrow function without decorators", () => {
+            const code = `const arrowFn = () => {}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.functions).toHaveLength(1)
+            expect(ast.functions[0].decorators).toHaveLength(0)
+        })
+
+        it("should extract NestJS controller pattern", () => {
+            const code = `@Controller('users')
+export class UserController {
+    @Get()
+    findAll() {}
+
+    @Get(':id')
+    findOne() {}
+
+    @Post()
+    @Body()
+    create() {}
+}`
+            const ast = parser.parse(code, "ts")
+
+            expect(ast.classes).toHaveLength(1)
+            expect(ast.classes[0].decorators).toContain("@Controller('users')")
+            expect(ast.classes[0].methods).toHaveLength(3)
+            expect(ast.classes[0].methods[0].decorators).toContain("@Get()")
+            expect(ast.classes[0].methods[1].decorators).toContain("@Get(':id')")
+            expect(ast.classes[0].methods[2].decorators).toContain("@Post()")
+        })
+    })
 })

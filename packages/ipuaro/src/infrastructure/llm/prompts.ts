@@ -188,9 +188,21 @@ function formatFileOverview(
 }
 
 /**
+ * Format decorators as a prefix string.
+ * Example: "@Get(':id') @Auth() "
+ */
+function formatDecoratorsPrefix(decorators: string[] | undefined): string {
+    if (!decorators || decorators.length === 0) {
+        return ""
+    }
+    return `${decorators.join(" ")} `
+}
+
+/**
  * Format a function signature.
  */
 function formatFunctionSignature(fn: FileAST["functions"][0]): string {
+    const decoratorsPrefix = formatDecoratorsPrefix(fn.decorators)
     const asyncPrefix = fn.isAsync ? "async " : ""
     const params = fn.params
         .map((p) => {
@@ -200,7 +212,7 @@ function formatFunctionSignature(fn: FileAST["functions"][0]): string {
         })
         .join(", ")
     const returnType = fn.returnType ? `: ${fn.returnType}` : ""
-    return `${asyncPrefix}${fn.name}(${params})${returnType}`
+    return `${decoratorsPrefix}${asyncPrefix}${fn.name}(${params})${returnType}`
 }
 
 /**
@@ -310,9 +322,10 @@ function formatFileSummary(
 
     if (ast.classes.length > 0) {
         for (const cls of ast.classes) {
+            const decoratorsPrefix = formatDecoratorsPrefix(cls.decorators)
             const ext = cls.extends ? ` extends ${cls.extends}` : ""
             const impl = cls.implements.length > 0 ? ` implements ${cls.implements.join(", ")}` : ""
-            lines.push(`- class ${cls.name}${ext}${impl}`)
+            lines.push(`- ${decoratorsPrefix}class ${cls.name}${ext}${impl}`)
         }
     }
 

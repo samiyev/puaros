@@ -52,6 +52,8 @@ export interface FunctionInfo {
     isExported: boolean
     /** Return type (if available) */
     returnType?: string
+    /** Decorators applied to the function (e.g., ["@Get(':id')", "@Auth()"]) */
+    decorators?: string[]
 }
 
 export interface MethodInfo {
@@ -69,6 +71,8 @@ export interface MethodInfo {
     visibility: "public" | "private" | "protected"
     /** Whether it's static */
     isStatic: boolean
+    /** Decorators applied to the method (e.g., ["@Get(':id')", "@UseGuards(AuthGuard)"]) */
+    decorators?: string[]
 }
 
 export interface PropertyInfo {
@@ -105,6 +109,8 @@ export interface ClassInfo {
     isExported: boolean
     /** Whether class is abstract */
     isAbstract: boolean
+    /** Decorators applied to the class (e.g., ["@Controller('users')", "@Injectable()"]) */
+    decorators?: string[]
 }
 
 export interface InterfaceInfo {
