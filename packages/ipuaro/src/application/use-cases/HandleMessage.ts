@@ -18,6 +18,7 @@ import {
     buildInitialContext,
     type ProjectStructure,
     SYSTEM_PROMPT,
+    TOOL_REMINDER,
 } from "../../infrastructure/llm/prompts.js"
 import { parseToolCalls } from "../../infrastructure/llm/ResponseParser.js"
 import type { IToolRegistry } from "../interfaces/IToolRegistry.js"
@@ -276,6 +277,12 @@ export class HandleMessage {
         }
 
         messages.push(...session.history)
+
+        // Add tool reminder if last message is from user (first LLM call for this query)
+        const lastMessage = session.history[session.history.length - 1]
+        if (lastMessage?.role === "user") {
+            messages.push(createSystemMessage(TOOL_REMINDER))
+        }
 
         return messages
     }

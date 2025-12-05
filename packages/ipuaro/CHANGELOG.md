@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.2] - 2025-12-05 - JSON Tool Call Parsing & Improved Prompts
+
+### Added
+
+- **JSON Tool Call Fallback in ResponseParser**
+  - LLM responses with JSON format `{"name": "tool", "arguments": {...}}` are now parsed
+  - Fallback to JSON when XML format not found
+  - Works with models like qwen2.5-coder that prefer JSON over XML
+
+- **Tool Name Aliases**
+  - `get_functions`, `read_file`, `read_lines` → `get_lines`
+  - `list_files`, `get_files` → `get_structure`
+  - `find_todos` → `get_todos`
+  - And more common LLM typos/variations
+
+### Changed
+
+- **Improved System Prompt**
+  - Added clear "When to Use Tools" / "Do NOT use tools" sections
+  - More concise and directive instructions
+  - Better examples for tool usage
+
+### Technical Details
+
+- Total tests: 1848 passed (+8 new tests for JSON parsing)
+- 0 ESLint errors, 3 warnings (pre-existing complexity)
+
+---
+
 ## [0.30.1] - 2025-12-05 - Display Transitive Counts in Context
 
 ### Changed

@@ -59,8 +59,49 @@ const VALID_TOOL_NAMES = new Set([
 ])
 
 /**
+ * Tool name aliases for common LLM typos/variations.
+ * Maps incorrect names to correct tool names.
+ */
+const TOOL_ALIASES: Record<string, string> = {
+    // get_lines aliases
+    get_functions: "get_lines",
+    read_file: "get_lines",
+    read_lines: "get_lines",
+    get_file: "get_lines",
+    read: "get_lines",
+    // get_function aliases
+    getfunction: "get_function",
+    // get_structure aliases
+    list_files: "get_structure",
+    get_files: "get_structure",
+    list_structure: "get_structure",
+    get_project_structure: "get_structure",
+    // get_todos aliases
+    find_todos: "get_todos",
+    list_todos: "get_todos",
+    // find_references aliases
+    get_references: "find_references",
+    // find_definition aliases
+    get_definition: "find_definition",
+    // edit_lines aliases
+    edit_file: "edit_lines",
+    modify_file: "edit_lines",
+    update_file: "edit_lines",
+}
+
+/**
+ * Normalize tool name using aliases.
+ */
+function normalizeToolName(name: string): string {
+    const lowerName = name.toLowerCase()
+    return TOOL_ALIASES[lowerName] ?? name
+}
+
+/**
  * Parse tool calls from LLM response text.
- * Supports XML format: <tool_call name="get_lines"><path>src/index.ts</path></tool_call>
+ * Supports both XML and JSON formats:
+ * - XML: <tool_call name="get_lines"><path>src/index.ts</path></tool_call>
+ * - JSON: {"name": "get_lines", "arguments": {"path": "src/index.ts"}}
  * Validates tool names and provides helpful error messages.
  */
 export function parseToolCalls(response: string): ParsedResponse {
@@ -68,14 +109,18 @@ export function parseToolCalls(response: string): ParsedResponse {
     const parseErrors: string[] = []
     let content = response
 
-    const matches = [...response.matchAll(TOOL_CALL_REGEX)]
+    // First, try XML format
+    const xmlMatches = [...response.matchAll(TOOL_CALL_REGEX)]
 
-    for (const match of matches) {
-        const [fullMatch, toolName, paramsXml] = match
+    for (const match of xmlMatches) {
+        const [fullMatch, rawToolName, paramsXml] = match
+
+        // Normalize tool name (handle common LLM typos/variations)
+        const toolName = normalizeToolName(rawToolName)
 
         if (!VALID_TOOL_NAMES.has(toolName)) {
             parseErrors.push(
-                `Unknown tool "${toolName}". Valid tools: ${[...VALID_TOOL_NAMES].join(", ")}`,
+                `Unknown tool "${rawToolName}". Valid tools: ${[...VALID_TOOL_NAMES].join(", ")}`,
             )
             continue
         }
@@ -91,7 +136,19 @@ export function parseToolCalls(response: string): ParsedResponse {
             content = content.replace(fullMatch, "")
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error)
-            parseErrors.push(`Failed to parse tool call "${toolName}": ${errorMsg}`)
+            parseErrors.push(`Failed to parse tool call "${rawToolName}": ${errorMsg}`)
+        }
+    }
+
+    // If no XML tool calls found, try JSON format as fallback
+    if (toolCalls.length === 0) {
+        const jsonResult = parseJsonToolCalls(response)
+        toolCalls.push(...jsonResult.toolCalls)
+        parseErrors.push(...jsonResult.parseErrors)
+
+        // Remove JSON tool calls from content
+        for (const jsonMatch of jsonResult.matchedStrings) {
+            content = content.replace(jsonMatch, "")
         }
     }
 
@@ -103,6 +160,59 @@ export function parseToolCalls(response: string): ParsedResponse {
         hasParseErrors: parseErrors.length > 0,
         parseErrors,
     }
+}
+
+/**
+ * JSON tool call format pattern.
+ * Matches: {"name": "tool_name", "arguments": {...}}
+ */
+const JSON_TOOL_CALL_REGEX =
+    /\{\s*"name"\s*:\s*"([^"]+)"\s*,\s*"arguments"\s*:\s*(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})\s*\}/g
+
+/**
+ * Parse tool calls from JSON format in response.
+ * This is a fallback for LLMs that prefer JSON over XML.
+ */
+function parseJsonToolCalls(response: string): {
+    toolCalls: ToolCall[]
+    parseErrors: string[]
+    matchedStrings: string[]
+} {
+    const toolCalls: ToolCall[] = []
+    const parseErrors: string[] = []
+    const matchedStrings: string[] = []
+
+    const matches = [...response.matchAll(JSON_TOOL_CALL_REGEX)]
+
+    for (const match of matches) {
+        const [fullMatch, rawToolName, argsJson] = match
+        matchedStrings.push(fullMatch)
+
+        // Normalize tool name
+        const toolName = normalizeToolName(rawToolName)
+
+        if (!VALID_TOOL_NAMES.has(toolName)) {
+            parseErrors.push(
+                `Unknown tool "${rawToolName}". Valid tools: ${[...VALID_TOOL_NAMES].join(", ")}`,
+            )
+            continue
+        }
+
+        try {
+            const args = JSON.parse(argsJson) as Record<string, unknown>
+            const toolCall = createToolCall(
+                `json_${String(Date.now())}_${String(toolCalls.length)}`,
+                toolName,
+                args,
+            )
+            toolCalls.push(toolCall)
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            parseErrors.push(`Failed to parse JSON tool call "${rawToolName}": ${errorMsg}`)
+        }
+    }
+
+    return { toolCalls, parseErrors, matchedStrings }
 }
 
 /**

@@ -135,6 +135,108 @@ describe("ResponseParser", () => {
             expect(result.parseErrors[0]).toContain("unknown_tool")
         })
 
+        it("should normalize tool name aliases", () => {
+            // get_functions -> get_lines (common LLM typo)
+            const response1 = `<tool_call name="get_functions"><path>src/index.ts</path></tool_call>`
+            const result1 = parseToolCalls(response1)
+            expect(result1.toolCalls).toHaveLength(1)
+            expect(result1.toolCalls[0].name).toBe("get_lines")
+            expect(result1.hasParseErrors).toBe(false)
+
+            // read_file -> get_lines
+            const response2 = `<tool_call name="read_file"><path>test.ts</path></tool_call>`
+            const result2 = parseToolCalls(response2)
+            expect(result2.toolCalls).toHaveLength(1)
+            expect(result2.toolCalls[0].name).toBe("get_lines")
+
+            // find_todos -> get_todos
+            const response3 = `<tool_call name="find_todos"></tool_call>`
+            const result3 = parseToolCalls(response3)
+            expect(result3.toolCalls).toHaveLength(1)
+            expect(result3.toolCalls[0].name).toBe("get_todos")
+
+            // list_files -> get_structure
+            const response4 = `<tool_call name="list_files"><path>.</path></tool_call>`
+            const result4 = parseToolCalls(response4)
+            expect(result4.toolCalls).toHaveLength(1)
+            expect(result4.toolCalls[0].name).toBe("get_structure")
+        })
+
+        // JSON format tests
+        it("should parse JSON format tool calls as fallback", () => {
+            const response = `{"name": "get_lines", "arguments": {"path": "src/index.ts"}}`
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(1)
+            expect(result.toolCalls[0].name).toBe("get_lines")
+            expect(result.toolCalls[0].params).toEqual({ path: "src/index.ts" })
+            expect(result.hasParseErrors).toBe(false)
+        })
+
+        it("should parse JSON format with numeric arguments", () => {
+            const response = `{"name": "get_lines", "arguments": {"path": "src/index.ts", "start": 1, "end": 50}}`
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(1)
+            expect(result.toolCalls[0].params).toEqual({
+                path: "src/index.ts",
+                start: 1,
+                end: 50,
+            })
+        })
+
+        it("should parse JSON format with surrounding text", () => {
+            const response = `I'll read the file for you:
+{"name": "get_lines", "arguments": {"path": "src/index.ts"}}
+Let me know if you need more.`
+
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(1)
+            expect(result.toolCalls[0].name).toBe("get_lines")
+            expect(result.content).toContain("I'll read the file for you:")
+            expect(result.content).toContain("Let me know if you need more.")
+        })
+
+        it("should normalize tool name aliases in JSON format", () => {
+            // read_file -> get_lines
+            const response = `{"name": "read_file", "arguments": {"path": "test.ts"}}`
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(1)
+            expect(result.toolCalls[0].name).toBe("get_lines")
+        })
+
+        it("should reject unknown tool names in JSON format", () => {
+            const response = `{"name": "unknown_tool", "arguments": {"path": "test.ts"}}`
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(0)
+            expect(result.hasParseErrors).toBe(true)
+            expect(result.parseErrors[0]).toContain("unknown_tool")
+        })
+
+        it("should prefer XML over JSON when both present", () => {
+            const response = `<tool_call name="get_lines"><path>xml.ts</path></tool_call>
+{"name": "get_function", "arguments": {"path": "json.ts", "name": "foo"}}`
+
+            const result = parseToolCalls(response)
+
+            // Should only parse XML since it was found first
+            expect(result.toolCalls).toHaveLength(1)
+            expect(result.toolCalls[0].name).toBe("get_lines")
+            expect(result.toolCalls[0].params.path).toBe("xml.ts")
+        })
+
+        it("should parse JSON with empty arguments", () => {
+            const response = `{"name": "git_status", "arguments": {}}`
+            const result = parseToolCalls(response)
+
+            expect(result.toolCalls).toHaveLength(1)
+            expect(result.toolCalls[0].name).toBe("git_status")
+            expect(result.toolCalls[0].params).toEqual({})
+        })
+
         it("should support CDATA for multiline content", () => {
             const response = `<tool_call name="edit_lines">
                 <path>src/index.ts</path>

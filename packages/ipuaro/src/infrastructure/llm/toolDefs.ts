@@ -509,3 +509,87 @@ export function getToolsByCategory(category: string): ToolDef[] {
             return []
     }
 }
+
+/*
+ * =============================================================================
+ * Native Ollama Tools Format
+ * =============================================================================
+ */
+
+/**
+ * Ollama native tool definition format.
+ */
+export interface OllamaTool {
+    type: "function"
+    function: {
+        name: string
+        description: string
+        parameters: {
+            type: "object"
+            properties: Record<string, OllamaToolProperty>
+            required: string[]
+        }
+    }
+}
+
+interface OllamaToolProperty {
+    type: string
+    description: string
+    enum?: string[]
+    items?: { type: string }
+}
+
+/**
+ * Convert ToolDef to Ollama native format.
+ */
+function convertToOllamaTool(tool: ToolDef): OllamaTool {
+    const properties: Record<string, OllamaToolProperty> = {}
+    const required: string[] = []
+
+    for (const param of tool.parameters) {
+        const prop: OllamaToolProperty = {
+            type: param.type === "array" ? "array" : param.type,
+            description: param.description,
+        }
+
+        if (param.enum) {
+            prop.enum = param.enum
+        }
+
+        if (param.type === "array") {
+            prop.items = { type: "string" }
+        }
+
+        properties[param.name] = prop
+
+        if (param.required) {
+            required.push(param.name)
+        }
+    }
+
+    return {
+        type: "function",
+        function: {
+            name: tool.name,
+            description: tool.description,
+            parameters: {
+                type: "object",
+                properties,
+                required,
+            },
+        },
+    }
+}
+
+/**
+ * All tools in Ollama native format.
+ * Used when useNativeTools is enabled.
+ */
+export const OLLAMA_NATIVE_TOOLS: OllamaTool[] = ALL_TOOLS.map(convertToOllamaTool)
+
+/**
+ * Get native tool definitions for Ollama.
+ */
+export function getOllamaNativeTools(): OllamaTool[] {
+    return OLLAMA_NATIVE_TOOLS
+}

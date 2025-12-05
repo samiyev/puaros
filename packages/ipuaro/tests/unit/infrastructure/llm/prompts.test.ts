@@ -19,10 +19,16 @@ describe("prompts", () => {
             expect(SYSTEM_PROMPT.length).toBeGreaterThan(100)
         })
 
-        it("should contain core principles", () => {
-            expect(SYSTEM_PROMPT).toContain("Lazy Loading")
-            expect(SYSTEM_PROMPT).toContain("Precision")
-            expect(SYSTEM_PROMPT).toContain("Safety")
+        it("should contain mandatory tool usage instructions", () => {
+            expect(SYSTEM_PROMPT).toContain("MANDATORY")
+            expect(SYSTEM_PROMPT).toContain("Tools for Code Questions")
+            expect(SYSTEM_PROMPT).toContain("ZERO code in your context")
+        })
+
+        it("should contain when to use and when not to use tools", () => {
+            expect(SYSTEM_PROMPT).toContain("When to Use Tools")
+            expect(SYSTEM_PROMPT).toContain("Do NOT use tools")
+            expect(SYSTEM_PROMPT).toContain("Greetings")
         })
 
         it("should list available tools", () => {
@@ -34,8 +40,9 @@ describe("prompts", () => {
         })
 
         it("should include safety rules", () => {
-            expect(SYSTEM_PROMPT).toContain("Safety Rules")
-            expect(SYSTEM_PROMPT).toContain("Never execute commands that could harm")
+            expect(SYSTEM_PROMPT).toContain("Stay safe")
+            expect(SYSTEM_PROMPT).toContain("destructive commands")
+            expect(SYSTEM_PROMPT).toContain("Verify before editing")
         })
     })
 

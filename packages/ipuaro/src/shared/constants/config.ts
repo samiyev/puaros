@@ -20,6 +20,7 @@ export const LLMConfigSchema = z.object({
     temperature: z.number().min(0).max(2).default(0.1),
     host: z.string().default("http://localhost:11434"),
     timeout: z.number().int().positive().default(120_000),
+    useNativeTools: z.boolean().default(false),
 })
 
 /**
