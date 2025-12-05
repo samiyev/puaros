@@ -431,7 +431,7 @@ export class MetaAnalyzer {
 
     /**
      * Batch analyze multiple files.
-     * Computes impact scores after all files are analyzed.
+     * Computes impact scores and transitive dependencies after all files are analyzed.
      */
     analyzeAll(files: Map<string, { ast: FileAST; content: string }>): Map<string, FileMeta> {
         const allASTs = new Map<string, FileAST>()
@@ -451,6 +451,165 @@ export class MetaAnalyzer {
             meta.impactScore = calculateImpactScore(meta.dependents.length, totalFiles)
         }
 
+        // Compute transitive dependency counts
+        this.computeTransitiveCounts(results)
+
         return results
+    }
+
+    /**
+     * Compute transitive dependency counts for all files.
+     * Uses DFS with memoization for efficiency.
+     */
+    computeTransitiveCounts(metas: Map<string, FileMeta>): void {
+        // Memoization caches
+        const transitiveDepCache = new Map<string, Set<string>>()
+        const transitiveDepByCache = new Map<string, Set<string>>()
+
+        // Compute transitive dependents (files that depend on this file, directly or transitively)
+        for (const [filePath, meta] of metas) {
+            const transitiveDeps = this.getTransitiveDependents(filePath, metas, transitiveDepCache)
+            // Exclude the file itself from count (can happen in cycles)
+            meta.transitiveDepCount = transitiveDeps.has(filePath)
+                ? transitiveDeps.size - 1
+                : transitiveDeps.size
+        }
+
+        // Compute transitive dependencies (files this file depends on, directly or transitively)
+        for (const [filePath, meta] of metas) {
+            const transitiveDepsBy = this.getTransitiveDependencies(
+                filePath,
+                metas,
+                transitiveDepByCache,
+            )
+            // Exclude the file itself from count (can happen in cycles)
+            meta.transitiveDepByCount = transitiveDepsBy.has(filePath)
+                ? transitiveDepsBy.size - 1
+                : transitiveDepsBy.size
+        }
+    }
+
+    /**
+     * Get all files that depend on the given file transitively.
+     * Uses DFS with cycle detection. Caching only at the top level.
+     */
+    getTransitiveDependents(
+        filePath: string,
+        metas: Map<string, FileMeta>,
+        cache: Map<string, Set<string>>,
+        visited?: Set<string>,
+    ): Set<string> {
+        // Return cached result if available (only valid for top-level calls)
+        if (!visited) {
+            const cached = cache.get(filePath)
+            if (cached) {
+                return cached
+            }
+        }
+
+        const isTopLevel = !visited
+        if (!visited) {
+            visited = new Set()
+        }
+
+        // Detect cycles
+        if (visited.has(filePath)) {
+            return new Set()
+        }
+
+        visited.add(filePath)
+        const result = new Set<string>()
+
+        const meta = metas.get(filePath)
+        if (!meta) {
+            if (isTopLevel) {
+                cache.set(filePath, result)
+            }
+            return result
+        }
+
+        // Add direct dependents
+        for (const dependent of meta.dependents) {
+            result.add(dependent)
+
+            // Recursively add transitive dependents
+            const transitive = this.getTransitiveDependents(
+                dependent,
+                metas,
+                cache,
+                new Set(visited),
+            )
+            for (const t of transitive) {
+                result.add(t)
+            }
+        }
+
+        // Only cache top-level results (not intermediate results during recursion)
+        if (isTopLevel) {
+            cache.set(filePath, result)
+        }
+        return result
+    }
+
+    /**
+     * Get all files that the given file depends on transitively.
+     * Uses DFS with cycle detection. Caching only at the top level.
+     */
+    getTransitiveDependencies(
+        filePath: string,
+        metas: Map<string, FileMeta>,
+        cache: Map<string, Set<string>>,
+        visited?: Set<string>,
+    ): Set<string> {
+        // Return cached result if available (only valid for top-level calls)
+        if (!visited) {
+            const cached = cache.get(filePath)
+            if (cached) {
+                return cached
+            }
+        }
+
+        const isTopLevel = !visited
+        if (!visited) {
+            visited = new Set()
+        }
+
+        // Detect cycles
+        if (visited.has(filePath)) {
+            return new Set()
+        }
+
+        visited.add(filePath)
+        const result = new Set<string>()
+
+        const meta = metas.get(filePath)
+        if (!meta) {
+            if (isTopLevel) {
+                cache.set(filePath, result)
+            }
+            return result
+        }
+
+        // Add direct dependencies
+        for (const dependency of meta.dependencies) {
+            result.add(dependency)
+
+            // Recursively add transitive dependencies
+            const transitive = this.getTransitiveDependencies(
+                dependency,
+                metas,
+                cache,
+                new Set(visited),
+            )
+            for (const t of transitive) {
+                result.add(t)
+            }
+        }
+
+        // Only cache top-level results (not intermediate results during recursion)
+        if (isTopLevel) {
+            cache.set(filePath, result)
+        }
+        return result
     }
 }

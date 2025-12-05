@@ -28,6 +28,10 @@ export interface FileMeta {
     fileType: "source" | "test" | "config" | "types" | "unknown"
     /** Impact score (0-100): percentage of codebase that depends on this file */
     impactScore: number
+    /** Count of files that depend on this file transitively (including indirect dependents) */
+    transitiveDepCount: number
+    /** Count of files this file depends on transitively (including indirect dependencies) */
+    transitiveDepByCount: number
 }
 
 export function createFileMeta(partial: Partial<FileMeta> = {}): FileMeta {
@@ -44,6 +48,8 @@ export function createFileMeta(partial: Partial<FileMeta> = {}): FileMeta {
         isEntryPoint: false,
         fileType: "unknown",
         impactScore: 0,
+        transitiveDepCount: 0,
+        transitiveDepByCount: 0,
         ...partial,
     }
 }

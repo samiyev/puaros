@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.0] - 2025-12-05 - Transitive Dependencies Count
+
+### Added
+
+- **Transitive Dependency Counts in FileMeta (v0.30.0)**
+  - New `transitiveDepCount: number` field - count of files that depend on this file transitively
+  - New `transitiveDepByCount: number` field - count of files this file depends on transitively
+  - Includes both direct and indirect dependencies/dependents
+  - Excludes the file itself from counts (handles circular dependencies)
+
+- **Transitive Dependency Computation in MetaAnalyzer**
+  - New `computeTransitiveCounts()` method - computes transitive counts for all files
+  - New `getTransitiveDependents()` method - DFS with cycle detection for dependents
+  - New `getTransitiveDependencies()` method - DFS with cycle detection for dependencies
+  - Top-level caching for efficiency (avoids re-computing for each file)
+  - Graceful handling of circular dependencies
+
+### Technical Details
+
+- Total tests: 1840 passed (was 1826, +14 new tests)
+  - 9 new tests for computeTransitiveCounts()
+  - 2 new tests for getTransitiveDependents()
+  - 2 new tests for getTransitiveDependencies()
+  - 1 new test for analyzeAll with transitive counts
+- Coverage: 97.58% lines, 91.5% branches, 98.64% functions
+- 0 ESLint errors, 3 warnings (pre-existing complexity)
+- Build successful
+
+### Notes
+
+This completes v0.30.0 - the final feature milestone before v1.0.0:
+- ✅ 0.27.0 - Inline Dependency Graph
+- ✅ 0.28.0 - Circular Dependencies in Context
+- ✅ 0.29.0 - Impact Score
+- ✅ 0.30.0 - Transitive Dependencies Count
+
+Next milestone: v1.0.0 - Production Ready
+
+---
+
 ## [0.29.0] - 2025-12-05 - Impact Score
 
 ### Added

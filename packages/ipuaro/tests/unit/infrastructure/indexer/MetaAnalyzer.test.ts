@@ -3,6 +3,7 @@ import { MetaAnalyzer } from "../../../../src/infrastructure/indexer/MetaAnalyze
 import { ASTParser } from "../../../../src/infrastructure/indexer/ASTParser.js"
 import type { FileAST } from "../../../../src/domain/value-objects/FileAST.js"
 import { createEmptyFileAST } from "../../../../src/domain/value-objects/FileAST.js"
+import { createFileMeta, type FileMeta } from "../../../../src/domain/value-objects/FileMeta.js"
 
 describe("MetaAnalyzer", () => {
     let analyzer: MetaAnalyzer
@@ -735,6 +736,370 @@ export function createComponent(): MyComponent {
             expect(meta.complexity.loc).toBeGreaterThan(10)
             expect(meta.dependencies).toContain("/project/src/helper.ts")
             expect(meta.fileType).toBe("source")
+        })
+    })
+
+    describe("computeTransitiveCounts", () => {
+        it("should compute transitive dependents for a simple chain", () => {
+            // A -> B -> C (A depends on B, B depends on C)
+            // So C has transitive dependents: B, A
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: ["/project/b.ts"],
+                    dependents: [],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: ["/project/c.ts"],
+                    dependents: ["/project/a.ts"],
+                }),
+            )
+            metas.set(
+                "/project/c.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: ["/project/b.ts"],
+                }),
+            )
+
+            analyzer.computeTransitiveCounts(metas)
+
+            expect(metas.get("/project/c.ts")!.transitiveDepCount).toBe(2) // B and A
+            expect(metas.get("/project/b.ts")!.transitiveDepCount).toBe(1) // A
+            expect(metas.get("/project/a.ts")!.transitiveDepCount).toBe(0) // none
+        })
+
+        it("should compute transitive dependencies for a simple chain", () => {
+            // A -> B -> C (A depends on B, B depends on C)
+            // So A has transitive dependencies: B, C
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: ["/project/b.ts"],
+                    dependents: [],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: ["/project/c.ts"],
+                    dependents: ["/project/a.ts"],
+                }),
+            )
+            metas.set(
+                "/project/c.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: ["/project/b.ts"],
+                }),
+            )
+
+            analyzer.computeTransitiveCounts(metas)
+
+            expect(metas.get("/project/a.ts")!.transitiveDepByCount).toBe(2) // B and C
+            expect(metas.get("/project/b.ts")!.transitiveDepByCount).toBe(1) // C
+            expect(metas.get("/project/c.ts")!.transitiveDepByCount).toBe(0) // none
+        })
+
+        it("should handle diamond dependency pattern", () => {
+            //     A
+            //    / \
+            //   B   C
+            //    \ /
+            //     D
+            // A depends on B and C, both depend on D
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: ["/project/b.ts", "/project/c.ts"],
+                    dependents: [],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: ["/project/d.ts"],
+                    dependents: ["/project/a.ts"],
+                }),
+            )
+            metas.set(
+                "/project/c.ts",
+                createFileMeta({
+                    dependencies: ["/project/d.ts"],
+                    dependents: ["/project/a.ts"],
+                }),
+            )
+            metas.set(
+                "/project/d.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: ["/project/b.ts", "/project/c.ts"],
+                }),
+            )
+
+            analyzer.computeTransitiveCounts(metas)
+
+            // D is depended on by B, C, and transitively by A
+            expect(metas.get("/project/d.ts")!.transitiveDepCount).toBe(3)
+            // A depends on B, C, and transitively on D
+            expect(metas.get("/project/a.ts")!.transitiveDepByCount).toBe(3)
+        })
+
+        it("should handle circular dependencies gracefully", () => {
+            // A -> B -> C -> A (circular)
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: ["/project/b.ts"],
+                    dependents: ["/project/c.ts"],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: ["/project/c.ts"],
+                    dependents: ["/project/a.ts"],
+                }),
+            )
+            metas.set(
+                "/project/c.ts",
+                createFileMeta({
+                    dependencies: ["/project/a.ts"],
+                    dependents: ["/project/b.ts"],
+                }),
+            )
+
+            // Should not throw, should handle cycles
+            analyzer.computeTransitiveCounts(metas)
+
+            // Each file has the other 2 as transitive dependents
+            expect(metas.get("/project/a.ts")!.transitiveDepCount).toBe(2)
+            expect(metas.get("/project/b.ts")!.transitiveDepCount).toBe(2)
+            expect(metas.get("/project/c.ts")!.transitiveDepCount).toBe(2)
+        })
+
+        it("should return 0 for files with no dependencies", () => {
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: [],
+                }),
+            )
+
+            analyzer.computeTransitiveCounts(metas)
+
+            expect(metas.get("/project/a.ts")!.transitiveDepCount).toBe(0)
+            expect(metas.get("/project/a.ts")!.transitiveDepByCount).toBe(0)
+        })
+
+        it("should handle empty metas map", () => {
+            const metas = new Map<string, FileMeta>()
+            // Should not throw
+            expect(() => analyzer.computeTransitiveCounts(metas)).not.toThrow()
+        })
+
+        it("should handle single file", () => {
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: [],
+                }),
+            )
+
+            analyzer.computeTransitiveCounts(metas)
+
+            expect(metas.get("/project/a.ts")!.transitiveDepCount).toBe(0)
+            expect(metas.get("/project/a.ts")!.transitiveDepByCount).toBe(0)
+        })
+
+        it("should handle multiple roots depending on same leaf", () => {
+            // A -> C, B -> C
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: ["/project/c.ts"],
+                    dependents: [],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: ["/project/c.ts"],
+                    dependents: [],
+                }),
+            )
+            metas.set(
+                "/project/c.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: ["/project/a.ts", "/project/b.ts"],
+                }),
+            )
+
+            analyzer.computeTransitiveCounts(metas)
+
+            expect(metas.get("/project/c.ts")!.transitiveDepCount).toBe(2) // A and B
+            expect(metas.get("/project/a.ts")!.transitiveDepByCount).toBe(1) // C
+            expect(metas.get("/project/b.ts")!.transitiveDepByCount).toBe(1) // C
+        })
+
+        it("should handle deep dependency chains", () => {
+            // A -> B -> C -> D -> E
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: ["/project/b.ts"],
+                    dependents: [],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: ["/project/c.ts"],
+                    dependents: ["/project/a.ts"],
+                }),
+            )
+            metas.set(
+                "/project/c.ts",
+                createFileMeta({
+                    dependencies: ["/project/d.ts"],
+                    dependents: ["/project/b.ts"],
+                }),
+            )
+            metas.set(
+                "/project/d.ts",
+                createFileMeta({
+                    dependencies: ["/project/e.ts"],
+                    dependents: ["/project/c.ts"],
+                }),
+            )
+            metas.set(
+                "/project/e.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: ["/project/d.ts"],
+                }),
+            )
+
+            analyzer.computeTransitiveCounts(metas)
+
+            // E has transitive dependents: D, C, B, A
+            expect(metas.get("/project/e.ts")!.transitiveDepCount).toBe(4)
+            // A has transitive dependencies: B, C, D, E
+            expect(metas.get("/project/a.ts")!.transitiveDepByCount).toBe(4)
+        })
+    })
+
+    describe("getTransitiveDependents", () => {
+        it("should return empty set for file not in metas", () => {
+            const metas = new Map<string, FileMeta>()
+            const cache = new Map<string, Set<string>>()
+
+            const result = analyzer.getTransitiveDependents("/project/unknown.ts", metas, cache)
+
+            expect(result.size).toBe(0)
+        })
+
+        it("should use cache for repeated calls", () => {
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: ["/project/b.ts"],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: ["/project/a.ts"],
+                    dependents: [],
+                }),
+            )
+
+            const cache = new Map<string, Set<string>>()
+            const result1 = analyzer.getTransitiveDependents("/project/a.ts", metas, cache)
+            const result2 = analyzer.getTransitiveDependents("/project/a.ts", metas, cache)
+
+            // Should return same instance from cache
+            expect(result1).toBe(result2)
+            expect(result1.size).toBe(1)
+        })
+    })
+
+    describe("getTransitiveDependencies", () => {
+        it("should return empty set for file not in metas", () => {
+            const metas = new Map<string, FileMeta>()
+            const cache = new Map<string, Set<string>>()
+
+            const result = analyzer.getTransitiveDependencies("/project/unknown.ts", metas, cache)
+
+            expect(result.size).toBe(0)
+        })
+
+        it("should use cache for repeated calls", () => {
+            const metas = new Map<string, FileMeta>()
+            metas.set(
+                "/project/a.ts",
+                createFileMeta({
+                    dependencies: ["/project/b.ts"],
+                    dependents: [],
+                }),
+            )
+            metas.set(
+                "/project/b.ts",
+                createFileMeta({
+                    dependencies: [],
+                    dependents: ["/project/a.ts"],
+                }),
+            )
+
+            const cache = new Map<string, Set<string>>()
+            const result1 = analyzer.getTransitiveDependencies("/project/a.ts", metas, cache)
+            const result2 = analyzer.getTransitiveDependencies("/project/a.ts", metas, cache)
+
+            // Should return same instance from cache
+            expect(result1).toBe(result2)
+            expect(result1.size).toBe(1)
+        })
+    })
+
+    describe("analyzeAll with transitive counts", () => {
+        it("should compute transitive counts in analyzeAll", () => {
+            const files = new Map<string, { ast: FileAST; content: string }>()
+
+            // A imports B, B imports C
+            const aContent = `import { b } from "./b"`
+            const aAST = parser.parse(aContent, "ts")
+            files.set("/project/src/a.ts", { ast: aAST, content: aContent })
+
+            const bContent = `import { c } from "./c"\nexport const b = () => c()`
+            const bAST = parser.parse(bContent, "ts")
+            files.set("/project/src/b.ts", { ast: bAST, content: bContent })
+
+            const cContent = `export const c = () => 42`
+            const cAST = parser.parse(cContent, "ts")
+            files.set("/project/src/c.ts", { ast: cAST, content: cContent })
+
+            const results = analyzer.analyzeAll(files)
+
+            // C has transitive dependents: B and A
+            expect(results.get("/project/src/c.ts")!.transitiveDepCount).toBe(2)
+            // A has transitive dependencies: B and C
+            expect(results.get("/project/src/a.ts")!.transitiveDepByCount).toBe(2)
         })
     })
 })
