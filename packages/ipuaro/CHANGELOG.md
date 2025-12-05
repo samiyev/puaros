@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0] - 2025-12-05 - Rich Initial Context: Decorator Extraction
+
+### Added
+
+- **Decorator Extraction (0.24.4)**
+  - Functions now show their decorators in initial context
+  - Classes now show their decorators in initial context
+  - Methods show decorators per-method
+  - New format: `@Controller('users') class UserController`
+  - Function format: `@Get(':id') async getUser(id: string): Promise<User>`
+  - Supports NestJS decorators: `@Controller`, `@Get`, `@Post`, `@Injectable`, `@UseGuards`, etc.
+  - Supports Angular decorators: `@Component`, `@Injectable`, `@Input`, `@Output`, etc.
+
+- **FileAST.ts Enhancements**
+  - `decorators?: string[]` field on `FunctionInfo`
+  - `decorators?: string[]` field on `MethodInfo`
+  - `decorators?: string[]` field on `ClassInfo`
+
+- **ASTParser.ts Enhancements**
+  - `formatDecorator()` - formats decorator node to string (e.g., `@Get(':id')`)
+  - `extractNodeDecorators()` - extracts decorators that are direct children of a node
+  - `extractDecoratorsFromSiblings()` - extracts decorators before the declaration in export statements
+  - Decorators are extracted for classes, methods, and exported functions
+
+- **prompts.ts Enhancements**
+  - `formatDecoratorsPrefix()` - formats decorators as a prefix string for display
+  - Used in `formatFunctionSignature()` for function decorators
+  - Used in `formatFileSummary()` for class decorators
+
+### New Context Format
+
+```
+### src/controllers/user.controller.ts
+- @Controller('users') class UserController extends BaseController
+- @Get(':id') @Auth() async getUser(id: string): Promise<User>
+- @Post() @ValidateBody() async createUser(data: UserDTO): Promise<User>
+```
+
+### Technical Details
+
+- Total tests: 1754 passed (was 1720, +34 new tests)
+  - 14 new tests for ASTParser decorator extraction
+  - 6 new tests for prompts decorator formatting
+  - +14 other tests from internal improvements
+- Coverage: 97.49% lines, 91.14% branches, 98.61% functions
+- 0 ESLint errors, 2 warnings (pre-existing complexity in ASTParser and prompts)
+- Build successful
+
+### Notes
+
+This completes the v0.24.0 Rich Initial Context milestone:
+- ✅ 0.24.1 - Function Signatures with Types
+- ✅ 0.24.2 - Interface/Type Field Definitions
+- ✅ 0.24.3 - Enum Value Definitions
+- ✅ 0.24.4 - Decorator Extraction
+
+Next milestone: v0.25.0 - Graph Metrics in Context
+
+---
+
 ## [0.25.0] - 2025-12-04 - Rich Initial Context: Interface Fields & Type Definitions
 
 ### Added

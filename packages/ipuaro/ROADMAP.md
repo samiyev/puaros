@@ -1779,10 +1779,10 @@ export interface ScanResult {
 
 ---
 
-## Version 0.24.0 - Rich Initial Context 📋
+## Version 0.24.0 - Rich Initial Context 📋 ✅
 
 **Priority:** HIGH
-**Status:** In Progress (3/4 complete)
+**Status:** Complete (v0.24.0 released)
 
 Enhance initial context for LLM: add function signatures, interface field types, and enum values. This allows LLM to answer questions about types and parameters without tool calls.
 
@@ -1858,7 +1858,7 @@ Enhance initial context for LLM: add function signatures, interface field types,
 
 **Why:** LLM knows valid enum values.
 
-### 0.24.4 - Decorator Extraction
+### 0.24.4 - Decorator Extraction ⭐ ✅
 
 **Problem:** LLM doesn't see decorators (important for NestJS, Angular)
 **Solution:** Show decorators in context
@@ -1872,16 +1872,15 @@ Enhance initial context for LLM: add function signatures, interface field types,
 ```
 
 **Changes:**
-- [ ] Add `decorators: string[]` to FunctionInfo and ClassInfo
-- [ ] Update `ASTParser.ts` to extract decorators
-- [ ] Update context to display decorators
+- [x] Add `decorators: string[]` to FunctionInfo, MethodInfo, and ClassInfo
+- [x] Update `ASTParser.ts` to extract decorators via `extractNodeDecorators()` and `extractDecoratorsFromSiblings()`
+- [x] Update `prompts.ts` to display decorators via `formatDecoratorsPrefix()`
 
 **Why:** LLM understands routing, DI, guards in NestJS/Angular.
 
 **Tests:**
-- [ ] Unit tests for enhanced ASTParser
-- [ ] Unit tests for new context format
-- [ ] Integration tests for full flow
+- [x] Unit tests for ASTParser decorator extraction (14 tests)
+- [x] Unit tests for prompts decorator formatting (6 tests)
 
 ---
 
@@ -1999,7 +1998,7 @@ interface FileMeta {
 - [x] 0 ESLint errors ✅
 - [x] Examples working ✅ (v0.18.0)
 - [x] CHANGELOG.md up to date ✅
-- [ ] Rich initial context (v0.24.0) — function signatures, interface fields, enum values
+- [x] Rich initial context (v0.24.0) — function signatures, interface fields, enum values, decorators ✅
 - [ ] Graph metrics in context (v0.25.0) — dependency graph, circular deps, impact score
 
 ---
@@ -2079,7 +2078,7 @@ sessions:list             # List<session_id>
 
 **Last Updated:** 2025-12-05
 **Target Version:** 1.0.0
-**Current Version:** 0.25.0
-**Next Milestones:** v0.24.0 (Rich Context - 3/4 complete), v0.25.0 (Graph Metrics)
+**Current Version:** 0.26.0
+**Next Milestones:** v0.25.0 (Graph Metrics - 0/4 complete)
 
-> **Note:** v0.24.0 and v0.25.0 are required for 1.0.0 release. They enable LLM to answer questions about types, signatures, and architecture without tool calls.
+> **Note:** v0.24.0 complete ✅. v0.25.0 (Graph Metrics) is required for 1.0.0 release. It enables LLM to see architecture without tool calls.
